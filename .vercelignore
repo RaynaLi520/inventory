@@ -1,0 +1,9 @@
+.git/
+.vercel/
+tools/
+__pycache__/
+*.pyc
+coz-response*.json
+coz-inventory*.json
+coz-inventory*.csv
+*.png
