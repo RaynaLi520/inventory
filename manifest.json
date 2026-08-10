@@ -1,0 +1,19 @@
+{
+  "name": "JA 成衣库存中台",
+  "short_name": "JA 库存",
+  "description": "统一管理成衣 SKU、仓库门店库存、出入库流水与销售渠道",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f5f3",
+  "theme_color": "#173f35",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

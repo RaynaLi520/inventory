@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JA 面料信息填报平台</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <div class="auth-announcement" id="authAnnouncementBar">
+      <span id="authAnnouncement">JA 面料信息平台</span>
+      <strong id="authAnnouncementAccent">供应商工作台</strong>
+    </div>
+    <header class="topbar">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <h1>JA 面料信息填报平台</h1>
+      </div>
+      <div class="topbar-actions">
+        <button class="button ghost" id="languageToggle" type="button">English</button>
+        <span class="identity-badge" id="identityBadge" hidden></span>
+        <button class="button ghost" id="logoutBtn" type="button" hidden>退出登录</button>
+      </div>
+    </header>
+
+    <section class="auth-card" id="authCard">
+      <div class="auth-intro">
+        <span class="auth-index" id="authIndex">JA / MEMBER ACCESS</span>
+        <h2 id="authTitle">登录您的工作空间</h2>
+        <p id="authHint">使用邮箱验证码登录。供应商资料需经 JA 管理员审核。</p>
+      </div>
+
+      <div class="auth-form-wrap">
+        <form class="auth-step" id="emailLoginForm">
+          <label>
+            <span id="emailLabel">邮箱</span>
+            <input id="authEmail" type="email" autocomplete="email" placeholder="name@company.com" required>
+          </label>
+          <button class="button primary auth-submit" id="sendOtpBtn" type="submit">发送验证码</button>
+        </form>
+
+        <form class="auth-step" id="otpVerifyForm" hidden>
+          <div class="auth-email-row">
+            <span id="otpSentTo">验证码已发送至</span>
+            <strong id="otpEmail"></strong>
+            <button class="text-button" id="changeEmailBtn" type="button">更换邮箱</button>
+          </div>
+          <label>
+            <span id="otpLabel">邮箱验证码</span>
+            <input id="authOtp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="6 位验证码" required>
+          </label>
+          <button class="button primary auth-submit" id="verifyOtpBtn" type="submit">验证并登录</button>
+          <button class="text-button auth-resend" id="resendOtpBtn" type="button">重新发送验证码</button>
+        </form>
+
+        <form class="auth-step" id="accessRequestForm" hidden>
+          <div class="auth-signed-email">
+            <span id="signedInAs">当前邮箱</span>
+            <strong id="requestEmail"></strong>
+          </div>
+          <label>
+            <span id="identityLabel">申请身份</span>
+            <select id="identityType">
+              <option value="supplier">供应商</option>
+              <option value="ja">JA 企业</option>
+            </select>
+          </label>
+          <label id="supplierIdentityWrap">
+            <span id="supplierIdentityLabel">供应商名称</span>
+            <input id="supplierIdentity" type="text" autocomplete="organization" placeholder="请输入公司全称" required>
+          </label>
+          <button class="button primary auth-submit" id="submitAccessRequestBtn" type="submit">提交审核</button>
+        </form>
+
+        <p class="auth-status" id="authStatus" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="cloud-card" id="cloudCard" hidden>
+      <div>
+        <h2>云端数据库同步</h2>
+        <p id="cloudStatus">数据按身份和供应商隔离保存到 Supabase。</p>
+      </div>
+      <div class="cloud-actions">
+        <button class="button ghost" id="syncNowBtn" type="button">同步</button>
+      </div>
+    </section>
+
+    <section class="approval-panel" id="approvalPanel" hidden>
+      <div class="approval-head">
+        <div>
+          <h2 id="approvalTitle">身份审核</h2>
+          <p id="approvalHint">审核供应商或 JA 企业的访问申请。</p>
+        </div>
+        <button class="button ghost" id="refreshApprovalsBtn" type="button">刷新</button>
+      </div>
+      <div class="approval-list" id="approvalList"></div>
+      <p class="empty visible" id="approvalEmpty">暂无待审核申请。</p>
+    </section>
+
+    <main id="appContent" hidden>
+      <section class="metrics" aria-label="面料概览">
+        <article class="metric">
+          <span>面料资料</span>
+          <strong id="fabricCount">0</strong>
+        </article>
+      </section>
+
+      <nav class="tabs" aria-label="功能切换">
+        <button class="tab active" data-tab="fabrics" type="button">面料库</button>
+      </nav>
+
+      <section class="workspace" id="calculatorPanel">
+        <form class="editor" id="quoteForm">
+          <div class="section-title">
+            <h2>单款报价计算</h2>
+            <button class="button ghost" id="resetQuoteBtn" type="button">重置</button>
+          </div>
+
+          <div class="form-grid">
+            <label class="span-2">
+              <span>选择报价线</span>
+              <select id="quoteLine"></select>
+            </label>
+            <label class="span-2">
+              <span>从面料库选择面料</span>
+              <select id="quoteFabricSelect"></select>
+            </label>
+            <label>
+              <span>面料 / Fabric</span>
+              <input id="fabricName" type="text">
+            </label>
+            <label>
+              <span>成衣 / Garment</span>
+              <input id="garmentName" type="text">
+            </label>
+            <label>
+              <span>基础款 / I.S base style</span>
+              <input id="baseStyle" type="text">
+            </label>
+            <label>
+              <span>目标 FOB USD</span>
+              <input id="targetFob" type="number" step="0.0001" min="0">
+            </label>
+            <label>
+              <span>用量 m/pc</span>
+              <input id="consumptionM" type="number" step="0.0001" min="0">
+            </label>
+            <label>
+              <span>面料门幅 cm</span>
+              <input id="widthCm" type="number" step="0.1" min="0">
+            </label>
+            <label>
+              <span>面料单价 USD/m</span>
+              <input id="fabricPriceUsd" type="number" step="0.0001" min="0">
+            </label>
+            <label>
+              <span>面料单价 RMB/m</span>
+              <input id="fabricPriceRmb" type="number" step="0.01" min="0" placeholder="可选，填后自动换 USD">
+            </label>
+            <label>
+              <span>辅料+包装 USD/pc</span>
+              <input id="trimsUsd" type="number" step="0.0001" min="0">
+            </label>
+            <label>
+              <span>CMT USD/pc</span>
+              <input id="cmtUsd" type="number" step="0.0001" min="0">
+            </label>
+            <label>
+              <span>测试 USD/pc</span>
+              <input id="testingUsd" type="number" step="0.0001" min="0">
+            </label>
+            <label>
+              <span>物流 USD/pc</span>
+              <input id="logisticsUsd" type="number" step="0.0001" min="0">
+            </label>
+            <label>
+              <span>里布/其他 USD/pc</span>
+              <input id="liningUsd" type="number" step="0.0001" min="0">
+            </label>
+            <label>
+              <span>利润率 %</span>
+              <input id="marginPct" type="number" step="0.01" min="0">
+            </label>
+            <label>
+              <span>FX RMB→USD</span>
+              <input id="fx" type="number" step="0.0001" min="0.0001">
+            </label>
+            <label>
+              <span>VAT 退税率 %</span>
+              <input id="vatPct" type="number" step="0.01" min="0">
+            </label>
+            <label class="span-2">
+              <span>备注</span>
+              <textarea id="quoteNote" rows="2"></textarea>
+            </label>
+          </div>
+
+          <aside class="calc-box" aria-live="polite">
+            <div>
+              <span>面料成本</span>
+              <strong id="fabricCostOut">$0.0000</strong>
+            </div>
+            <div>
+              <span>直接成本</span>
+              <strong id="directCostOut">$0.0000</strong>
+            </div>
+            <div>
+              <span>FOB</span>
+              <strong id="fobOut">$0.00</strong>
+            </div>
+            <div>
+              <span>目标差距</span>
+              <strong id="gapOut">$0.00</strong>
+            </div>
+            <div>
+              <span>差距 %</span>
+              <strong id="gapPctOut">0.0%</strong>
+            </div>
+            <div>
+              <span>达标最高面料价</span>
+              <strong id="maxFabricOut">$0.0000/m</strong>
+            </div>
+            <p id="formulaOut">FOB = (面料 + 辅料/包装 + CMT + 测试 + 物流 + 里布/其他) × (1 + 利润率)</p>
+          </aside>
+
+          <div class="form-actions">
+            <button class="button primary" type="submit">保存当前报价</button>
+          </div>
+        </form>
+
+        <section class="table-panel">
+          <div class="list-head">
+            <h2>报价矩阵</h2>
+            <div class="tools">
+              <input id="quoteSearch" type="search" placeholder="搜索面料、成衣、基础款">
+              <button class="button secondary" id="exportQuoteCsvBtn" type="button">导出 CSV</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>面料</th>
+                  <th>成衣</th>
+                  <th>基础款</th>
+                  <th class="num">用量</th>
+                  <th class="num">面料价</th>
+                  <th class="num">辅料</th>
+                  <th class="num">CMT</th>
+                  <th class="num">FOB</th>
+                  <th class="actions-col">操作</th>
+                </tr>
+              </thead>
+              <tbody id="quoteRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace single" id="targetPanel">
+        <section class="table-panel">
+          <div class="list-head">
+            <h2>目标 FOB 差距分析</h2>
+            <div class="tools">
+              <button class="button secondary" id="exportTargetCsvBtn" type="button">导出 CSV</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>款式</th>
+                  <th>Style No.</th>
+                  <th class="num">目标</th>
+                  <th class="num">调整用量</th>
+                  <th class="num">面料价</th>
+                  <th class="num">面料成本</th>
+                  <th class="num">辅料</th>
+                  <th class="num">CMT</th>
+                  <th class="num">Direct</th>
+                  <th class="num">FOB</th>
+                  <th class="num">Gap</th>
+                  <th class="num">最高面料价</th>
+                </tr>
+              </thead>
+              <tbody id="targetRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace single active" id="fabricsPanel">
+        <section class="fabric-manager form-hidden" id="fabricManager">
+        <form class="editor fabric-editor" id="fabricForm" hidden>
+          <div class="section-title">
+            <h2 id="fabricFormTitle">新增面料</h2>
+            <div class="form-title-actions">
+              <button class="button secondary" id="backFabricBtn" type="button">返回</button>
+              <button class="button secondary" id="draftFabricBtn" type="button">暂存</button>
+              <button class="button ghost" id="resetFabricBtn" type="button">清空</button>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>面料编号</span>
+              <input id="fabricLibId" type="text" required placeholder="例如 GU-0009">
+            </label>
+            <label>
+              <span>面料名称</span>
+              <input id="fabricLibNameZh" type="text" placeholder="例如 毛圈">
+            </label>
+            <label class="span-2">
+              <span>成分</span>
+              <input id="fabricComposition" type="text" placeholder="例如 77% cotton / 23% recycled poly">
+            </label>
+            <label>
+              <span>克重 GSM</span>
+              <input id="fabricWeight" type="number" step="0.1" min="0" placeholder="例如 260">
+            </label>
+            <label>
+              <span>克重 oz</span>
+              <input id="fabricWeightOz" type="number" step="0.01" min="0" placeholder="例如 7.67">
+            </label>
+            <label>
+              <span>门幅 cm</span>
+              <input id="fabricWidthCm" type="number" step="0.1" min="0">
+            </label>
+            <label>
+              <span>颜色</span>
+              <input id="fabricColorway" type="text" placeholder="例如 Black">
+            </label>
+            <label>
+              <span>工艺 / 版本</span>
+              <input id="fabricProcess" type="text" placeholder="例如 素色 / 印花">
+            </label>
+            <label class="supplier-private">
+              <span>供应商 / Mill</span>
+              <input id="fabricMill" type="text">
+            </label>
+            <label>
+              <span>RMB/kg</span>
+              <input id="fabricRmbKg" type="number" step="0.01" min="0">
+            </label>
+            <label>
+              <span>RMB/m</span>
+              <input id="fabricRmbM" type="number" step="0.01" min="0">
+            </label>
+            <section class="supplier-quote-editor span-2">
+              <div class="supplier-quote-head">
+                <div>
+                  <h3 id="supplierQuotesTitle">供应商报价明细</h3>
+                  <p id="supplierQuotesHint">可编辑每个供应商的报价，保存后自动选最低 RMB/m。</p>
+                </div>
+                <button class="button secondary" id="addSupplierQuoteBtn" type="button">添加报价</button>
+              </div>
+              <div class="supplier-quote-list" id="supplierQuoteList"></div>
+            </section>
+            <label class="span-2">
+              <span>每公斤出米数 m/kg</span>
+              <input id="fabricMetersPerKg" type="text" readonly placeholder="填写门幅、克重后自动计算">
+            </label>
+            <p class="formula-hint span-2" id="fabricConversionHint">每公斤出米数 = 1000 ÷ 门幅(m) ÷ 克重(g/m²)；RMB/m = RMB/kg ÷ 每公斤出米数。</p>
+            <label>
+              <span>匹配款/备注</span>
+              <input id="fabricMatch" type="text">
+            </label>
+            <label class="span-2">
+              <span>上传图片</span>
+              <input id="fabricImageFiles" type="file" accept="image/*" multiple>
+            </label>
+            <p class="formula-hint span-2" id="fabricImageHint">可一次选择多张图片，也可以直接粘贴图片到这里，保存后会追加到当前面料图片。</p>
+          </div>
+          <div class="form-actions">
+            <button class="button primary" type="submit">保存面料</button>
+          </div>
+        </form>
+
+        <section class="table-panel">
+          <div class="list-head">
+            <h2>面料库</h2>
+            <div class="tools">
+              <input id="fabricSearch" type="search" placeholder="搜索编号、名称、成分、供应商">
+              <button class="button primary" id="showFabricFormBtn" type="button">新增面料</button>
+              <button class="button secondary" id="exportFabricCsvBtn" type="button">导出 CSV</button>
+            </div>
+          </div>
+          <div class="fabric-filters">
+            <div class="fabric-filters-head">
+              <h3 id="fabricFiltersTitle">筛选器</h3>
+              <button class="button ghost" id="clearFabricFiltersBtn" type="button">清空筛选</button>
+            </div>
+            <div class="fabric-filter-grid">
+              <label class="supplier-private">
+                <span>供应商</span>
+                <select id="fabricFilterSupplier">
+                  <option value="">全部供应商</option>
+                </select>
+              </label>
+              <label>
+                <span>成分</span>
+                <select id="fabricFilterComposition">
+                  <option value="">全部成分</option>
+                </select>
+              </label>
+              <label>
+                <span>克重</span>
+                <select id="fabricFilterWeight">
+                  <option value="">全部克重</option>
+                </select>
+              </label>
+              <label>
+                <span>门幅</span>
+                <select id="fabricFilterWidth">
+                  <option value="">全部门幅</option>
+                </select>
+              </label>
+              <label>
+                <span>颜色</span>
+                <select id="fabricFilterColor">
+                  <option value="">全部颜色</option>
+                </select>
+              </label>
+              <label>
+                <span>工艺</span>
+                <select id="fabricFilterProcess">
+                  <option value="">全部工艺</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="fabric-card-grid" id="fabricRows"></div>
+        </section>
+        </section>
+      </section>
+
+      <section class="workspace single" id="trimsPanel">
+        <section class="split">
+          <div class="editor">
+            <div class="section-title">
+              <h2>辅料 Build-Up</h2>
+            </div>
+            <label>
+              <span>选择款式辅料块</span>
+              <select id="trimBlock"></select>
+            </label>
+            <aside class="calc-box compact">
+              <div>
+                <span>SEW</span>
+                <strong id="trimSewOut">$0.0000</strong>
+              </div>
+              <div>
+                <span>PACK</span>
+                <strong id="trimPackOut">$0.0000</strong>
+              </div>
+              <div>
+                <span>GU 固定</span>
+                <strong id="trimGuOut">$0.0000</strong>
+              </div>
+              <div>
+                <span>Costing total</span>
+                <strong id="trimTotalOut">$0.0000</strong>
+              </div>
+            </aside>
+          </div>
+          <div class="table-panel">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>项目</th>
+                    <th class="num">RMB/unit</th>
+                    <th>单位</th>
+                    <th class="num">Qty/pc</th>
+                    <th class="num">USD/pc</th>
+                    <th>组别</th>
+                    <th>备注</th>
+                  </tr>
+                </thead>
+                <tbody id="trimRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace single" id="savedPanel">
+        <section class="table-panel">
+          <div class="list-head">
+            <h2>保存记录</h2>
+            <div class="tools">
+              <button class="button secondary" id="exportSavedCsvBtn" type="button">导出 CSV</button>
+              <button class="button ghost" id="clearSavedBtn" type="button">清空保存记录</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>面料</th>
+                  <th>成衣</th>
+                  <th class="num">用量</th>
+                  <th class="num">面料价</th>
+                  <th class="num">Direct</th>
+                  <th class="num">FOB</th>
+                  <th class="num">Gap</th>
+                  <th>备注</th>
+                </tr>
+              </thead>
+              <tbody id="savedRows"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="savedEmpty">暂无保存记录。</p>
+        </section>
+      </section>
+
+      <section class="workspace single" id="backupPanel">
+        <section class="backup-grid">
+          <article class="backup-card">
+            <h2>完整备份</h2>
+            <p>导出当前工具数据和保存报价，之后可以再导入恢复。</p>
+            <button class="button primary" id="backupDownloadBtn" type="button">下载 JSON 备份</button>
+          </article>
+          <article class="backup-card">
+            <h2>导入备份</h2>
+            <p>选择本工具导出的 JSON。导入会覆盖当前本地数据。</p>
+            <input id="backupFile" type="file" accept="application/json,.json">
+            <button class="button" id="importBackupBtn" type="button">导入备份</button>
+          </article>
+          <article class="backup-card danger">
+            <h2>恢复初始数据</h2>
+            <p>清空当前改动，重新载入初始参考数据。</p>
+            <button class="button danger-button" id="resetAllBtn" type="button">恢复初始数据</button>
+          </article>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="image-modal" id="fabricImageDialog" hidden>
+    <div class="image-modal-backdrop" data-action="close-fabric-images"></div>
+    <section class="image-modal-panel" role="dialog" aria-modal="true" aria-labelledby="fabricImageTitle">
+      <header class="image-modal-head">
+        <div>
+          <h2 id="fabricImageTitle">面料图片</h2>
+          <p id="fabricImageMeta"></p>
+        </div>
+        <button class="icon-close" data-action="close-fabric-images" type="button" aria-label="关闭">×</button>
+      </header>
+      <div class="image-grid" id="fabricImageGrid"></div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase-config.js"></script>
+  <script src="assets/seed-data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

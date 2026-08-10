@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f35">
+  <title>JA 成衣库存中台</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="assets/inventory.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">JA</span>
+        <div>
+          <strong>JUSTIN ALLEN</strong>
+          <span>GARMENT OPS</span>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="主导航">
+        <button class="nav-item active" data-view="overview" type="button">
+          <i data-lucide="layout-dashboard"></i><span>经营概览</span>
+        </button>
+        <button class="nav-item" data-view="inventory" type="button">
+          <i data-lucide="boxes"></i><span>成衣库存</span><b id="navLowCount">0</b>
+        </button>
+        <button class="nav-item" data-view="movements" type="button">
+          <i data-lucide="arrow-left-right"></i><span>出入库流水</span>
+        </button>
+        <button class="nav-item" data-view="channels" type="button">
+          <i data-lucide="store"></i><span>销售渠道</span>
+        </button>
+        <a class="nav-item" href="fabric.html">
+          <i data-lucide="swatch-book"></i><span>面料档案</span><small>原工具</small>
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sync-state"><span></span> 数据已保存到本机</div>
+        <button class="profile-button" type="button" title="账户设置">
+          <span class="avatar">RL</span>
+          <span><strong>Rayna Li</strong><small>品牌管理员</small></span>
+          <i data-lucide="chevrons-up-down"></i>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="mobile-brand"><strong>JA</strong><span>成衣库存</span></div>
+        <div class="context-title">
+          <span id="pageEyebrow">库存中台 / 今日</span>
+          <h1 id="pageTitle">经营概览</h1>
+        </div>
+        <div class="top-actions">
+          <button class="icon-button" id="scanBtn" type="button" title="扫描 SKU"><i data-lucide="scan-line"></i></button>
+          <button class="icon-button notification-button" type="button" title="库存提醒"><i data-lucide="bell"></i><span></span></button>
+          <button class="button secondary desktop-only" id="exportBtn" type="button"><i data-lucide="download"></i>导出库存</button>
+          <button class="button primary" id="quickMoveBtn" type="button"><i data-lucide="package-plus"></i>快速出入库</button>
+        </div>
+      </header>
+
+      <section class="view active" id="overviewView">
+        <div class="date-strip">
+          <div>
+            <span class="date-day" id="dateDay">09</span>
+            <span><strong id="dateWeek">星期日</strong><small id="dateFull">2026 年 8 月</small></span>
+          </div>
+          <p>线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。</p>
+        </div>
+
+        <section class="metrics" aria-label="核心库存指标">
+          <article class="metric featured">
+            <div class="metric-label"><i data-lucide="package-check"></i><span>可售库存</span></div>
+            <strong id="metricAvailable">0</strong>
+            <p><span class="trend up"><i data-lucide="trending-up"></i> 4.8%</span> 较上周</p>
+          </article>
+          <article class="metric">
+            <div class="metric-label"><i data-lucide="shopping-bag"></i><span>今日售出</span></div>
+            <strong>36</strong>
+            <p>线上 24 · 门店 12</p>
+          </article>
+          <article class="metric">
+            <div class="metric-label"><i data-lucide="circle-alert"></i><span>低库存 SKU</span></div>
+            <strong id="metricLow">0</strong>
+            <p><span class="trend warn">需处理</span> 低于安全库存</p>
+          </article>
+          <article class="metric">
+            <div class="metric-label"><i data-lucide="truck"></i><span>在途库存</span></div>
+            <strong>280</strong>
+            <p>3 个采购单 · 最早 8/12 到货</p>
+          </article>
+        </section>
+
+        <section class="attention-band" id="attentionBand">
+          <div class="attention-icon"><i data-lucide="alert-triangle"></i></div>
+          <div>
+            <strong><span id="attentionCount">0</span> 个 SKU 需要处理</strong>
+            <p>经典卫衣和阔腿裤部分尺码已低于安全库存。</p>
+          </div>
+          <button class="text-action" data-jump="inventory" type="button">查看并补货 <i data-lucide="arrow-right"></i></button>
+        </section>
+
+        <div class="overview-grid">
+          <section class="panel inventory-preview">
+            <div class="section-head">
+              <div><span class="section-kicker">LIVE STOCK</span><h2>重点款库存</h2></div>
+              <button class="text-action" data-jump="inventory" type="button">全部 SKU <i data-lucide="arrow-right"></i></button>
+            </div>
+            <div class="table-wrap">
+              <table class="stock-table compact-table">
+                <thead><tr><th>款式 / SKU</th><th>尺码库存带</th><th class="num">可售</th><th>状态</th></tr></thead>
+                <tbody id="overviewRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <aside class="panel channel-summary">
+            <div class="section-head"><div><span class="section-kicker">ALLOCATION</span><h2>渠道库存</h2></div></div>
+            <div class="channel-total"><strong id="channelTotal">0</strong><span>件可售库存</span></div>
+            <div class="channel-bars" id="channelBars"></div>
+            <div class="divider"></div>
+            <h3>最近动态</h3>
+            <div class="activity-list" id="activityList"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="inventoryView">
+        <div class="toolbar">
+          <label class="search-box"><i data-lucide="search"></i><input id="inventorySearch" type="search" placeholder="搜索款式、SKU、颜色"></label>
+          <select id="categoryFilter" aria-label="按品类筛选"><option value="">全部品类</option></select>
+          <select id="statusFilter" aria-label="按库存状态筛选"><option value="">全部状态</option><option value="low">低库存</option><option value="healthy">库存正常</option></select>
+          <button class="button secondary" id="addSkuBtn" type="button"><i data-lucide="plus"></i>新增 SKU</button>
+        </div>
+
+        <section class="panel inventory-panel">
+          <div class="section-head inventory-head">
+            <div><span class="section-kicker">SKU CATALOG</span><h2>成衣库存明细</h2></div>
+            <div class="table-summary"><strong id="resultCount">0</strong> 个 SKU <span>·</span> 实时可售 <strong id="resultAvailable">0</strong> 件</div>
+          </div>
+          <div class="table-wrap">
+            <table class="stock-table">
+              <thead>
+                <tr><th>款式 / SKU</th><th>颜色</th><th>尺码库存带</th><th class="num">仓库</th><th class="num">门店</th><th class="num">占用</th><th class="num">可售</th><th>状态</th><th></th></tr>
+              </thead>
+              <tbody id="inventoryRows"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="inventoryEmpty" hidden><i data-lucide="package-search"></i><strong>没有匹配的 SKU</strong><p>请调整搜索词或筛选条件。</p></div>
+        </section>
+      </section>
+
+      <section class="view" id="movementsView">
+        <section class="movement-summary">
+          <div><span>今日入库</span><strong id="todayInbound">0</strong><small>件</small></div>
+          <div><span>今日出库</span><strong id="todayOutbound">0</strong><small>件</small></div>
+          <div><span>今日调拨</span><strong>18</strong><small>件</small></div>
+        </section>
+        <section class="panel">
+          <div class="section-head">
+            <div><span class="section-kicker">STOCK LEDGER</span><h2>库存流水</h2></div>
+            <label class="search-box narrow"><i data-lucide="search"></i><input id="movementSearch" type="search" placeholder="搜索单号或 SKU"></label>
+          </div>
+          <div class="table-wrap">
+            <table class="ledger-table">
+              <thead><tr><th>时间 / 单号</th><th>类型</th><th>SKU</th><th>库位</th><th class="num">数量</th><th>操作人</th><th>备注</th></tr></thead>
+              <tbody id="movementRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="channelsView">
+        <div class="channel-intro">
+          <div><span class="section-kicker">OMNICHANNEL</span><h2>销售渠道与库存配额</h2><p>每个渠道共享实物库存，通过配额控制超卖风险。</p></div>
+          <button class="button secondary" type="button"><i data-lucide="plus"></i>连接渠道</button>
+        </div>
+        <div class="channel-grid" id="channelCards"></div>
+        <section class="panel rule-panel">
+          <div class="section-head"><div><span class="section-kicker">POLICY</span><h2>库存同步规则</h2></div><button class="button secondary" id="saveRulesBtn" type="button">保存规则</button></div>
+          <div class="rule-list">
+            <label><span><strong>安全库存保护</strong><small>可售数量达到安全库存时停止线上销售</small></span><input type="checkbox" checked><i></i></label>
+            <label><span><strong>订单自动占用</strong><small>订单创建后立即占用库存，取消后自动释放</small></span><input type="checkbox" checked><i></i></label>
+            <label><span><strong>门店库存线上可见</strong><small>允许消费者查询附近门店库存</small></span><input type="checkbox"><i></i></label>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <nav class="mobile-nav" aria-label="移动端导航">
+      <button class="active" data-view="overview" type="button"><i data-lucide="layout-dashboard"></i><span>概览</span></button>
+      <button data-view="inventory" type="button"><i data-lucide="boxes"></i><span>库存</span></button>
+      <button class="mobile-action" id="mobileMoveBtn" type="button"><i data-lucide="plus"></i><span>出入库</span></button>
+      <button data-view="movements" type="button"><i data-lucide="arrow-left-right"></i><span>流水</span></button>
+      <button data-view="channels" type="button"><i data-lucide="store"></i><span>渠道</span></button>
+    </nav>
+  </div>
+
+  <div class="modal" id="movementModal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="movementModalTitle">
+      <header class="modal-head"><div><span class="section-kicker">STOCK MOVEMENT</span><h2 id="movementModalTitle">快速出入库</h2></div><button class="icon-button" data-close-modal type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <form id="movementForm">
+        <div class="segmented" role="group" aria-label="出入库类型">
+          <button class="active" data-type="inbound" type="button"><i data-lucide="package-plus"></i>入库</button>
+          <button data-type="outbound" type="button"><i data-lucide="package-minus"></i>出库</button>
+        </div>
+        <input id="movementType" type="hidden" value="inbound">
+        <label><span>SKU</span><select id="movementSku" required></select></label>
+        <div class="form-row">
+          <label><span>库位</span><select id="movementLocation"><option value="warehouse">上海总仓</option><option value="store">静安门店</option></select></label>
+          <label><span>数量</span><input id="movementQty" type="number" min="1" value="1" required></label>
+        </div>
+        <label><span>备注</span><input id="movementNote" type="text" placeholder="例如：采购单 PO-20260809"></label>
+        <div class="form-actions"><button class="button secondary" data-close-modal type="button">取消</button><button class="button primary" type="submit">确认入库</button></div>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal" id="skuModal" hidden>
+    <div class="modal-backdrop" data-close-sku></div>
+    <section class="modal-panel wide" role="dialog" aria-modal="true" aria-labelledby="skuModalTitle">
+      <header class="modal-head"><div><span class="section-kicker">NEW VARIANT</span><h2 id="skuModalTitle">新增成衣 SKU</h2></div><button class="icon-button" data-close-sku type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <form id="skuForm">
+        <div class="form-grid">
+          <label><span>款式名称</span><input id="skuName" required placeholder="例如：轻量针织开衫"></label>
+          <label><span>品类</span><select id="skuCategory"><option>上装</option><option>下装</option><option>连衣裙</option><option>外套</option><option>配饰</option></select></label>
+          <label><span>款号</span><input id="skuStyle" required placeholder="例如：JA2608"></label>
+          <label><span>颜色代码</span><input id="skuColor" required maxlength="3" placeholder="例如：BLK"></label>
+          <label><span>尺码</span><select id="skuSize"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option></select></label>
+          <label><span>安全库存</span><input id="skuSafety" type="number" min="0" value="5"></label>
+        </div>
+        <div class="sku-preview"><span>SKU 编码预览</span><code id="skuPreview">JA-FW26-TOP-JA2608-BLK-M</code><small>品牌-季节-品类-款号-颜色-尺码</small></div>
+        <div class="form-actions"><button class="button secondary" data-close-sku type="button">取消</button><button class="button primary" type="submit">创建 SKU</button></div>
+      </form>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="circle-check"></i><span></span></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="assets/inventory.js"></script>
+</body>
+</html>
