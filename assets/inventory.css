@@ -385,3 +385,62 @@ select, input[type="number"], input[type="text"] { height: 38px; border: 1px sol
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Readability and user-controlled appearance. */
+.control-button { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: var(--surface); font-size: 12px; cursor: pointer; }
+.control-button:hover { border-color: var(--line-strong); color: var(--ink); background: #f7f9f8; }
+.control-button svg { width: 15px; height: 15px; }
+.nav-item span { font-size: 15px; }
+.context-title span { margin-bottom: 4px; font-size: 11px; }
+.context-title h1 { font-size: 23px; }
+.button { min-height: 40px; font-size: 14px; }
+.text-action { font-size: 13px; }
+.date-strip strong { font-size: 14px; }
+.date-strip small { font-size: 12px; }
+.date-strip p { font-size: 13px; }
+.metric-label { font-size: 13px; }
+.metric p { font-size: 12px; }
+.attention-band strong { font-size: 14px; }
+.attention-band p { font-size: 12px; }
+.section-head h2, .channel-intro h2 { font-size: 17px; }
+th { height: 43px; font-size: 11px; }
+td { height: 68px; font-size: 12px; }
+.product-cell strong { font-size: 13px; }
+.status { font-size: 11px; }
+.search-box input { font-size: 13px; }
+select, input[type="number"], input[type="text"] { height: 40px; font-size: 13px; }
+.table-summary { font-size: 12px; }
+.table-summary strong { font-size: 14px; }
+
+body.dark-theme {
+  --ink: #edf4f0;
+  --muted: #a6b6af;
+  --line: #30463e;
+  --line-strong: #466057;
+  --canvas: #101b18;
+  --surface: #172723;
+  --green-soft: #1d4437;
+  --amber-soft: #4b3719;
+  --red-soft: #4a2727;
+  --blue-soft: #203743;
+  background: var(--canvas);
+  color: var(--ink);
+}
+body.dark-theme .main-area { color: var(--ink); }
+body.dark-theme .topbar { background: rgba(16, 27, 24, .95); }
+body.dark-theme th { color: #a6b6af; background: #1b2e28; }
+body.dark-theme td { color: #d9e5df; border-color: #253b33; }
+body.dark-theme .panel, body.dark-theme .metrics, body.dark-theme .movement-summary, body.dark-theme .channel-card { background: var(--surface); }
+body.dark-theme .attention-band { border-color: #665022; background: #2a2417; }
+body.dark-theme .search-box, body.dark-theme select, body.dark-theme input[type="number"], body.dark-theme input[type="text"], body.dark-theme .control-button, body.dark-theme .icon-button { color: var(--ink); background: var(--surface); }
+body.dark-theme .search-box input, body.dark-theme select, body.dark-theme input { color: var(--ink); }
+body.dark-theme .size-stock { border-color: #3a5048; background: #1a2b26; }
+body.dark-theme .size-stock.empty { background: #202925; }
+body.dark-theme .channel-card > p, body.dark-theme .activity p { color: #b9c9c1; }
+body.dark-theme .sku-preview { background: #1d3a31; }
+
+@media (max-width: 640px) {
+  .control-button { width: 38px; padding: 0; justify-content: center; }
+  .control-button span { display: none; }
+  .top-actions > .button.primary { display: none; }
+}

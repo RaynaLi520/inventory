@@ -10,6 +10,21 @@
     movements: ["库存中心 / 流水", "出入库流水"],
     channels: ["全渠道 / 配额", "销售渠道"]
   };
+  const translationPairs = [
+    ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
+    ["数据已保存到本机", "Saved locally"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
+    ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
+    ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], ["经典卫衣和阔腿裤部分尺码已低于安全库存。", "Some sizes of the classic hoodie and wide-leg pants are below safety stock."], [" 个 SKU 需要处理", " SKUs need action"],
+    ["可售库存", "Sellable stock"], ["今日售出", "Sold today"], ["低库存 SKU", "Low-stock SKUs"], ["在途库存", "In transit"], ["较上周", "vs last week"], ["需处理", "Needs action"], ["低于安全库存", "Below safety stock"], ["3 个采购单 · 最早 8/12 到货", "3 purchase orders · earliest arrival Aug 12"], ["线上 24 · 门店 12", "Online 24 · Store 12"], ["4.8%", "4.8%"],
+    ["个 SKU · 实时可售", "SKUs · sellable now"], ["件", "pcs"], ["件可售库存", "sellable pcs"], ["重点款库存", "Priority stock"], ["全部 SKU", "All SKUs"], ["渠道库存", "Channel stock"], ["最近动态", "Recent activity"], ["库存总览", "Stock overview"], ["库存正常", "Healthy"], ["低库存", "Low stock"], ["LIVE STOCK", "LIVE STOCK"], ["ALLOCATION", "ALLOCATION"],
+    ["品牌小程序", "Brand mini-program"], ["天猫旗舰店", "Tmall flagship"], ["静安门店", "Jing'an store"], ["机动库存", "Buffer stock"], ["渠道可售", "Channel sellable"], ["今日订单", "Orders today"], ["同步正常", "Sync healthy"], ["微信自营商城", "WeChat direct store"], ["平台电商", "Marketplace"], ["线下直营", "Offline retail"], ["2 分钟前同步", "Synced 2 min ago"],
+    ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SKU", "New SKU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
+    ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["备注", "Note"],
+    ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
+    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款号", "Style no."], ["颜色代码", "Color code"], ["尺码", "Size"], ["安全库存", "Safety stock"], ["新增成衣 SKU", "New garment SKU"], ["SKU 编码预览", "SKU code preview"], ["品牌-季节-品类-款号-颜色-尺码", "Brand-season-category-style-color-size"], ["创建 SKU", "Create SKU"], ["例如：轻量针织开衫", "e.g. lightweight knit cardigan"], ["例如：JA2608", "e.g. JA2608"], ["例如：BLK", "e.g. BLK"]
+  ];
+  const zhToEn = new Map(translationPairs);
+  const enToZh = new Map(translationPairs.map(([zh, en]) => [en, zh]));
 
   const seedState = {
     products: [
@@ -59,6 +74,7 @@
   let state = loadState();
   let activeView = "overview";
   let toastTimer = null;
+  let currentLang = localStorage.getItem("ja-garment-language") || "zh";
 
   function localDateKey(date = new Date()) {
     const year = date.getFullYear();
@@ -96,6 +112,48 @@
   function totalAvailable() { return state.products.reduce((sum, product) => sum + availableStock(product), 0); }
   function formatNumber(value) { return new Intl.NumberFormat("zh-CN").format(value); }
   function refreshIcons() { if (window.lucide) window.lucide.createIcons({ attrs: { "stroke-width": 1.7 } }); }
+
+  function applyLanguage() {
+    const map = currentLang === "en" ? zhToEn : enToZh;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    textNodes.forEach((node) => {
+      if (node.parentElement?.closest("script, style")) return;
+      const raw = node.nodeValue;
+      const trimmed = raw.trim();
+      if (!trimmed) return;
+      if (map.has(trimmed)) {
+        node.nodeValue = raw.replace(trimmed, map.get(trimmed));
+        return;
+      }
+      let translated = raw;
+      translationPairs.forEach(([zh, en]) => {
+        translated = translated.replaceAll(currentLang === "en" ? zh : en, currentLang === "en" ? en : zh);
+      });
+      node.nodeValue = translated;
+    });
+    const languageButton = $("languageToggle");
+    const themeButton = $("themeToggle");
+    if (languageButton) {
+      languageButton.innerHTML = `<i data-lucide="languages"></i><span>${currentLang === "zh" ? "English" : "中文"}</span>`;
+      languageButton.title = currentLang === "zh" ? "切换语言" : "Switch language";
+    }
+    if (themeButton) themeButton.title = currentLang === "zh" ? "切换主题" : "Switch theme";
+    document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
+    document.title = currentLang === "zh" ? "JA 成衣库存中台" : "JA Garment Inventory";
+    refreshIcons();
+  }
+
+  function applyTheme() {
+    const dark = localStorage.getItem("ja-garment-theme") === "dark";
+    document.body.classList.toggle("dark-theme", dark);
+    const themeButton = $("themeToggle");
+    if (themeButton) themeButton.innerHTML = `<i data-lucide="${dark ? "sun" : "moon"}"></i><span>${dark ? "浅色" : "深色"}</span>`;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#101b18" : "#173f35");
+    refreshIcons();
+    applyLanguage();
+  }
 
   function renderSizeBand(product) {
     return `<div class="size-band">${sizeOrder.filter((size) => size in product.sizes).map((size) => {
@@ -236,6 +294,7 @@
     renderMovements();
     renderChannels();
     refreshIcons();
+    applyLanguage();
   }
 
   function switchView(view) {
@@ -245,6 +304,7 @@
     document.querySelectorAll("[data-view]").forEach((node) => node.classList.toggle("active", node.dataset.view === view));
     $("pageEyebrow").textContent = viewMeta[view][0];
     $("pageTitle").textContent = viewMeta[view][1];
+    applyLanguage();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -281,6 +341,7 @@
     $("movementType").value = type;
     document.querySelectorAll(".segmented button").forEach((button) => button.classList.toggle("active", button.dataset.type === type));
     $("movementForm").querySelector('[type="submit"]').textContent = type === "inbound" ? "确认入库" : "确认出库";
+    applyLanguage();
   }
 
   function submitMovement(event) {
@@ -392,13 +453,23 @@
     $("movementForm").addEventListener("submit", submitMovement);
     $("skuForm").addEventListener("submit", submitSku);
     $("exportBtn").addEventListener("click", exportInventory);
-    $("inventorySearch").addEventListener("input", () => { renderInventory(); refreshIcons(); });
-    $("categoryFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); });
-    $("statusFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); });
+    $("inventorySearch").addEventListener("input", () => { renderInventory(); refreshIcons(); applyLanguage(); });
+    $("categoryFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
+    $("statusFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
     $("movementSearch").addEventListener("input", renderMovements);
     document.querySelectorAll(".segmented button").forEach((button) => button.addEventListener("click", () => setMovementType(button.dataset.type)));
     ["skuCategory", "skuStyle", "skuColor", "skuSize"].forEach((id) => $(id).addEventListener("input", updateSkuPreview));
     $("saveRulesBtn").addEventListener("click", () => showToast("库存同步规则已保存"));
+    $("languageToggle").addEventListener("click", () => {
+      currentLang = currentLang === "zh" ? "en" : "zh";
+      localStorage.setItem("ja-garment-language", currentLang);
+      renderAll();
+      switchView(activeView);
+    });
+    $("themeToggle").addEventListener("click", () => {
+      localStorage.setItem("ja-garment-theme", document.body.classList.contains("dark-theme") ? "light" : "dark");
+      applyTheme();
+    });
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
       if (!$("movementModal").hidden) closeMovementModal();
@@ -415,6 +486,7 @@
 
   initDate();
   bindEvents();
+  applyTheme();
   renderAll();
   switchView(activeView);
 })();
