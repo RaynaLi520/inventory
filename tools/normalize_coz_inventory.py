@@ -39,6 +39,11 @@ def excel_date(value: Any) -> str | None:
     return (EXCEL_EPOCH + timedelta(days=serial)).date().isoformat()
 
 
+def normalize_size(value: Any) -> str:
+    size = clean(value) or "F"
+    return "F" if re.fullmatch(r"(?:free(?:\s*size|\s*尺码)?|均码|one\s*size|os)", size, re.IGNORECASE) else size
+
+
 def query_sku(row: dict[str, Any]) -> str:
     raw_query = row.get("Query")
     if raw_query:
@@ -90,7 +95,7 @@ def normalize_group(sku: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
         "style_no": style,
         "product_name": customer_name or style_note or style,
         "color": clean(choose_value(rows, "C4")),
-        "size": clean(choose_value(rows, "C5")),
+        "size": normalize_size(choose_value(rows, "C5")),
         "stocked_quantity": compact_number(total),
         "reserved_quantity": compact_number(reserved),
         "available_quantity": compact_number(max(0.0, total - reserved)),
@@ -98,6 +103,7 @@ def normalize_group(sku: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
         "retail_price": compact_number(number(choose_value(rows, "C23"))),
         "upc": clean(choose_value(rows, "C25")),
         "primary_fabric": clean(choose_value(rows, "C26")),
+        "image_path": clean(choose_value(rows, "C22")),
         "source_updated_at": excel_date(choose_value(rows, "C27")),
         "style_note": style_note,
         "customer_product_name": customer_name,

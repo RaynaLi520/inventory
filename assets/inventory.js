@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "ja-garment-inventory-v1";
   const CATEGORY_STORAGE_KEY = "ja-garment-categories-v1";
-  const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL"];
+  const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "F"];
   const defaultCategoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
   const categoryCodes = loadCategoryCodes();
   const viewMeta = {
@@ -99,6 +99,69 @@
     return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
   }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function normalizeSizeLabel(value) {
+    const size = String(value || "F").trim();
+    return /^(?:free(?:\s*size|\s*尺码)?|均码|one\s*size|os)$/i.test(size) ? "F" : size;
+  }
+  function resolveColorAppearance(value) {
+    const color = String(value || "").trim().toLowerCase();
+    const rules = [
+      [/黑|墨|炭|black|charcoal/, "#303432"],
+      [/藏青|海军|深海|navy/, "#344b61"],
+      [/蓝|blue|denim/, "#6f97b2"],
+      [/粉|pink|rose/, "#d99aa9"],
+      [/红|莓|red|raspberry|burgundy/, "#b96067"],
+      [/紫|purple|lavender|lilac/, "#8c789e"],
+      [/绿|苔|green|olive|moss/, "#78917b"],
+      [/黄|yellow|gold/, "#d2ad45"],
+      [/橙|orange|coral/, "#cc805f"],
+      [/咖|棕|褐|brown|coffee|chocolate/, "#94735f"],
+      [/米|燕麦|卡其|beige|oat|khaki|sand/, "#c8b99e"],
+      [/灰|银|石灰|gray|grey|silver/, "#969c99"],
+      [/白|象牙|乳白|white|ivory|cream/, "#f4f3ed"]
+    ];
+    const base = rules.find(([pattern]) => pattern.test(color))?.[1] || "#8a918d";
+    const stripe = /条纹|白条|间条|stripe|striped|gingham|check|格纹|格子/.test(color);
+    const accent = /白|white|ivory|cream/.test(color) && base !== "#f4f3ed" ? "#f4f3ed" : "#eef2ef";
+    return { hex: base, accent, pattern: stripe ? "stripe" : "" };
+  }
+  function colorSwatch(product) {
+    const resolved = resolveColorAppearance(product.color);
+    const validHex = (value) => /^#[0-9a-f]{6}$/i.test(String(value || ""));
+    const useResolved = state.source?.type === "coz";
+    const base = useResolved || !validHex(product.colorHex) ? resolved.hex : product.colorHex;
+    const accent = validHex(product.colorAccent) ? product.colorAccent : resolved.accent;
+    const pattern = product.colorPattern || resolved.pattern;
+    return `<span class="swatch${pattern === "stripe" ? " swatch-stripe" : ""}" style="--swatch-base:${base};--swatch-accent:${accent}" aria-hidden="true"></span>`;
+  }
+  function safeImageUrl(value) {
+    const raw = String(value || "");
+    if (/^data:image\/(?:jpeg|png|webp);base64,/i.test(raw)) return raw;
+    try {
+      const url = new URL(raw);
+      return url.protocol === "https:" ? url.href : "";
+    } catch (_) { return ""; }
+  }
+  function upgradeCozState(saved) {
+    if (saved?.source?.type !== "coz") return saved;
+    saved.products.forEach((product) => {
+      const appearance = resolveColorAppearance(product.color);
+      product.colorHex = appearance.hex;
+      product.colorAccent = appearance.accent;
+      product.colorPattern = appearance.pattern;
+      product.image = safeImageUrl(product.image || product.imageUrl);
+      const sizes = {};
+      Object.entries(product.sizes || {}).forEach(([size, qty]) => {
+        const label = normalizeSizeLabel(size);
+        sizes[label] = Number(sizes[label] || 0) + Number(qty || 0);
+      });
+      product.sizes = sizes;
+      if (product.skuBySize) {
+        product.skuBySize = Object.fromEntries(Object.entries(product.skuBySize).map(([size, sku]) => [normalizeSizeLabel(size), sku]));
+      }
+    });
+    return saved;
+  }
   function loadCategoryCodes() {
     try {
       const saved = JSON.parse(localStorage.getItem(CATEGORY_STORAGE_KEY));
@@ -110,7 +173,7 @@
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (saved?.products?.length && Array.isArray(saved.movements)) return saved;
+      if (saved?.products?.length && Array.isArray(saved.movements)) return upgradeCozState(saved);
     } catch (_) { /* Use the packaged inventory sample if local data is invalid. */ }
     return clone(seedState);
   }
@@ -179,9 +242,10 @@
   }
 
   function productCell(product) {
+    const missingImageTitle = product.imagePath ? "已获取图片记录，等待商品图片源同步" : "CoZ 暂未提供商品图片";
     const image = product.image
       ? `<button class="product-image-button" type="button" data-image-preview data-image-src="${escapeHtml(product.image)}" data-image-name="${escapeHtml(product.name)}" data-image-sku="${escapeHtml(product.baseSku)}" title="双击查看大图" aria-label="查看 ${escapeHtml(product.name)} 大图"><img class="product-thumb" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} 商品图片"></button>`
-      : '<span class="product-image-placeholder" title="CoZ 暂未提供商品图片"><i data-lucide="image-off"></i></span>';
+      : `<span class="product-image-placeholder" title="${missingImageTitle}"><i data-lucide="image-off"></i></span>`;
     return `<div class="product-cell">${image}<div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(product.baseSku)}</code></div></div>`;
   }
 
@@ -249,7 +313,7 @@
     $("inventoryRows").innerHTML = products.map((product) => `
       <tr>
         <td>${productCell(product)}</td>
-        <td class="color-cell"><span class="swatch" style="background:${escapeHtml(product.colorHex)}"></span>${escapeHtml(product.color)}</td>
+        <td class="color-cell">${colorSwatch(product)}${escapeHtml(product.color)}</td>
         <td>${renderSizeBand(product)}</td>
         <td class="num">${isCoz ? "--" : formatNumber(product.warehouse)}</td>
         <td class="num">${isCoz ? "--" : formatNumber(product.store)}</td>
@@ -568,19 +632,23 @@
     snapshot.inventory.forEach((item) => {
       const style = String(item.styleNo || item.sku || "").trim();
       const color = String(item.color || "未设置颜色").trim();
-      const size = String(item.size || "Free Size").trim();
+      const size = normalizeSizeLabel(item.size);
       if (!style || !item.sku) return;
       const key = `${style}\u0000${color}`;
       if (!groups.has(key)) {
+        const appearance = resolveColorAppearance(color);
         groups.set(key, {
           name: item.productName || item.styleNote || style,
           category: item.category || "成衣",
           style,
           baseSku: style,
           color,
-          colorHex: "#8a918d",
+          colorHex: appearance.hex,
+          colorAccent: appearance.accent,
+          colorPattern: appearance.pattern,
           safety: 0,
-          image: "",
+          image: safeImageUrl(item.imageUrl),
+          imagePath: item.imagePath || "",
           sizes: {},
           skuBySize: {},
           warehouse: 0,
@@ -591,6 +659,8 @@
         });
       }
       const product = groups.get(key);
+      if (!product.image) product.image = safeImageUrl(item.imageUrl);
+      if (!product.imagePath && item.imagePath) product.imagePath = item.imagePath;
       product.sizes[size] = Number(product.sizes[size] || 0) + Number(item.stockedQuantity || 0);
       if (!product.skuBySize[size]) product.skuBySize[size] = String(item.sku);
       product.warehouse += Number(item.stockedQuantity || 0);
@@ -613,6 +683,7 @@
         syncedAt: snapshot.syncedAt,
         skuCount: snapshot.skuCount,
         stockedQuantity: snapshot.stockedQuantity,
+        imageCount: snapshot.imageCount || 0,
         sourceRowCount: snapshot.sourceRowCount,
         allRowsLoaded: snapshot.allRowsLoaded
       }
