@@ -2,8 +2,10 @@
   "use strict";
 
   const STORAGE_KEY = "ja-garment-inventory-v1";
+  const CATEGORY_STORAGE_KEY = "ja-garment-categories-v1";
   const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL"];
-  const categoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
+  const defaultCategoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
+  const categoryCodes = loadCategoryCodes();
   const viewMeta = {
     overview: ["库存中台 / 今日", "经营概览"],
     inventory: ["商品中心 / SKU", "成衣库存"],
@@ -12,7 +14,7 @@
   };
   const translationPairs = [
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
-    ["数据已保存到本机", "Saved locally"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
+    ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
     ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
     ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], ["经典卫衣和阔腿裤部分尺码已低于安全库存。", "Some sizes of the classic hoodie and wide-leg pants are below safety stock."], [" 个 SKU 需要处理", " SKUs need action"],
     ["可售库存", "Sellable stock"], ["今日售出", "Sold today"], ["低库存 SKU", "Low-stock SKUs"], ["在途库存", "In transit"], ["较上周", "vs last week"], ["需处理", "Needs action"], ["低于安全库存", "Below safety stock"], ["3 个采购单 · 最早 8/12 到货", "3 purchase orders · earliest arrival Aug 12"], ["线上 24 · 门店 12", "Online 24 · Store 12"], ["4.8%", "4.8%"],
@@ -21,7 +23,7 @@
     ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SKU", "New SKU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
     ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["备注", "Note"],
     ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
-    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款号", "Style no."], ["颜色代码", "Color code"], ["尺码", "Size"], ["安全库存", "Safety stock"], ["新增成衣 SKU", "New garment SKU"], ["SKU 编码预览", "SKU code preview"], ["品牌-季节-品类-款号-颜色-尺码", "Brand-season-category-style-color-size"], ["创建 SKU", "Create SKU"], ["例如：轻量针织开衫", "e.g. lightweight knit cardigan"], ["例如：JA2608", "e.g. JA2608"], ["例如：BLK", "e.g. BLK"]
+    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["添加品类", "Add category"], ["品类名称", "Category name"], ["SKU 缩写", "SKU abbreviation"], ["保存品类", "Save category"], ["商品图片", "Product image"], ["款号", "Style no."], ["颜色代码", "Color code"], ["尺码", "Size"], ["安全库存", "Safety stock"], ["新增成衣 SKU", "New garment SKU"], ["SKU 编码预览", "SKU code preview"], ["品牌-季节-品类-款号-颜色-尺码", "Brand-season-category-style-color-size"], ["创建 SKU", "Create SKU"], ["例如：轻量针织开衫", "e.g. lightweight knit cardigan"], ["例如：JA2608", "e.g. JA2608"], ["例如：BLK", "e.g. BLK"]
   ];
   const zhToEn = new Map(translationPairs);
   const enToZh = new Map(translationPairs.map(([zh, en]) => [en, zh]));
@@ -97,6 +99,14 @@
     return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
   }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function loadCategoryCodes() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CATEGORY_STORAGE_KEY));
+      if (saved && typeof saved === "object" && !Array.isArray(saved)) return { ...defaultCategoryCodes, ...saved };
+    } catch (_) { /* Use the packaged categories if local data is invalid. */ }
+    return { ...defaultCategoryCodes };
+  }
+  function saveCategoryCodes() { localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryCodes)); }
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -105,6 +115,11 @@
     return clone(seedState);
   }
   function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function orderedSizes(product) {
+    const availableSizes = Object.keys(product.sizes || {});
+    return [...sizeOrder.filter((size) => availableSizes.includes(size)), ...availableSizes.filter((size) => !sizeOrder.includes(size)).sort()];
+  }
+  function skuForSize(product, size) { return product.skuBySize?.[size] || `${product.baseSku}-${size}`; }
   function totalStock(product) { return Object.values(product.sizes).reduce((sum, qty) => sum + Number(qty || 0), 0); }
   function availableStock(product) { return Math.max(0, totalStock(product) - Number(product.reserved || 0)); }
   function isLow(product) { return Object.values(product.sizes).some((qty) => Number(qty) <= Number(product.safety)); }
@@ -156,7 +171,7 @@
   }
 
   function renderSizeBand(product) {
-    return `<div class="size-band">${sizeOrder.filter((size) => size in product.sizes).map((size) => {
+    return `<div class="size-band">${orderedSizes(product).map((size) => {
       const qty = Number(product.sizes[size] || 0);
       const cls = qty === 0 ? "empty" : qty <= product.safety ? "low" : "";
       return `<div class="size-stock ${cls}" title="${size} 码：${qty} 件"><div><span>${size}</span><strong>${qty}</strong></div></div>`;
@@ -164,7 +179,10 @@
   }
 
   function productCell(product) {
-    return `<div class="product-cell"><img class="product-thumb" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} 面料"><div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(product.baseSku)}</code></div></div>`;
+    const image = product.image
+      ? `<button class="product-image-button" type="button" data-image-preview data-image-src="${escapeHtml(product.image)}" data-image-name="${escapeHtml(product.name)}" data-image-sku="${escapeHtml(product.baseSku)}" title="双击查看大图" aria-label="查看 ${escapeHtml(product.name)} 大图"><img class="product-thumb" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} 商品图片"></button>`
+      : '<span class="product-image-placeholder" title="CoZ 暂未提供商品图片"><i data-lucide="image-off"></i></span>';
+    return `<div class="product-cell">${image}<div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(product.baseSku)}</code></div></div>`;
   }
 
   function statusBadge(product) {
@@ -174,8 +192,13 @@
   function renderOverview() {
     const available = totalAvailable();
     const lowCount = lowSkuCount();
+    const isCoz = state.source?.type === "coz";
     $("metricAvailable").textContent = formatNumber(available);
     $("metricLow").textContent = lowCount;
+    $("metricSold").textContent = isCoz ? "--" : "36";
+    $("metricSoldDetail").textContent = isCoz ? "CoZ 暂未提供" : "线上 24 · 门店 12";
+    $("metricTransit").textContent = isCoz ? "--" : "280";
+    $("metricTransitDetail").textContent = isCoz ? "CoZ 暂未提供" : "3 个采购单 · 最早 8/12 到货";
     $("navLowCount").textContent = lowCount;
     $("attentionCount").textContent = lowCount;
     $("attentionBand").hidden = lowCount === 0;
@@ -189,7 +212,9 @@
         <td>${statusBadge(product)}</td>
       </tr>`).join("");
 
-    const channels = [
+    const channels = isCoz ? [
+      { name: "CoZ 实时库存", value: available, color: "#176b54" }
+    ] : [
       { name: "品牌小程序", value: Math.round(available * .42), color: "#176b54" },
       { name: "天猫旗舰店", value: Math.round(available * .31), color: "#386a82" },
       { name: "静安门店", value: Math.round(available * .19), color: "#bd7914" },
@@ -199,8 +224,9 @@
     $("channelBars").innerHTML = channels.map((channel) => `
       <div><div class="bar-label"><span>${channel.name}</span><span>${formatNumber(channel.value)} 件</span></div><div class="bar-track"><i style="width:${Math.max(4, channel.value / available * 100)}%;--bar:${channel.color}"></i></div></div>`).join("");
 
-    $("activityList").innerHTML = state.movements.slice(0, 4).map((movement) => `
-      <div class="activity"><span class="activity-icon ${movement.type}"><i data-lucide="${movement.type === "inbound" ? "package-plus" : movement.type === "outbound" ? "package-minus" : "clipboard-check"}"></i></span><div><p>${movement.type === "inbound" ? "入库" : movement.type === "outbound" ? "出库" : "盘点调整"} <strong>${Math.abs(movement.qty)} 件</strong> · ${escapeHtml(shortSku(movement.sku))}</p><small>${escapeHtml(movement.location)} · ${escapeHtml(movement.time.slice(5))}</small></div></div>`).join("");
+    $("activityList").innerHTML = state.movements.length ? state.movements.slice(0, 4).map((movement) => `
+      <div class="activity"><span class="activity-icon ${movement.type}"><i data-lucide="${movement.type === "inbound" ? "package-plus" : movement.type === "outbound" ? "package-minus" : "clipboard-check"}"></i></span><div><p>${movement.type === "inbound" ? "入库" : movement.type === "outbound" ? "出库" : "盘点调整"} <strong>${Math.abs(movement.qty)} 件</strong> · ${escapeHtml(shortSku(movement.sku))}</p><small>${escapeHtml(movement.location)} · ${escapeHtml(movement.time.slice(5))}</small></div></div>`).join("")
+      : '<div class="activity-empty"><i data-lucide="history"></i><span>接口未提供出入库流水</span></div>';
   }
 
   function getFilteredProducts() {
@@ -217,6 +243,7 @@
 
   function renderInventory() {
     const products = getFilteredProducts();
+    const isCoz = state.source?.type === "coz";
     $("resultCount").textContent = products.reduce((sum, product) => sum + Object.keys(product.sizes).length, 0);
     $("resultAvailable").textContent = formatNumber(products.reduce((sum, product) => sum + availableStock(product), 0));
     $("inventoryRows").innerHTML = products.map((product) => `
@@ -224,9 +251,9 @@
         <td>${productCell(product)}</td>
         <td class="color-cell"><span class="swatch" style="background:${escapeHtml(product.colorHex)}"></span>${escapeHtml(product.color)}</td>
         <td>${renderSizeBand(product)}</td>
-        <td class="num">${formatNumber(product.warehouse)}</td>
-        <td class="num">${formatNumber(product.store)}</td>
-        <td class="num">${formatNumber(product.reserved)}</td>
+        <td class="num">${isCoz ? "--" : formatNumber(product.warehouse)}</td>
+        <td class="num">${isCoz ? "--" : formatNumber(product.store)}</td>
+        <td class="num">${isCoz && !product.reservedReported ? "--" : formatNumber(product.reserved)}</td>
         <td class="num"><span class="stock-number">${formatNumber(availableStock(product))}</span></td>
         <td>${statusBadge(product)}</td>
         <td><button class="row-action" data-move-product="${product.id}" type="button" title="调整库存"><i data-lucide="arrow-left-right"></i></button></td>
@@ -260,6 +287,16 @@
 
   function renderChannels() {
     const available = totalAvailable();
+    if (state.source?.type === "coz") {
+      const syncedAt = new Date(state.source.syncedAt).toLocaleString(currentLang === "zh" ? "zh-CN" : "en", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      $("channelCards").innerHTML = `
+        <article class="channel-card" style="--channel-color:#176b54">
+          <div class="channel-card-head"><span class="channel-logo">CoZ</span><span class="connection">同步正常</span></div>
+          <h3>CoZ 实时库存</h3><p>${escapeHtml(syncedAt)} · ${formatNumber(state.source.skuCount)} SKU</p>
+          <div class="channel-stats"><div><span>可售库存</span><strong>${formatNumber(available)}</strong></div><div><span>库存来源</span><strong>API</strong></div></div>
+        </article>`;
+      return;
+    }
     const channels = [
       { code: "微", name: "品牌小程序", sub: "微信自营商城", color: "#176b54", stock: Math.round(available * .42), orders: 14 },
       { code: "TM", name: "天猫旗舰店", sub: "平台电商", color: "#c94743", stock: Math.round(available * .31), orders: 10 },
@@ -280,19 +317,43 @@
     $("categoryFilter").value = selected;
   }
 
+  function renderSkuCategoryOptions(selectedCategory) {
+    state.products.forEach((product) => {
+      if (product.category && !categoryCodes[product.category]) categoryCodes[product.category] = "CAT";
+    });
+    const select = $("skuCategory");
+    const selected = selectedCategory || select.value;
+    select.innerHTML = Object.entries(categoryCodes).map(([name, code]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} · ${escapeHtml(code)}</option>`).join("");
+    if ([...select.options].some((option) => option.value === selected)) select.value = selected;
+  }
+
+  function renderSyncState() {
+    const node = document.querySelector(".sync-state");
+    if (!node) return;
+    if (state.source?.type !== "coz") {
+      node.innerHTML = "<span></span> 数据已保存到本机";
+      return;
+    }
+    const syncedAt = new Date(state.source.syncedAt).toLocaleTimeString(currentLang === "zh" ? "zh-CN" : "en", { hour: "2-digit", minute: "2-digit" });
+    node.innerHTML = `<span></span> ${currentLang === "zh" ? "CoZ 实时库存" : "CoZ live inventory"} · ${escapeHtml(syncedAt)}`;
+    node.title = `${formatNumber(state.source.skuCount)} SKU`;
+  }
+
   function renderMovementSkuOptions() {
     const current = $("movementSku").value;
-    $("movementSku").innerHTML = state.products.flatMap((product) => sizeOrder.filter((size) => size in product.sizes).map((size) => `<option value="${product.id}|${size}">${escapeHtml(product.baseSku)}-${size} · ${escapeHtml(product.name)}</option>`)).join("");
+    $("movementSku").innerHTML = state.products.flatMap((product) => orderedSizes(product).map((size) => `<option value="${product.id}|${size}">${escapeHtml(skuForSize(product, size))} · ${escapeHtml(product.name)}</option>`)).join("");
     if ([...$("movementSku").options].some((option) => option.value === current)) $("movementSku").value = current;
   }
 
   function renderAll() {
     renderCategoryOptions();
+    renderSkuCategoryOptions();
     renderMovementSkuOptions();
     renderOverview();
     renderInventory();
     renderMovements();
     renderChannels();
+    renderSyncState();
     refreshIcons();
     applyLanguage();
   }
@@ -312,7 +373,7 @@
     renderMovementSkuOptions();
     if (productId) {
       const product = state.products.find((item) => item.id === productId);
-      const preferredSize = size || sizeOrder.find((item) => item in product.sizes) || "M";
+      const preferredSize = size || orderedSizes(product)[0] || "M";
       $("movementSku").value = `${productId}|${preferredSize}`;
     }
     $("movementModal").hidden = false;
@@ -326,6 +387,7 @@
   }
 
   function openSkuModal() {
+    renderSkuCategoryOptions();
     $("skuModal").hidden = false;
     document.body.style.overflow = "hidden";
     updateSkuPreview();
@@ -334,6 +396,71 @@
 
   function closeSkuModal() {
     $("skuModal").hidden = true;
+    closeCategoryCreator();
+    document.body.style.overflow = "";
+  }
+
+  function openCategoryCreator() {
+    $("categoryCreator").hidden = false;
+    $("addCategoryBtn").setAttribute("aria-expanded", "true");
+    setTimeout(() => $("newCategoryName").focus(), 20);
+  }
+
+  function closeCategoryCreator() {
+    $("categoryCreator").hidden = true;
+    $("addCategoryBtn").setAttribute("aria-expanded", "false");
+    $("newCategoryName").value = "";
+    $("newCategoryCode").value = "";
+  }
+
+  function addCategory() {
+    const name = $("newCategoryName").value.trim();
+    const code = $("newCategoryCode").value.trim().toUpperCase();
+    if (!name) {
+      showToast("请输入品类名称");
+      $("newCategoryName").focus();
+      return;
+    }
+    if (!/^[A-Z0-9]{2,5}$/.test(code)) {
+      showToast("SKU 缩写需为 2 至 5 位英文或数字");
+      $("newCategoryCode").focus();
+      return;
+    }
+    const existingName = Object.keys(categoryCodes).find((category) => category.toLowerCase() === name.toLowerCase());
+    const existingCode = Object.entries(categoryCodes).find(([, categoryCode]) => categoryCode === code);
+    if (existingName) {
+      renderSkuCategoryOptions(existingName);
+      closeCategoryCreator();
+      updateSkuPreview();
+      showToast(`品类“${existingName}”已存在并已选中`);
+      return;
+    }
+    if (existingCode) {
+      showToast(`SKU 缩写 ${code} 已用于“${existingCode[0]}”`);
+      $("newCategoryCode").focus();
+      return;
+    }
+    categoryCodes[name] = code;
+    saveCategoryCodes();
+    renderSkuCategoryOptions(name);
+    closeCategoryCreator();
+    updateSkuPreview();
+    showToast(`品类“${name}”已添加并选中`);
+  }
+
+  function openImageModal(button) {
+    $("imageModalPreview").src = button.dataset.imageSrc;
+    $("imageModalPreview").alt = `${button.dataset.imageName} 商品图片`;
+    $("imageModalName").textContent = button.dataset.imageName;
+    $("imageModalSku").textContent = button.dataset.imageSku;
+    $("imageModal").hidden = false;
+    document.body.style.overflow = "hidden";
+    setTimeout(() => $("imageModal").querySelector("[data-close-image]").focus(), 20);
+  }
+
+  function closeImageModal() {
+    $("imageModal").hidden = true;
+    $("imageModalPreview").removeAttribute("src");
     document.body.style.overflow = "";
   }
 
@@ -367,7 +494,7 @@
       id: `${type === "inbound" ? "IN" : "OUT"}-${compactDateKey()}-${sequence}`,
       time: stamp,
       type,
-      sku: `${product.baseSku}-${size}`,
+      sku: skuForSize(product, size),
       location,
       qty: qty * direction,
       operator: "Rayna Li",
@@ -409,6 +536,7 @@
     saveState();
     closeSkuModal();
     $("skuForm").reset();
+    renderSkuCategoryOptions();
     renderAll();
     showToast(`SKU ${baseSku}-${size} 已创建`);
   }
@@ -416,7 +544,7 @@
   function exportInventory() {
     const headers = ["SKU", "款式", "品类", "颜色", "尺码", "库存", "安全库存", "状态"];
     const rows = state.products.flatMap((product) => Object.entries(product.sizes).map(([size, qty]) => [
-      `${product.baseSku}-${size}`, product.name, product.category, product.color, size, qty, product.safety, qty <= product.safety ? "低库存" : "正常"
+      skuForSize(product, size), product.name, product.category, product.color, size, qty, product.safety, qty <= product.safety ? "低库存" : "正常"
     ]));
     const csv = "\ufeff" + [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -435,6 +563,87 @@
     toastTimer = setTimeout(() => $("toast").classList.remove("visible"), 2800);
   }
 
+  function stateFromCozSnapshot(snapshot) {
+    const groups = new Map();
+    snapshot.inventory.forEach((item) => {
+      const style = String(item.styleNo || item.sku || "").trim();
+      const color = String(item.color || "未设置颜色").trim();
+      const size = String(item.size || "Free Size").trim();
+      if (!style || !item.sku) return;
+      const key = `${style}\u0000${color}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          name: item.productName || item.styleNote || style,
+          category: item.category || "成衣",
+          style,
+          baseSku: style,
+          color,
+          colorHex: "#8a918d",
+          safety: 0,
+          image: "",
+          sizes: {},
+          skuBySize: {},
+          warehouse: 0,
+          store: 0,
+          reserved: 0,
+          reservedReported: false,
+          sourceUpdatedAt: item.sourceUpdatedAt || null
+        });
+      }
+      const product = groups.get(key);
+      product.sizes[size] = Number(product.sizes[size] || 0) + Number(item.stockedQuantity || 0);
+      if (!product.skuBySize[size]) product.skuBySize[size] = String(item.sku);
+      product.warehouse += Number(item.stockedQuantity || 0);
+      product.reserved += Number(item.reservedQuantity || 0);
+      product.reservedReported ||= Boolean(item.reservedReported);
+      if (item.productName && product.name === style) product.name = item.productName;
+      if (item.sourceUpdatedAt && (!product.sourceUpdatedAt || item.sourceUpdatedAt > product.sourceUpdatedAt)) product.sourceUpdatedAt = item.sourceUpdatedAt;
+    });
+
+    const products = [...groups.values()]
+      .sort((a, b) => a.style.localeCompare(b.style) || a.color.localeCompare(b.color))
+      .map((product, index) => ({ id: `COZ-${String(index + 1).padStart(4, "0")}`, ...product }));
+    if (!products.length) throw new Error("CoZ 同步数据中没有有效 SKU");
+    return {
+      products,
+      movements: [],
+      source: {
+        type: "coz",
+        brand: "CoZ",
+        syncedAt: snapshot.syncedAt,
+        skuCount: snapshot.skuCount,
+        stockedQuantity: snapshot.stockedQuantity,
+        sourceRowCount: snapshot.sourceRowCount,
+        allRowsLoaded: snapshot.allRowsLoaded
+      }
+    };
+  }
+
+  function receiveCozSnapshot(event) {
+    const message = event.data;
+    const bridgeToken = new URLSearchParams(window.location.search).get("bridge") || "";
+    if (!bridgeToken || event.source !== window.opener) return;
+    if (message?.type !== "COZ_INVENTORY_SNAPSHOT" || message.version !== 1 || message.bridgeToken !== bridgeToken) return;
+    const snapshot = message.snapshot;
+    if (snapshot?.brand !== "CoZ" || !Array.isArray(snapshot.inventory) || snapshot.inventory.length > 50000) return;
+    try {
+      state = stateFromCozSnapshot(snapshot);
+      saveState();
+      renderAll();
+      showToast(`CoZ 库存已同步：${formatNumber(state.source.skuCount)} 个 SKU`);
+    } catch (error) {
+      showToast(error?.message || "CoZ 库存数据无法读取");
+    }
+  }
+
+  function initCozBridge() {
+    window.addEventListener("message", receiveCozSnapshot);
+    const params = new URLSearchParams(window.location.search);
+    const bridgeToken = params.get("bridge") || "";
+    if (params.get("coz-sync") !== "1" || !bridgeToken || !window.opener) return;
+    setTimeout(() => window.opener?.postMessage({ type: "COZ_INVENTORY_READY", version: 1, bridgeToken }, "*"), 350);
+  }
+
   function bindEvents() {
     document.addEventListener("click", (event) => {
       const viewButton = event.target.closest("[data-view]");
@@ -445,11 +654,43 @@
       if (moveButton) openMovementModal(moveButton.dataset.moveProduct);
       if (event.target.closest("[data-close-modal]")) closeMovementModal();
       if (event.target.closest("[data-close-sku]")) closeSkuModal();
+      if (event.target.closest("[data-close-image]")) closeImageModal();
+    });
+    document.addEventListener("dblclick", (event) => {
+      const imageButton = event.target.closest("[data-image-preview]");
+      if (imageButton) openImageModal(imageButton);
+    });
+    let lastTouchTarget = null;
+    let lastTouchAt = 0;
+    document.addEventListener("pointerup", (event) => {
+      if (event.pointerType !== "touch") return;
+      const imageButton = event.target.closest("[data-image-preview]");
+      if (!imageButton) return;
+      const now = Date.now();
+      if (lastTouchTarget === imageButton && now - lastTouchAt < 360) openImageModal(imageButton);
+      lastTouchTarget = imageButton;
+      lastTouchAt = now;
+    });
+    document.addEventListener("keydown", (event) => {
+      const imageButton = event.target.closest?.("[data-image-preview]");
+      if (imageButton && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        openImageModal(imageButton);
+      }
     });
     $("quickMoveBtn").addEventListener("click", () => openMovementModal());
     $("mobileMoveBtn").addEventListener("click", () => openMovementModal());
     $("scanBtn").addEventListener("click", () => { openMovementModal(); showToast("请选择或扫描 SKU 后调整库存"); });
     $("addSkuBtn").addEventListener("click", openSkuModal);
+    $("addCategoryBtn").addEventListener("click", openCategoryCreator);
+    $("cancelCategoryBtn").addEventListener("click", closeCategoryCreator);
+    $("saveCategoryBtn").addEventListener("click", addCategory);
+    ["newCategoryName", "newCategoryCode"].forEach((id) => $(id).addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addCategory();
+      }
+    }));
     $("movementForm").addEventListener("submit", submitMovement);
     $("skuForm").addEventListener("submit", submitSku);
     $("exportBtn").addEventListener("click", exportInventory);
@@ -474,6 +715,7 @@
       if (event.key !== "Escape") return;
       if (!$("movementModal").hidden) closeMovementModal();
       if (!$("skuModal").hidden) closeSkuModal();
+      if (!$("imageModal").hidden) closeImageModal();
     });
   }
 
@@ -485,6 +727,7 @@
   }
 
   initDate();
+  initCozBridge();
   bindEvents();
   applyTheme();
   renderAll();

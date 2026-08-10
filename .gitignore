@@ -4,5 +4,9 @@
 /*.png
 __pycache__/
 *.pyc
+coz-response*.json
+coz-inventory*.json
+coz-inventory*.csv
+tools/coz_inventory_bridge.user.js
 
 .vercel

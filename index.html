@@ -78,8 +78,8 @@
           </article>
           <article class="metric">
             <div class="metric-label"><i data-lucide="shopping-bag"></i><span>今日售出</span></div>
-            <strong>36</strong>
-            <p>线上 24 · 门店 12</p>
+            <strong id="metricSold">36</strong>
+            <p id="metricSoldDetail">线上 24 · 门店 12</p>
           </article>
           <article class="metric">
             <div class="metric-label"><i data-lucide="circle-alert"></i><span>低库存 SKU</span></div>
@@ -88,8 +88,8 @@
           </article>
           <article class="metric">
             <div class="metric-label"><i data-lucide="truck"></i><span>在途库存</span></div>
-            <strong>280</strong>
-            <p>3 个采购单 · 最早 8/12 到货</p>
+            <strong id="metricTransit">280</strong>
+            <p id="metricTransitDetail">3 个采购单 · 最早 8/12 到货</p>
           </article>
         </section>
 
@@ -226,7 +226,18 @@
       <form id="skuForm">
         <div class="form-grid">
           <label><span>款式名称</span><input id="skuName" required placeholder="例如：轻量针织开衫"></label>
-          <label><span>品类</span><select id="skuCategory"><option>上装</option><option>下装</option><option>连衣裙</option><option>外套</option><option>配饰</option></select></label>
+          <div class="form-field category-field">
+            <div class="field-title"><label for="skuCategory">品类</label><button class="inline-add" id="addCategoryBtn" type="button" aria-expanded="false" aria-controls="categoryCreator"><i data-lucide="plus"></i>添加品类</button></div>
+            <select id="skuCategory"></select>
+            <div class="category-creator" id="categoryCreator" hidden>
+              <input id="newCategoryName" maxlength="16" placeholder="品类名称，例如：家居服" aria-label="品类名称">
+              <input id="newCategoryCode" maxlength="5" placeholder="SKU 缩写，例如：HOM" aria-label="SKU 缩写">
+              <div class="category-creator-actions">
+                <button class="mini-icon-button" id="cancelCategoryBtn" type="button" title="取消添加品类" aria-label="取消添加品类"><i data-lucide="x"></i></button>
+                <button class="mini-icon-button confirm" id="saveCategoryBtn" type="button" title="保存品类" aria-label="保存品类"><i data-lucide="check"></i></button>
+              </div>
+            </div>
+          </div>
           <label><span>款号</span><input id="skuStyle" required placeholder="例如：JA2608"></label>
           <label><span>颜色代码</span><input id="skuColor" required maxlength="3" placeholder="例如：BLK"></label>
           <label><span>尺码</span><select id="skuSize"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option></select></label>
@@ -235,6 +246,20 @@
         <div class="sku-preview"><span>SKU 编码预览</span><code id="skuPreview">JA-FW26-TOP-JA2608-BLK-M</code><small>品牌-季节-品类-款号-颜色-尺码</small></div>
         <div class="form-actions"><button class="button secondary" data-close-sku type="button">取消</button><button class="button primary" type="submit">创建 SKU</button></div>
       </form>
+    </section>
+  </div>
+
+  <div class="modal image-modal" id="imageModal" hidden>
+    <div class="modal-backdrop" data-close-image></div>
+    <section class="image-viewer-panel" role="dialog" aria-modal="true" aria-labelledby="imageModalTitle">
+      <header class="image-viewer-head">
+        <div><span class="section-kicker">PRODUCT IMAGE</span><h2 id="imageModalTitle">商品图片</h2></div>
+        <button class="icon-button" data-close-image type="button" aria-label="关闭图片"><i data-lucide="x"></i></button>
+      </header>
+      <figure class="image-viewer-figure">
+        <div class="image-stage"><img id="imageModalPreview" alt=""></div>
+        <figcaption><strong id="imageModalName"></strong><code id="imageModalSku"></code></figcaption>
+      </figure>
     </section>
   </div>
 

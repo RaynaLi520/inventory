@@ -29,7 +29,16 @@ JA 成衣库存中台
 - assets/seed-data.js：初始数据
 - assets/supabase-config.js：Supabase 前端连接配置
 - tools/import_fabrics.py：Excel 面料数据导入脚本
+- tools/normalize_coz_inventory.py：将 CoZ GetTableDataWithOffset 响应按品牌筛选、按 SKU 去重并标准化为 JSON/CSV
 - supabase-schema.sql：Supabase 数据表和策略 SQL
+
+CoZ 库存响应验证：
+python tools\normalize_coz_inventory.py "响应文件路径" --brand CoZ
+
+生成标准化 JSON：
+python tools\normalize_coz_inventory.py "响应文件路径" --brand CoZ --output coz-inventory.json
+
+原始响应和标准化库存文件已加入 .gitignore，避免把内部库存数据提交到 GitHub。
 
 登录和权限配置：
 1. 在 Supabase Dashboard > Authentication > Providers 中启用 Email。
