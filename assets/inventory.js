@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "ja-garment-inventory-v1";
   const CATEGORY_STORAGE_KEY = "ja-garment-categories-v1";
+  const STOCK_HISTORY_KEY = "ja-garment-stock-history-v1";
   const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "F"];
   const defaultCategoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
   const categoryCodes = loadCategoryCodes();
@@ -16,7 +17,7 @@
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
     ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
     ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
-    ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], ["经典卫衣和阔腿裤部分尺码已低于安全库存。", "Some sizes of the classic hoodie and wide-leg pants are below safety stock."], [" 个 SKU 需要处理", " SKUs need action"],
+    ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], [" 个 SKU 需要处理", " SKUs need action"],
     ["可售库存", "Sellable stock"], ["今日售出", "Sold today"], ["低库存 SKU", "Low-stock SKUs"], ["在途库存", "In transit"], ["较上周", "vs last week"], ["需处理", "Needs action"], ["低于安全库存", "Below safety stock"], ["3 个采购单 · 最早 8/12 到货", "3 purchase orders · earliest arrival Aug 12"], ["线上 24 · 门店 12", "Online 24 · Store 12"], ["4.8%", "4.8%"],
     ["个 SKU · 实时可售", "SKUs · sellable now"], ["件", "pcs"], ["件可售库存", "sellable pcs"], ["重点款库存", "Priority stock"], ["全部 SKU", "All SKUs"], ["渠道库存", "Channel stock"], ["最近动态", "Recent activity"], ["库存总览", "Stock overview"], ["库存正常", "Healthy"], ["低库存", "Low stock"], ["LIVE STOCK", "LIVE STOCK"], ["ALLOCATION", "ALLOCATION"],
     ["品牌小程序", "Brand mini-program"], ["天猫旗舰店", "Tmall flagship"], ["静安门店", "Jing'an store"], ["机动库存", "Buffer stock"], ["渠道可售", "Channel sellable"], ["今日订单", "Orders today"], ["同步正常", "Sync healthy"], ["微信自营商城", "WeChat direct store"], ["平台电商", "Marketplace"], ["线下直营", "Offline retail"], ["2 分钟前同步", "Synced 2 min ago"],
@@ -74,6 +75,7 @@
   };
 
   let state = loadState();
+  let stockHistory = loadStockHistory();
   let activeView = "overview";
   let toastTimer = null;
   let currentLang = localStorage.getItem("ja-garment-language") || "zh";
@@ -178,6 +180,38 @@
     return clone(seedState);
   }
   function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function loadStockHistory() {
+    try {
+      const history = JSON.parse(localStorage.getItem(STOCK_HISTORY_KEY));
+      if (!Array.isArray(history)) return [];
+      return history.filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(entry?.day) && Number.isFinite(Number(entry.available)))
+        .map((entry) => ({ day: entry.day, available: Number(entry.available), syncedAt: entry.syncedAt || `${entry.day}T23:59:59` }))
+        .sort((a, b) => a.day.localeCompare(b.day));
+    } catch (_) { return []; }
+  }
+  function recordStockSnapshot(available, syncedAt = new Date()) {
+    const date = syncedAt instanceof Date ? syncedAt : new Date(syncedAt);
+    if (Number.isNaN(date.getTime())) return;
+    const day = localDateKey(date);
+    const entry = { day, available: Number(available || 0), syncedAt: date.toISOString() };
+    const existing = stockHistory.findIndex((item) => item.day === day);
+    if (existing >= 0) stockHistory[existing] = entry;
+    else stockHistory.push(entry);
+    const cutoff = new Date(date);
+    cutoff.setDate(cutoff.getDate() - 45);
+    stockHistory = stockHistory.filter((item) => item.day >= localDateKey(cutoff)).sort((a, b) => a.day.localeCompare(b.day));
+    try { localStorage.setItem(STOCK_HISTORY_KEY, JSON.stringify(stockHistory)); }
+    catch (_) { /* Inventory rendering must continue if browser storage is full. */ }
+  }
+  function weeklyStockTrend(currentAvailable, now = new Date()) {
+    const previousWeek = new Date(now);
+    previousWeek.setDate(previousWeek.getDate() - 7);
+    const baseline = stockHistory.find((entry) => entry.day === localDateKey(previousWeek));
+    if (!baseline) return { kind: "pending" };
+    if (baseline.available === 0) return currentAvailable === 0 ? { kind: "flat", percent: 0 } : { kind: "up", percent: null };
+    const percent = (currentAvailable - baseline.available) / baseline.available * 100;
+    return { kind: Math.abs(percent) < .05 ? "flat" : percent > 0 ? "up" : "down", percent };
+  }
   function orderedSizes(product) {
     const availableSizes = Object.keys(product.sizes || {});
     return [...sizeOrder.filter((size) => availableSizes.includes(size)), ...availableSizes.filter((size) => !sizeOrder.includes(size)).sort()];
@@ -253,11 +287,37 @@
     return isLow(product) ? '<span class="status low">低库存</span>' : '<span class="status healthy">库存正常</span>';
   }
 
+  function renderWeeklyTrend(available) {
+    const trend = weeklyStockTrend(available);
+    const node = $("metricAvailableTrend");
+    if (trend.kind === "pending") {
+      node.innerHTML = `<span class="trend pending"><i data-lucide="history"></i>${currentLang === "zh" ? "暂无上周数据" : "No prior-week data"}</span>`;
+      return;
+    }
+    const direction = trend.kind === "up" ? "trending-up" : trend.kind === "down" ? "trending-down" : "minus";
+    const value = trend.percent == null
+      ? (currentLang === "zh" ? "新增库存" : "New stock")
+      : `${trend.percent > 0 ? "+" : ""}${trend.percent.toFixed(1)}%`;
+    node.innerHTML = `<span class="trend ${trend.kind}"><i data-lucide="${direction}"></i>${value}</span> ${currentLang === "zh" ? "较上周" : "vs last week"}`;
+  }
+
+  function lowStockDescription() {
+    const affected = state.products.filter(isLow);
+    const names = [...new Set(affected.map((product) => String(product.name || product.style || product.baseSku).trim()).filter(Boolean))];
+    if (!names.length) return currentLang === "zh" ? "当前所有 SKU 均高于安全库存。" : "All SKUs are above safety stock.";
+    const listed = names.slice(0, 2).join(currentLang === "zh" ? "、" : ", ");
+    const more = names.length > 2 ? (currentLang === "zh" ? "等款式" : " and other styles") : "";
+    return currentLang === "zh"
+      ? `${listed}${more}的部分尺码已达到或低于安全库存。`
+      : `${listed}${more}: some sizes are at or below safety stock.`;
+  }
+
   function renderOverview() {
     const available = totalAvailable();
     const lowCount = lowSkuCount();
     const isCoz = state.source?.type === "coz";
     $("metricAvailable").textContent = formatNumber(available);
+    renderWeeklyTrend(available);
     $("metricLow").textContent = lowCount;
     $("metricSold").textContent = isCoz ? "--" : "36";
     $("metricSoldDetail").textContent = isCoz ? "CoZ 暂未提供" : "线上 24 · 门店 12";
@@ -265,6 +325,7 @@
     $("metricTransitDetail").textContent = isCoz ? "CoZ 暂未提供" : "3 个采购单 · 最早 8/12 到货";
     $("navLowCount").textContent = lowCount;
     $("attentionCount").textContent = lowCount;
+    $("attentionDescription").textContent = lowStockDescription();
     $("attentionBand").hidden = lowCount === 0;
 
     const focusProducts = [...state.products].sort((a, b) => Number(isLow(b)) - Number(isLow(a)) || availableStock(a) - availableStock(b)).slice(0, 5);
@@ -564,6 +625,7 @@
       operator: "Rayna Li",
       note: $("movementNote").value.trim() || "快速库存调整"
     });
+    recordStockSnapshot(totalAvailable(), now);
     saveState();
     closeMovementModal();
     $("movementForm").reset();
@@ -699,6 +761,7 @@
     if (snapshot?.brand !== "CoZ" || !Array.isArray(snapshot.inventory) || snapshot.inventory.length > 50000) return;
     try {
       state = stateFromCozSnapshot(snapshot);
+      recordStockSnapshot(totalAvailable(), snapshot.syncedAt || new Date());
       saveState();
       renderAll();
       showToast(`CoZ 库存已同步：${formatNumber(state.source.skuCount)} 个 SKU`);
@@ -798,6 +861,7 @@
   }
 
   initDate();
+  if (state.source?.type === "coz" && localDateKey(new Date(state.source.syncedAt)) === localDateKey()) recordStockSnapshot(totalAvailable(), state.source.syncedAt);
   initCozBridge();
   bindEvents();
   applyTheme();

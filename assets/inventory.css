@@ -157,6 +157,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .trend { display: inline-flex; align-items: center; gap: 2px; margin-right: 3px; font-weight: 700; }
 .trend svg { width: 11px; }
 .trend.up { color: #78d7af; }
+.trend.down { color: #ffc1b8; }
+.trend.flat, .trend.pending { color: #c5dcd4; }
 .trend.warn { padding: 2px 5px; border-radius: 3px; color: #9a5a00; background: var(--amber-soft); }
 
 .attention-band { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 13px; margin-top: 18px; padding: 13px 17px; border: 1px solid #e6d3aa; border-left: 3px solid var(--amber); background: #fffaf0; }
