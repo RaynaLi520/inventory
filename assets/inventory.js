@@ -4,6 +4,14 @@
   const STORAGE_KEY = "ja-garment-inventory-v1";
   const CATEGORY_STORAGE_KEY = "ja-garment-categories-v1";
   const STOCK_HISTORY_KEY = "ja-garment-stock-history-v1";
+  const CLOUD_TABLE = "inventory_platform_state";
+  const CLOUD_RECORD_ID = "default";
+  const cloudConfig = window.SUPABASE_CONFIG || {};
+  const supabaseClient = window.supabase && cloudConfig.url && cloudConfig.anonKey
+    ? window.supabase.createClient(cloudConfig.url, cloudConfig.anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+      })
+    : null;
   const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "F"];
   const defaultCategoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
   const categoryCodes = loadCategoryCodes();
@@ -79,6 +87,13 @@
   let activeView = "overview";
   let toastTimer = null;
   let currentLang = localStorage.getItem("ja-garment-language") || "zh";
+  let cloudStatus = supabaseClient ? "connecting" : "local";
+  let cloudUpdatedAt = null;
+  let cloudReady = false;
+  let cloudDirty = false;
+  let cloudSaveTimer = null;
+  let cloudRevision = 0;
+  let cloudChannel = null;
 
   function localDateKey(date = new Date()) {
     const year = date.getFullYear();
@@ -171,7 +186,10 @@
     } catch (_) { /* Use the packaged categories if local data is invalid. */ }
     return { ...defaultCategoryCodes };
   }
-  function saveCategoryCodes() { localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryCodes)); }
+  function saveCategoryCodes() {
+    localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryCodes));
+    queueCloudSave();
+  }
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -179,16 +197,133 @@
     } catch (_) { /* Use the packaged inventory sample if local data is invalid. */ }
     return clone(seedState);
   }
-  function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    queueCloudSave();
+  }
+  function normalizeStockHistory(history) {
+    if (!Array.isArray(history)) return [];
+    return history.filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(entry?.day) && Number.isFinite(Number(entry.available)))
+      .map((entry) => ({ day: entry.day, available: Number(entry.available), syncedAt: entry.syncedAt || `${entry.day}T23:59:59` }))
+      .sort((a, b) => a.day.localeCompare(b.day));
+  }
   function loadStockHistory() {
     try {
       const history = JSON.parse(localStorage.getItem(STOCK_HISTORY_KEY));
-      if (!Array.isArray(history)) return [];
-      return history.filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(entry?.day) && Number.isFinite(Number(entry.available)))
-        .map((entry) => ({ day: entry.day, available: Number(entry.available), syncedAt: entry.syncedAt || `${entry.day}T23:59:59` }))
-        .sort((a, b) => a.day.localeCompare(b.day));
+      return normalizeStockHistory(history);
     } catch (_) { return []; }
   }
+
+  function cloudDocument() {
+    return {
+      version: 1,
+      state,
+      categoryCodes: { ...categoryCodes },
+      stockHistory
+    };
+  }
+
+  function persistLocalCache() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryCodes));
+    localStorage.setItem(STOCK_HISTORY_KEY, JSON.stringify(stockHistory));
+  }
+
+  function queueCloudSave() {
+    cloudRevision += 1;
+    if (!supabaseClient || !cloudReady) {
+      cloudDirty = true;
+      return;
+    }
+    clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(() => persistCloudState(), 450);
+  }
+
+  async function persistCloudState() {
+    if (!supabaseClient || !cloudReady) return;
+    const revision = cloudRevision;
+    const updatedAt = new Date().toISOString();
+    cloudStatus = "syncing";
+    renderSyncState();
+    const { error } = await supabaseClient
+      .from(CLOUD_TABLE)
+      .upsert({ id: CLOUD_RECORD_ID, data: cloudDocument(), updated_at: updatedAt }, { onConflict: "id" });
+    if (error) {
+      cloudStatus = "error";
+      renderSyncState();
+      console.error("Supabase inventory save failed", error);
+      return;
+    }
+    cloudUpdatedAt = updatedAt;
+    cloudStatus = "synced";
+    cloudDirty = false;
+    renderSyncState();
+    if (revision !== cloudRevision) queueCloudSave();
+  }
+
+  function applyCloudDocument(document) {
+    if (!document?.state?.products?.length || !Array.isArray(document.state.movements)) return false;
+    state = upgradeCozState(clone(document.state));
+    Object.keys(categoryCodes).forEach((key) => delete categoryCodes[key]);
+    Object.assign(categoryCodes, defaultCategoryCodes, document.categoryCodes || {});
+    stockHistory = normalizeStockHistory(document.stockHistory);
+    persistLocalCache();
+    return true;
+  }
+
+  async function initCloudState() {
+    if (!supabaseClient) {
+      cloudStatus = "local";
+      renderSyncState();
+      return;
+    }
+    cloudStatus = "connecting";
+    renderSyncState();
+    const { data, error } = await supabaseClient
+      .from(CLOUD_TABLE)
+      .select("data,updated_at")
+      .eq("id", CLOUD_RECORD_ID)
+      .maybeSingle();
+    if (error) {
+      cloudStatus = "error";
+      renderSyncState();
+      console.error("Supabase inventory load failed", error);
+      return;
+    }
+    cloudReady = true;
+    if (cloudDirty || !data) {
+      await persistCloudState();
+      return;
+    }
+    if (applyCloudDocument(data.data)) {
+      cloudUpdatedAt = data.updated_at;
+      cloudStatus = "synced";
+      renderAll();
+    } else {
+      await persistCloudState();
+    }
+  }
+
+  function subscribeToCloudState() {
+    if (!supabaseClient || !cloudReady || cloudChannel) return;
+    cloudChannel = supabaseClient
+      .channel("inventory-platform-state")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: CLOUD_TABLE,
+        filter: `id=eq.${CLOUD_RECORD_ID}`
+      }, (payload) => {
+        const remote = payload.new;
+        if (!remote?.data || remote.updated_at === cloudUpdatedAt || cloudStatus === "syncing") return;
+        if (!applyCloudDocument(remote.data)) return;
+        cloudUpdatedAt = remote.updated_at;
+        cloudStatus = "synced";
+        renderAll();
+      })
+      .subscribe();
+  }
+
   function recordStockSnapshot(available, syncedAt = new Date()) {
     const date = syncedAt instanceof Date ? syncedAt : new Date(syncedAt);
     if (Number.isNaN(date.getTime())) return;
@@ -202,6 +337,7 @@
     stockHistory = stockHistory.filter((item) => item.day >= localDateKey(cutoff)).sort((a, b) => a.day.localeCompare(b.day));
     try { localStorage.setItem(STOCK_HISTORY_KEY, JSON.stringify(stockHistory)); }
     catch (_) { /* Inventory rendering must continue if browser storage is full. */ }
+    queueCloudSave();
   }
   function weeklyStockTrend(currentAvailable, now = new Date()) {
     const previousWeek = new Date(now);
@@ -455,13 +591,19 @@
   function renderSyncState() {
     const node = document.querySelector(".sync-state");
     if (!node) return;
-    if (state.source?.type !== "coz") {
-      node.innerHTML = "<span></span> 数据已保存到本机";
-      return;
+    node.dataset.status = cloudStatus;
+    const labels = currentLang === "zh"
+      ? { connecting: "正在连接云端", syncing: "正在同步云端", synced: "云端已同步", error: "云端失败，使用本地数据", local: "数据已保存到本机" }
+      : { connecting: "Connecting to cloud", syncing: "Syncing to cloud", synced: "Cloud synced", error: "Cloud unavailable, using local data", local: "Saved locally" };
+    let detail = "";
+    if (cloudStatus === "synced" && cloudUpdatedAt) {
+      const time = new Date(cloudUpdatedAt).toLocaleTimeString(currentLang === "zh" ? "zh-CN" : "en", { hour: "2-digit", minute: "2-digit" });
+      detail = ` · ${escapeHtml(time)}`;
     }
-    const syncedAt = new Date(state.source.syncedAt).toLocaleTimeString(currentLang === "zh" ? "zh-CN" : "en", { hour: "2-digit", minute: "2-digit" });
-    node.innerHTML = `<span></span> ${currentLang === "zh" ? "CoZ 实时库存" : "CoZ live inventory"} · ${escapeHtml(syncedAt)}`;
-    node.title = `${formatNumber(state.source.skuCount)} SKU`;
+    node.innerHTML = `<span></span> ${labels[cloudStatus] || labels.local}${detail}`;
+    node.title = state.source?.type === "coz"
+      ? `${currentLang === "zh" ? "CoZ 实时库存" : "CoZ live inventory"} · ${formatNumber(state.source.skuCount)} SKU`
+      : labels[cloudStatus] || labels.local;
   }
 
   function renderMovementSkuOptions() {
@@ -860,11 +1002,24 @@
     $("dateFull").textContent = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long" }).format(now);
   }
 
-  initDate();
-  if (state.source?.type === "coz" && localDateKey(new Date(state.source.syncedAt)) === localDateKey()) recordStockSnapshot(totalAvailable(), state.source.syncedAt);
-  initCozBridge();
-  bindEvents();
-  applyTheme();
-  renderAll();
-  switchView(activeView);
+  async function initialize() {
+    initDate();
+    bindEvents();
+    applyTheme();
+    renderAll();
+    switchView(activeView);
+    await initCloudState();
+    subscribeToCloudState();
+    if (state.source?.type === "coz" && localDateKey(new Date(state.source.syncedAt)) === localDateKey()) {
+      recordStockSnapshot(totalAvailable(), state.source.syncedAt);
+    }
+    initCozBridge();
+    window.addEventListener("online", async () => {
+      if (cloudStatus !== "error") return;
+      await initCloudState();
+      subscribeToCloudState();
+    });
+  }
+
+  initialize();
 })();

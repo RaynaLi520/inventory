@@ -9,10 +9,10 @@ JA 成衣库存中台
 
 项目说明：
 - 默认入口 index.html 是成衣库存 MVP，用 SKU 管理颜色/尺码变体、仓库与门店库存、出入库流水和渠道配额。
-- 当前库存 MVP 使用浏览器本机存储，可直接体验搜索筛选、低库存预警、快速出入库、新增 SKU 和 CSV 导出。
+- 当前库存平台以 Supabase 云端状态为主，并保留浏览器本机缓存作为断网备用；可直接使用搜索筛选、低库存预警、快速出入库、新增 SKU 和 CSV 导出。
 - 原面料填报平台完整保留在 fabric.html，用于记录面料、供应商报价、图片和图片备注。
 - inventory-schema.sql 是后续接入 Supabase 的规范化库存结构，请先执行 supabase-schema.sql，再执行该文件。
-- 数据通过 Supabase 云端数据库保存，不再使用匿名共享写入。
+- 面料报价工具通过 Supabase 账号和 RLS 保存数据，不使用匿名共享写入；成衣库存页当前采用下方说明的临时 anon 策略。
 - JA 身份可以查看已授权数据集；供应商只能查看和维护自己的数据集。
 - Excel 数据源用于批量导入面料库，网站内新增的面料会按添加时间排序。
 - 项目 GitHub 仓库：RaynaLi520/inventory。
@@ -28,6 +28,7 @@ JA 成衣库存中台
 - assets/styles.css：页面样式
 - assets/seed-data.js：初始数据
 - assets/supabase-config.js：Supabase 前端连接配置
+- supabase-inventory-state.sql：成衣库存云端状态表、RLS 策略与实时订阅配置
 - tools/import_fabrics.py：Excel 面料数据导入脚本
 - tools/normalize_coz_inventory.py：将 CoZ GetTableDataWithOffset 响应按品牌筛选、按 SKU 去重并标准化为 JSON/CSV
 - supabase-schema.sql：Supabase 数据表和策略 SQL
@@ -39,6 +40,12 @@ python tools\normalize_coz_inventory.py "响应文件路径" --brand CoZ
 python tools\normalize_coz_inventory.py "响应文件路径" --brand CoZ --output coz-inventory.json
 
 原始响应和标准化库存文件已加入 .gitignore，避免把内部库存数据提交到 GitHub。
+
+成衣库存云端配置：
+1. 在 Supabase SQL Editor 执行 supabase-inventory-state.sql（当前项目已经执行）。
+2. 页面首次打开时，如果云端还没有状态，会把该浏览器的本地库存迁移到云端；后续改动自动同步。
+3. 侧栏显示“云端已同步”代表写入成功；断网或接口失败时会显示本地模式，恢复网络后自动重试。
+4. 当前库存页没有登录，因此临时允许 anon 角色读写 default 状态。正式多人使用前应接入 Supabase Auth 并收紧 RLS 策略。
 
 登录和权限配置：
 1. 在 Supabase Dashboard > Authentication > Providers 中启用 Email。

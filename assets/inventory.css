@@ -89,6 +89,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sidebar-bottom { margin-top: auto; }
 .sync-state { display: flex; align-items: center; gap: 7px; padding: 14px 10px; border-bottom: 1px solid rgba(255,255,255,.11); color: #92afa4; font-size: 10px; }
 .sync-state span { width: 7px; height: 7px; border-radius: 50%; background: #56c596; box-shadow: 0 0 0 3px rgba(86,197,150,.12); }
+.sync-state[data-status="connecting"] span,
+.sync-state[data-status="syncing"] span { background: #f1bd55; box-shadow: 0 0 0 3px rgba(241,189,85,.15); }
+.sync-state[data-status="error"] span { background: #e07a72; box-shadow: 0 0 0 3px rgba(224,122,114,.15); }
 .profile-button { width: 100%; display: grid; grid-template-columns: 34px 1fr 16px; align-items: center; gap: 9px; margin-top: 12px; padding: 8px; border: 0; border-radius: 6px; color: #fff; background: transparent; text-align: left; cursor: pointer; }
 .profile-button:hover { background: rgba(255,255,255,.07); }
 .profile-button .avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #173f35; background: #dbe8e3; font: 700 11px Arial, sans-serif; }
