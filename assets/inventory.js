@@ -4,6 +4,7 @@
   const STORAGE_KEY = "ja-garment-inventory-v1";
   const CATEGORY_STORAGE_KEY = "ja-garment-categories-v1";
   const STOCK_HISTORY_KEY = "ja-garment-stock-history-v1";
+  const hasSavedLocalState = localStorage.getItem(STORAGE_KEY) !== null;
   const CLOUD_TABLE = "inventory_platform_state";
   const CLOUD_RECORD_ID = "default";
   const cloudConfig = window.SUPABASE_CONFIG || {};
@@ -291,8 +292,13 @@
       return;
     }
     cloudReady = true;
-    if (cloudDirty || !data) {
+    if (cloudDirty || (!data && hasSavedLocalState)) {
       await persistCloudState();
+      return;
+    }
+    if (!data) {
+      cloudStatus = "ready";
+      renderSyncState();
       return;
     }
     if (applyCloudDocument(data.data)) {
@@ -593,8 +599,8 @@
     if (!node) return;
     node.dataset.status = cloudStatus;
     const labels = currentLang === "zh"
-      ? { connecting: "正在连接云端", syncing: "正在同步云端", synced: "云端已同步", error: "云端失败，使用本地数据", local: "数据已保存到本机" }
-      : { connecting: "Connecting to cloud", syncing: "Syncing to cloud", synced: "Cloud synced", error: "Cloud unavailable, using local data", local: "Saved locally" };
+      ? { connecting: "正在连接云端", syncing: "正在同步云端", synced: "云端已同步", ready: "云端已连接，等待库存", error: "云端失败，使用本地数据", local: "数据已保存到本机" }
+      : { connecting: "Connecting to cloud", syncing: "Syncing to cloud", synced: "Cloud synced", ready: "Cloud connected, waiting for inventory", error: "Cloud unavailable, using local data", local: "Saved locally" };
     let detail = "";
     if (cloudStatus === "synced" && cloudUpdatedAt) {
       const time = new Date(cloudUpdatedAt).toLocaleTimeString(currentLang === "zh" ? "zh-CN" : "en", { hour: "2-digit", minute: "2-digit" });

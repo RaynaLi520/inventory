@@ -43,7 +43,7 @@ python tools\normalize_coz_inventory.py "响应文件路径" --brand CoZ --outpu
 
 成衣库存云端配置：
 1. 在 Supabase SQL Editor 执行 supabase-inventory-state.sql（当前项目已经执行）。
-2. 页面首次打开时，如果云端还没有状态，会把该浏览器的本地库存迁移到云端；后续改动自动同步。
+2. 页面首次打开时，如果云端还没有状态，会把该浏览器已有的本地库存迁移到云端；全新浏览器会等待首次库存改动或 CoZ 同步，不会上传内置演示数据。
 3. 侧栏显示“云端已同步”代表写入成功；断网或接口失败时会显示本地模式，恢复网络后自动重试。
 4. 当前库存页没有登录，因此临时允许 anon 角色读写 default 状态。正式多人使用前应接入 Supabase Auth 并收紧 RLS 策略。
 
