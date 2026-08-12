@@ -248,7 +248,21 @@ select, input[type="number"], input[type="text"] { height: 38px; border: 1px sol
 .bundle-component { display: grid; gap: 10px; min-width: 0; }
 .bundle-components label { display: flex; flex-direction: column; gap: 6px; }
 .bundle-components label > span { color: var(--muted); font-size: 12px; }
-.bundle-components select { width: 100%; padding: 0 10px; }
+.component-combobox { position: relative; min-width: 0; }
+.component-search-control { position: relative; display: flex; align-items: center; }
+.component-search-control > svg { position: absolute; left: 11px; z-index: 1; width: 16px; color: var(--muted); pointer-events: none; }
+.component-search-control input { padding: 0 38px 0 36px; text-overflow: ellipsis; }
+.component-clear { position: absolute; right: 4px; width: 34px; height: 34px; display: none; place-items: center; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+.component-combobox.has-value .component-clear { display: grid; }
+.component-clear svg { width: 15px; }
+.component-results { position: absolute; z-index: 65; top: calc(100% + 5px); left: 0; width: min(360px, calc(100vw - 72px)); max-height: 270px; overflow-y: auto; border: 1px solid var(--line-strong); border-radius: 5px; background: var(--surface); box-shadow: 0 13px 30px rgba(20, 34, 29, .18); }
+.bundle-component:last-child .component-results { right: 0; left: auto; }
+.component-result { width: 100%; display: grid; gap: 3px; padding: 10px 11px; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
+.component-result:last-child { border-bottom: 0; }
+.component-result:hover, .component-result.active { background: var(--green-soft); }
+.component-result strong { overflow: hidden; font: 700 13px/1.35 Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.component-result span { overflow: hidden; color: var(--muted); font-size: 12px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.component-result-empty { padding: 13px 11px; color: var(--muted); font-size: 12px; }
 .bundle-code { display: block; margin-top: 4px; color: #7b8581; font: 13px/1.35 Consolas, monospace; }
 .bundle-parts { display: flex; flex-wrap: wrap; gap: 5px; max-width: 360px; }
 .bundle-part { display: inline-flex; align-items: center; gap: 5px; padding: 5px 7px; border: 1px solid var(--line); color: var(--ink); background: var(--canvas); font-size: 13px; }
@@ -560,6 +574,7 @@ body.dark-theme .channel-card > p, body.dark-theme .activity p { color: #b9c9c1;
 body.dark-theme .sku-preview { background: #1d3a31; }
 body.dark-theme .category-creator { border-color: var(--line); background: #14241f; }
 body.dark-theme .variant-section { border-color: var(--line); background: #14241f; }
+body.dark-theme .component-results { background: var(--surface); box-shadow: 0 13px 30px rgba(0, 0, 0, .35); }
 
 @media (max-width: 640px) {
   .control-button { width: 38px; padding: 0; justify-content: center; }
@@ -573,6 +588,7 @@ body.dark-theme .variant-section { border-color: var(--line); background: #14241
   .sku-variant-head, .sku-variant-row { min-width: 500px; }
   .bundle-components { grid-template-columns: 1fr; }
   .bundle-components .field-title { grid-column: auto; flex-direction: column; gap: 2px; }
+  .component-results { position: static; width: 100%; max-height: 220px; margin-top: 5px; box-shadow: none; }
   .category-creator input:first-child { grid-column: 1 / -1; }
   .image-viewer-panel { max-height: calc(100vh - 20px); border-radius: 7px 7px 0 0; }
   .image-viewer-figure { grid-template-columns: 1fr; }

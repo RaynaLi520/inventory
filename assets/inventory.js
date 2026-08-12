@@ -6,6 +6,8 @@
   const ITEM_TYPE_STORAGE_KEY = "coz-spu-item-types-v1";
   const SPU_YEAR_STORAGE_KEY = "coz-spu-years-v1";
   const FABRIC_TYPE_STORAGE_KEY = "coz-spu-fabric-types-v1";
+  const BUNDLE_SEASON_STORAGE_KEY = "coz-bundle-seasons-v1";
+  const BUNDLE_COLOR_STORAGE_KEY = "coz-bundle-colors-v1";
   const STOCK_HISTORY_KEY = "ja-garment-stock-history-v1";
   const hasSavedLocalState = localStorage.getItem(STORAGE_KEY) !== null;
   const CLOUD_TABLE = "inventory_platform_state";
@@ -26,6 +28,8 @@
   const itemTypeCodes = loadItemTypeCodes();
   const spuYears = loadSpuYears();
   const fabricTypeCodes = loadFabricTypeCodes();
+  const bundleSeasons = loadStringOptions(BUNDLE_SEASON_STORAGE_KEY, ["SS26", "AW26"]);
+  const bundleColors = loadStringOptions(BUNDLE_COLOR_STORAGE_KEY, []);
   const viewMeta = {
     overview: ["库存中台 / 今日", "经营概览"],
     inventory: ["商品中心 / SKU", "成衣库存"],
@@ -35,7 +39,7 @@
   };
   const translationPairs = [
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
-    ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装 / BOM", "Virtual bundle / BOM"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["套装库存正常", "Bundle available"], ["套装不可售", "Bundle unavailable"], ["删除套装", "Delete bundle"],
+    ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装 / BOM", "Virtual bundle / BOM"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["添加季节", "Add season"], ["新季节", "New season"], ["添加颜色", "Add color"], ["新颜色", "New color"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["输入款号、名称或颜色检索", "Search style, name, or color"], ["清除组件", "Clear component"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["套装库存正常", "Bundle available"], ["套装不可售", "Bundle unavailable"], ["删除套装", "Delete bundle"],
     ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
     ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
     ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], [" 个 SKU 需要处理", " SKUs need action"],
@@ -228,9 +232,21 @@
     } catch (_) { /* Use the packaged fabric type mapping. */ }
     return { Woven: "W", Knit: "K" };
   }
+  function loadStringOptions(storageKey, defaults) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey));
+      if (Array.isArray(saved)) return [...new Set([...defaults, ...saved].map((value) => String(value || "").trim()).filter(Boolean))];
+    } catch (_) { /* Use the packaged options if local data is invalid. */ }
+    return [...defaults];
+  }
   function saveSpuOptions() {
     localStorage.setItem(SPU_YEAR_STORAGE_KEY, JSON.stringify(spuYears));
     localStorage.setItem(FABRIC_TYPE_STORAGE_KEY, JSON.stringify(fabricTypeCodes));
+    queueCloudSave();
+  }
+  function saveBundleOptions() {
+    localStorage.setItem(BUNDLE_SEASON_STORAGE_KEY, JSON.stringify(bundleSeasons));
+    localStorage.setItem(BUNDLE_COLOR_STORAGE_KEY, JSON.stringify(bundleColors));
     queueCloudSave();
   }
   function saveCategoryCodes() {
@@ -326,6 +342,8 @@
       itemTypeCodes: { ...itemTypeCodes },
       spuYears: [...spuYears],
       fabricTypeCodes: { ...fabricTypeCodes },
+      bundleSeasons: [...bundleSeasons],
+      bundleColors: [...bundleColors],
       stockHistory
     };
   }
@@ -336,6 +354,8 @@
     localStorage.setItem(ITEM_TYPE_STORAGE_KEY, JSON.stringify(itemTypeCodes));
     localStorage.setItem(SPU_YEAR_STORAGE_KEY, JSON.stringify(spuYears));
     localStorage.setItem(FABRIC_TYPE_STORAGE_KEY, JSON.stringify(fabricTypeCodes));
+    localStorage.setItem(BUNDLE_SEASON_STORAGE_KEY, JSON.stringify(bundleSeasons));
+    localStorage.setItem(BUNDLE_COLOR_STORAGE_KEY, JSON.stringify(bundleColors));
     localStorage.setItem(STOCK_HISTORY_KEY, JSON.stringify(stockHistory));
   }
 
@@ -381,6 +401,8 @@
     spuYears.splice(0, spuYears.length, ...[...new Set([2025, 2026, 2027, ...(document.spuYears || [])].map(Number).filter((year) => Number.isInteger(year) && year >= 2000 && year <= 2099))].sort());
     Object.keys(fabricTypeCodes).forEach((key) => delete fabricTypeCodes[key]);
     Object.assign(fabricTypeCodes, { Woven: "W", Knit: "K" }, document.fabricTypeCodes || {});
+    bundleSeasons.splice(0, bundleSeasons.length, ...[...new Set(["SS26", "AW26", ...(document.bundleSeasons || []), ...(document.state.bundles || []).map((bundle) => bundle.season)].map((value) => String(value || "").trim().toUpperCase()).filter(Boolean))]);
+    bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(document.state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
     stockHistory = normalizeStockHistory(document.stockHistory);
     persistLocalCache();
     return true;
@@ -509,6 +531,13 @@
     }
     if (themeButton) themeButton.title = currentLang === "zh" ? "切换主题" : "Switch theme";
     if ($("skuYear") && $("skuFabric")) renderSpuOptionSelectors($("skuYear").value, $("skuFabric").value);
+    if ($("bundleSeason") && $("bundleColor")) renderBundleOptionSelectors($("bundleSeason").value, $("bundleColor").value);
+    [1, 2, 3].forEach((index) => {
+      const search = $(`bundleComponentSearch${index}`);
+      if (search) search.placeholder = currentLang === "zh" ? "输入款号、名称或颜色检索" : "Search style, name, or color";
+      const clear = document.querySelector(`[data-clear-component="${index}"]`);
+      if (clear) clear.title = currentLang === "zh" ? "清除组件" : "Clear component";
+    });
     document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
     document.title = currentLang === "zh" ? "JA 成衣库存中台" : "JA Garment Inventory";
     refreshIcons();
@@ -643,19 +672,86 @@
     $("inventoryEmpty").hidden = products.length > 0;
   }
 
-  function bundleComponentOptions() {
-    const options = state.products.map((product) => ({
-      value: product.id,
-      label: `${product.baseSku} · ${product.name} · ${product.color} · ${orderedSizes(product).join("/")}`
-    }));
-    return `<option value="">请选择组件</option>${options.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join("")}`;
+  function bundleComponentLabel(product) {
+    return `${product.baseSku} · ${product.name} · ${product.color} · ${orderedSizes(product).join("/")}`;
   }
 
   function renderBundleComponentOptions() {
-    ["bundleComponent1", "bundleComponent2", "bundleComponent3"].forEach((id) => {
-      const select = $(id);
-      if (select) select.innerHTML = bundleComponentOptions();
-    });
+    [1, 2, 3].forEach((index) => clearBundleComponent(index, false));
+  }
+
+  function matchingBundleComponents(query) {
+    const terms = String(query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+    return state.products.filter((product) => {
+      const searchable = [product.baseSku, product.style, product.originalStyle, product.name, product.color, ...orderedSizes(product), ...Object.values(product.skuBySize || {})].join(" ").toLowerCase();
+      return terms.every((term) => searchable.includes(term));
+    }).slice(0, 40);
+  }
+
+  function renderBundleComponentResults(index, query = "") {
+    const results = $(`bundleComponentResults${index}`);
+    const matches = matchingBundleComponents(query);
+    results.innerHTML = matches.length
+      ? matches.map((product, resultIndex) => `<button class="component-result${resultIndex === 0 ? " active" : ""}" type="button" role="option" data-component-index="${index}" data-component-id="${escapeHtml(product.id)}"><strong>${escapeHtml(product.baseSku)}</strong><span>${escapeHtml(product.name)} · ${escapeHtml(product.color)} · ${escapeHtml(orderedSizes(product).join("/"))}</span></button>`).join("")
+      : `<div class="component-result-empty">${currentLang === "zh" ? "没有匹配的组件" : "No matching components"}</div>`;
+    results.hidden = false;
+    $(`bundleComponentSearch${index}`).setAttribute("aria-expanded", "true");
+  }
+
+  function closeBundleComponentResults(index) {
+    const results = $(`bundleComponentResults${index}`);
+    results.hidden = true;
+    $(`bundleComponentSearch${index}`).setAttribute("aria-expanded", "false");
+  }
+
+  function selectBundleComponent(index, productId) {
+    const product = state.products.find((item) => item.id === productId);
+    if (!product) return;
+    $(`bundleComponent${index}`).value = product.id;
+    $(`bundleComponentSearch${index}`).value = bundleComponentLabel(product);
+    document.querySelector(`[data-component-picker="${index}"]`).classList.add("has-value");
+    closeBundleComponentResults(index);
+    updateBundleComponentCode(index);
+  }
+
+  function clearBundleComponent(index, updatePreview = true) {
+    $(`bundleComponent${index}`).value = "";
+    $(`bundleComponentSearch${index}`).value = "";
+    document.querySelector(`[data-component-picker="${index}"]`).classList.remove("has-value");
+    closeBundleComponentResults(index);
+    if (updatePreview) updateBundleComponentCode(index);
+  }
+
+  function handleBundleComponentKeydown(index, event) {
+    const results = $(`bundleComponentResults${index}`);
+    if (event.key === "Escape") {
+      closeBundleComponentResults(index);
+      return;
+    }
+    if (results.hidden && ["ArrowDown", "Enter"].includes(event.key)) renderBundleComponentResults(index, event.currentTarget.value);
+    const options = [...results.querySelectorAll(".component-result")];
+    const current = options.findIndex((option) => option.classList.contains("active"));
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const next = event.key === "ArrowDown" ? Math.min(options.length - 1, current + 1) : Math.max(0, current - 1);
+      options.forEach((option, optionIndex) => option.classList.toggle("active", optionIndex === next));
+      options[next]?.scrollIntoView({ block: "nearest" });
+    } else if (event.key === "Enter") {
+      const active = results.querySelector(".component-result.active") || options[0];
+      if (active) {
+        event.preventDefault();
+        selectBundleComponent(index, active.dataset.componentId);
+      }
+    }
+  }
+
+  function renderBundleOptionSelectors(selectedSeason, selectedColor) {
+    const knownSeasons = [...new Set([...bundleSeasons, ...(state.bundles || []).map((bundle) => bundle.season)].filter(Boolean))];
+    const knownColors = [...new Set([...bundleColors, ...(state.bundles || []).map((bundle) => bundle.color), ...state.products.map((product) => product.color)].map((value) => String(value || "").trim()).filter(Boolean))];
+    $("bundleSeason").innerHTML = knownSeasons.map((season) => `<option value="${escapeHtml(season)}">${escapeHtml(season)}</option>`).join("");
+    $("bundleColor").innerHTML = `<option value="">${currentLang === "zh" ? "请选择颜色" : "Select color"}</option>${knownColors.map((color) => `<option value="${escapeHtml(color)}">${escapeHtml(color)}</option>`).join("")}`;
+    if (selectedSeason && knownSeasons.includes(selectedSeason)) $("bundleSeason").value = selectedSeason;
+    if (selectedColor && knownColors.includes(selectedColor)) $("bundleColor").value = selectedColor;
   }
 
   function renderBundleSkuPreview() {
@@ -930,7 +1026,7 @@
 
   function openBundleModal() {
     $("bundleForm").reset();
-    $("bundleSeason").value = "SS26";
+    renderBundleOptionSelectors("SS26", "");
     $("fixedSkuField").hidden = true;
     $("fixedStockField").hidden = true;
     renderBundleComponentOptions();
@@ -943,6 +1039,9 @@
 
   function closeBundleModal() {
     $("bundleModal").hidden = true;
+    closeBundleSeasonCreator();
+    closeBundleColorCreator();
+    [1, 2, 3].forEach(closeBundleComponentResults);
     document.body.style.overflow = "";
   }
 
@@ -1096,6 +1195,55 @@
     closeFabricCreator();
     updateNextSpuSequence();
     showToast(`面料类型 ${name} 已添加`);
+  }
+
+  function openBundleSeasonCreator() {
+    $("bundleSeasonCreator").hidden = false;
+    $("addBundleSeasonBtn").setAttribute("aria-expanded", "true");
+    setTimeout(() => $("newBundleSeason").focus(), 20);
+  }
+  function closeBundleSeasonCreator() {
+    $("bundleSeasonCreator").hidden = true;
+    $("addBundleSeasonBtn").setAttribute("aria-expanded", "false");
+    $("newBundleSeason").value = "";
+  }
+  function addBundleSeason() {
+    const season = $("newBundleSeason").value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{2,8}$/.test(season)) {
+      showToast("季节需为 2 至 8 位英文或数字，例如 SS27");
+      return;
+    }
+    if (!bundleSeasons.includes(season)) bundleSeasons.push(season);
+    saveBundleOptions();
+    renderBundleOptionSelectors(season, $("bundleColor").value);
+    closeBundleSeasonCreator();
+    renderBundleSkuPreview();
+    showToast(`季节 ${season} 已添加`);
+  }
+  function openBundleColorCreator() {
+    $("bundleColorCreator").hidden = false;
+    $("addBundleColorBtn").setAttribute("aria-expanded", "true");
+    setTimeout(() => $("newBundleColor").focus(), 20);
+  }
+  function closeBundleColorCreator() {
+    $("bundleColorCreator").hidden = true;
+    $("addBundleColorBtn").setAttribute("aria-expanded", "false");
+    $("newBundleColor").value = "";
+  }
+  function addBundleColor() {
+    const color = $("newBundleColor").value.trim();
+    if (!color) {
+      showToast("请输入颜色名称");
+      return;
+    }
+    const existing = bundleColors.find((value) => value.toLowerCase() === color.toLowerCase());
+    const selected = existing || color;
+    if (!existing) bundleColors.push(color);
+    saveBundleOptions();
+    renderBundleOptionSelectors($("bundleSeason").value, selected);
+    closeBundleColorCreator();
+    renderBundleSkuPreview();
+    showToast(`颜色 ${selected} 已添加`);
   }
 
   function addCategory() {
@@ -1507,6 +1655,12 @@
       if (editButton) openSkuModal(editButton.dataset.editProduct);
       const deleteBundleButton = event.target.closest("[data-delete-bundle]");
       if (deleteBundleButton) deleteBundle(deleteBundleButton.dataset.deleteBundle);
+      const componentResult = event.target.closest("[data-component-id]");
+      if (componentResult) selectBundleComponent(Number(componentResult.dataset.componentIndex), componentResult.dataset.componentId);
+      const clearComponentButton = event.target.closest("[data-clear-component]");
+      if (clearComponentButton) clearBundleComponent(Number(clearComponentButton.dataset.clearComponent));
+      const componentPicker = event.target.closest("[data-component-picker]");
+      if (!componentPicker) [1, 2, 3].forEach(closeBundleComponentResults);
       if (event.target.closest("[data-close-modal]")) closeMovementModal();
       if (event.target.closest("[data-close-sku]")) closeSkuModal();
       if (event.target.closest("[data-close-bundle]")) closeBundleModal();
@@ -1548,6 +1702,12 @@
     $("addFabricBtn").addEventListener("click", openFabricCreator);
     $("cancelFabricBtn").addEventListener("click", closeFabricCreator);
     $("saveFabricBtn").addEventListener("click", addFabricType);
+    $("addBundleSeasonBtn").addEventListener("click", openBundleSeasonCreator);
+    $("cancelBundleSeasonBtn").addEventListener("click", closeBundleSeasonCreator);
+    $("saveBundleSeasonBtn").addEventListener("click", addBundleSeason);
+    $("addBundleColorBtn").addEventListener("click", openBundleColorCreator);
+    $("cancelBundleColorBtn").addEventListener("click", closeBundleColorCreator);
+    $("saveBundleColorBtn").addEventListener("click", addBundleColor);
     ["newCategoryName", "newCategoryCode"].forEach((id) => $(id).addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -1556,6 +1716,8 @@
     }));
     $("newYear").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addYear(); } });
     ["newFabricName", "newFabricCode"].forEach((id) => $(id).addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addFabricType(); } }));
+    $("newBundleSeason").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addBundleSeason(); } });
+    $("newBundleColor").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addBundleColor(); } });
     $("movementForm").addEventListener("submit", submitMovement);
     $("skuForm").addEventListener("submit", submitSku);
     $("bundleForm").addEventListener("submit", submitBundle);
@@ -1570,7 +1732,22 @@
     $("skuColorCode").addEventListener("input", updateGeneratedSkuCodes);
     $("skuVariantRows").addEventListener("input", (event) => { if (event.target.classList.contains("variant-sku")) event.target.dataset.manual = "true"; });
     ["bundleSeason", "bundleColor", "bundleSize", "bundleFixedSku", "bundleCode1", "bundleCode2", "bundleCode3"].forEach((id) => $(id).addEventListener("input", renderBundleSkuPreview));
-    [1, 2, 3].forEach((index) => $(`bundleComponent${index}`).addEventListener("change", () => updateBundleComponentCode(index)));
+    [1, 2, 3].forEach((index) => {
+      const search = $(`bundleComponentSearch${index}`);
+      search.addEventListener("focus", () => {
+        [1, 2, 3].filter((otherIndex) => otherIndex !== index).forEach(closeBundleComponentResults);
+        renderBundleComponentResults(index, search.value);
+      });
+      search.addEventListener("input", () => {
+        if ($(`bundleComponent${index}`).value) {
+          $(`bundleComponent${index}`).value = "";
+          document.querySelector(`[data-component-picker="${index}"]`).classList.remove("has-value");
+          updateBundleComponentCode(index);
+        }
+        renderBundleComponentResults(index, search.value);
+      });
+      search.addEventListener("keydown", (event) => handleBundleComponentKeydown(index, event));
+    });
     $("bundleType").addEventListener("change", updateBundleTypeFields);
     $("saveRulesBtn").addEventListener("click", () => showToast("库存同步规则已保存"));
     $("languageToggle").addEventListener("click", () => {
