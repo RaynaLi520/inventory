@@ -263,23 +263,40 @@
             </div>
           </div>
           <label><span>创建日期</span><input id="skuCreatedDate" type="date" required></label>
-          <label><span>年份</span><select id="skuYear"><option>2025</option><option selected>2026</option><option>2027</option></select></label>
+          <div class="form-field category-field">
+            <div class="field-title"><label for="skuYear">年份</label><button class="inline-add" id="addYearBtn" type="button" aria-expanded="false" aria-controls="yearCreator"><i data-lucide="plus"></i>添加年份</button></div>
+            <select id="skuYear"></select>
+            <div class="category-creator compact-creator" id="yearCreator" hidden>
+              <input id="newYear" inputmode="numeric" maxlength="4" placeholder="例如：2028" aria-label="新年份">
+              <div class="category-creator-actions"><button class="mini-icon-button" id="cancelYearBtn" type="button" aria-label="取消添加年份"><i data-lucide="x"></i></button><button class="mini-icon-button confirm" id="saveYearBtn" type="button" aria-label="保存年份"><i data-lucide="check"></i></button></div>
+            </div>
+          </div>
           <label><span>季节</span><select id="skuSeason"><option value="SS" selected>SS · 春夏</option><option value="AW">AW · 秋冬</option></select></label>
-          <label><span>面料类型</span><select id="skuFabric"><option value="W" selected>Woven · 梭织</option><option value="K">Knit · 针织</option></select></label>
+          <div class="form-field category-field">
+            <div class="field-title"><label for="skuFabric">面料类型</label><button class="inline-add" id="addFabricBtn" type="button" aria-expanded="false" aria-controls="fabricCreator"><i data-lucide="plus"></i>添加面料类型</button></div>
+            <select id="skuFabric"></select>
+            <div class="category-creator" id="fabricCreator" hidden>
+              <input id="newFabricName" maxlength="20" placeholder="例如：Lace / 蕾丝" aria-label="面料类型名称">
+              <input id="newFabricCode" maxlength="1" placeholder="例如：L" aria-label="面料类型代码">
+              <div class="category-creator-actions"><button class="mini-icon-button" id="cancelFabricBtn" type="button" aria-label="取消添加面料类型"><i data-lucide="x"></i></button><button class="mini-icon-button confirm" id="saveFabricBtn" type="button" aria-label="保存面料类型"><i data-lucide="check"></i></button></div>
+            </div>
+          </div>
           <label><span>三位序号</span><input id="skuSequence" required inputmode="numeric" maxlength="3" pattern="\d{1,3}" value="001" placeholder="例如：001"></label>
           <label><span>原始款号</span><input id="skuStyle" required placeholder="例如：CoZ25-1201WT0025"></label>
           <label class="span-2"><span>图片链接（可选）</span><input id="skuImageUrl" type="url" placeholder="https://..."></label>
         </div>
         <div class="variant-section">
-          <div class="field-title"><strong>初始库存变体</strong><small>颜色和尺码不进入 SPU 编码。</small></div>
+          <div class="field-title"><strong>SKU 变体</strong><small>一个 SPU 可同时生成多个尺码 SKU。</small></div>
           <div class="form-grid">
           <label><span>颜色</span><input id="skuColor" required placeholder="例如：Light Blue / 浅蓝色"></label>
-          <label><span>尺码</span><select id="skuSize"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option></select></label>
+          <label><span>颜色代码</span><input id="skuColorCode" required maxlength="5" placeholder="例如：LBL"></label>
           <label><span>安全库存</span><input id="skuSafety" type="number" min="0" value="5"></label>
           </div>
+          <div class="sku-variant-list"><div class="sku-variant-head"><span>生成</span><span>尺码</span><span>初始库存</span><span>SKU 编码</span></div><div id="skuVariantRows"></div></div>
         </div>
         <div class="sku-preview"><span>SPU 编码预览</span><code id="skuPreview">COZSS26-WST001</code><small>COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号</small></div>
-        <div class="form-actions"><button class="button secondary" data-close-sku type="button">取消</button><button class="button primary" type="submit">创建 SPU</button></div>
+        <input id="editingProductId" type="hidden">
+        <div class="form-actions"><button class="button secondary" data-close-sku type="button">取消</button><button class="button primary" id="skuSubmitButton" type="submit">创建 SPU 和 SKU</button></div>
       </form>
     </section>
   </div>
