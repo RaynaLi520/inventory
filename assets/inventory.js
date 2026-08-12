@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "ja-garment-inventory-v1";
   const CATEGORY_STORAGE_KEY = "ja-garment-categories-v1";
+  const ITEM_TYPE_STORAGE_KEY = "coz-spu-item-types-v1";
   const STOCK_HISTORY_KEY = "ja-garment-stock-history-v1";
   const hasSavedLocalState = localStorage.getItem(STORAGE_KEY) !== null;
   const CLOUD_TABLE = "inventory_platform_state";
@@ -16,6 +17,11 @@
   const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "F"];
   const defaultCategoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
   const categoryCodes = loadCategoryCodes();
+  const defaultItemTypeCodes = {
+    Shirt: "ST", Pant: "PT", Short: "SO", Dress: "DR", Cami: "CM", Tank: "TK",
+    Top: "TP", Tee: "TE", Accessories: "ACC", "PJ Set": "SET", Skirt: "SK", Robe: "RB", Blazer: "BZ"
+  };
+  const itemTypeCodes = loadItemTypeCodes();
   const viewMeta = {
     overview: ["库存中台 / 今日", "经营概览"],
     inventory: ["商品中心 / SKU", "成衣库存"],
@@ -32,10 +38,10 @@
     ["可售库存", "Sellable stock"], ["今日售出", "Sold today"], ["低库存 SKU", "Low-stock SKUs"], ["在途库存", "In transit"], ["较上周", "vs last week"], ["需处理", "Needs action"], ["低于安全库存", "Below safety stock"], ["3 个采购单 · 最早 8/12 到货", "3 purchase orders · earliest arrival Aug 12"], ["线上 24 · 门店 12", "Online 24 · Store 12"], ["4.8%", "4.8%"],
     ["个 SKU · 实时可售", "SKUs · sellable now"], ["件", "pcs"], ["件可售库存", "sellable pcs"], ["重点款库存", "Priority stock"], ["全部 SKU", "All SKUs"], ["渠道库存", "Channel stock"], ["最近动态", "Recent activity"], ["库存总览", "Stock overview"], ["库存正常", "Healthy"], ["低库存", "Low stock"], ["LIVE STOCK", "LIVE STOCK"], ["ALLOCATION", "ALLOCATION"],
     ["品牌小程序", "Brand mini-program"], ["天猫旗舰店", "Tmall flagship"], ["静安门店", "Jing'an store"], ["机动库存", "Buffer stock"], ["渠道可售", "Channel sellable"], ["今日订单", "Orders today"], ["同步正常", "Sync healthy"], ["微信自营商城", "WeChat direct store"], ["平台电商", "Marketplace"], ["线下直营", "Offline retail"], ["2 分钟前同步", "Synced 2 min ago"],
-    ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SKU", "New SKU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
+    ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SPU", "New SPU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
     ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["备注", "Note"],
     ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
-    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["添加品类", "Add category"], ["品类名称", "Category name"], ["SKU 缩写", "SKU abbreviation"], ["保存品类", "Save category"], ["商品图片", "Product image"], ["款号", "Style no."], ["颜色代码", "Color code"], ["尺码", "Size"], ["安全库存", "Safety stock"], ["新增成衣 SKU", "New garment SKU"], ["SKU 编码预览", "SKU code preview"], ["品牌-季节-品类-款号-颜色-尺码", "Brand-season-category-style-color-size"], ["创建 SKU", "Create SKU"], ["例如：轻量针织开衫", "e.g. lightweight knit cardigan"], ["例如：JA2608", "e.g. JA2608"], ["例如：BLK", "e.g. BLK"]
+    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款式名称", "Style name"], ["商品类型", "Item type"], ["添加类型", "Add type"], ["类型名称", "Type name"], ["类型缩写", "Type code"], ["商品图片", "Product image"], ["创建日期", "Creation date"], ["年份", "Year"], ["季节", "Season"], ["面料类型", "Fabric type"], ["SS · 春夏", "SS · Spring/Summer"], ["AW · 秋冬", "AW · Autumn/Winter"], ["三位序号", "3-digit sequence"], ["原始款号", "Original style no."], ["图片链接（可选）", "Image URL (optional)"], ["初始库存变体", "Initial inventory variant"], ["颜色和尺码不进入 SPU 编码。", "Color and size are not part of the SPU code."], ["尺码", "Size"], ["安全库存", "Safety stock"], ["新增成衣 SPU", "New garment SPU"], ["SPU 编码预览", "SPU code preview"], ["COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号", "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence"], ["创建 SPU", "Create SPU"]
   ];
   const zhToEn = new Map(translationPairs);
   const enToZh = new Map(translationPairs.map(([zh, en]) => [en, zh]));
@@ -193,6 +199,17 @@
     } catch (_) { /* Use the packaged categories if local data is invalid. */ }
     return { ...defaultCategoryCodes };
   }
+  function loadItemTypeCodes() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(ITEM_TYPE_STORAGE_KEY));
+      if (saved && typeof saved === "object" && !Array.isArray(saved)) return { ...defaultItemTypeCodes, ...saved };
+    } catch (_) { /* Use the packaged CoZ item type mapping if local data is invalid. */ }
+    return { ...defaultItemTypeCodes };
+  }
+  function saveItemTypeCodes() {
+    localStorage.setItem(ITEM_TYPE_STORAGE_KEY, JSON.stringify(itemTypeCodes));
+    queueCloudSave();
+  }
   function saveCategoryCodes() {
     localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryCodes));
     queueCloudSave();
@@ -283,6 +300,7 @@
       version: 1,
       state,
       categoryCodes: { ...categoryCodes },
+      itemTypeCodes: { ...itemTypeCodes },
       stockHistory
     };
   }
@@ -290,6 +308,7 @@
   function persistLocalCache() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryCodes));
+    localStorage.setItem(ITEM_TYPE_STORAGE_KEY, JSON.stringify(itemTypeCodes));
     localStorage.setItem(STOCK_HISTORY_KEY, JSON.stringify(stockHistory));
   }
 
@@ -330,6 +349,8 @@
     state = upgradeCozState(clone(document.state));
     Object.keys(categoryCodes).forEach((key) => delete categoryCodes[key]);
     Object.assign(categoryCodes, defaultCategoryCodes, document.categoryCodes || {});
+    Object.keys(itemTypeCodes).forEach((key) => delete itemTypeCodes[key]);
+    Object.assign(itemTypeCodes, defaultItemTypeCodes, document.itemTypeCodes || {});
     stockHistory = normalizeStockHistory(document.stockHistory);
     persistLocalCache();
     return true;
@@ -457,6 +478,11 @@
       languageButton.title = currentLang === "zh" ? "切换语言" : "Switch language";
     }
     if (themeButton) themeButton.title = currentLang === "zh" ? "切换主题" : "Switch theme";
+    const fabricOptions = $("skuFabric")?.options;
+    if (fabricOptions?.length >= 2) {
+      fabricOptions[0].textContent = "Woven · 梭织";
+      fabricOptions[1].textContent = "Knit · 针织";
+    }
     document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
     document.title = currentLang === "zh" ? "JA 成衣库存中台" : "JA Garment Inventory";
     refreshIcons();
@@ -714,12 +740,9 @@
   }
 
   function renderSkuCategoryOptions(selectedCategory) {
-    state.products.forEach((product) => {
-      if (product.category && !categoryCodes[product.category]) categoryCodes[product.category] = "CAT";
-    });
     const select = $("skuCategory");
     const selected = selectedCategory || select.value;
-    select.innerHTML = Object.entries(categoryCodes).map(([name, code]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} · ${escapeHtml(code)}</option>`).join("");
+    select.innerHTML = Object.entries(itemTypeCodes).map(([name, code]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} · ${escapeHtml(code)}</option>`).join("");
     if ([...select.options].some((option) => option.value === selected)) select.value = selected;
   }
 
@@ -792,7 +815,11 @@
   }
 
   function openSkuModal() {
+    $("skuForm").reset();
     renderSkuCategoryOptions();
+    $("skuCreatedDate").value = localDateKey();
+    $("skuYear").value = String(new Date().getFullYear());
+    updateNextSpuSequence();
     $("skuModal").hidden = false;
     document.body.style.overflow = "hidden";
     updateSkuPreview();
@@ -916,35 +943,35 @@
     const name = $("newCategoryName").value.trim();
     const code = $("newCategoryCode").value.trim().toUpperCase();
     if (!name) {
-      showToast("请输入品类名称");
+      showToast("请输入商品类型名称");
       $("newCategoryName").focus();
       return;
     }
-    if (!/^[A-Z0-9]{2,5}$/.test(code)) {
-      showToast("SKU 缩写需为 2 至 5 位英文或数字");
+    if (!/^[A-Z0-9]{1,4}$/.test(code)) {
+      showToast("类型缩写需为 1 至 4 位英文或数字");
       $("newCategoryCode").focus();
       return;
     }
-    const existingName = Object.keys(categoryCodes).find((category) => category.toLowerCase() === name.toLowerCase());
-    const existingCode = Object.entries(categoryCodes).find(([, categoryCode]) => categoryCode === code);
+    const existingName = Object.keys(itemTypeCodes).find((itemType) => itemType.toLowerCase() === name.toLowerCase());
+    const existingCode = Object.entries(itemTypeCodes).find(([, itemTypeCode]) => itemTypeCode === code);
     if (existingName) {
       renderSkuCategoryOptions(existingName);
       closeCategoryCreator();
       updateSkuPreview();
-      showToast(`品类“${existingName}”已存在并已选中`);
+      showToast(`商品类型“${existingName}”已存在并已选中`);
       return;
     }
     if (existingCode) {
-      showToast(`SKU 缩写 ${code} 已用于“${existingCode[0]}”`);
+      showToast(`类型缩写 ${code} 已用于“${existingCode[0]}”`);
       $("newCategoryCode").focus();
       return;
     }
-    categoryCodes[name] = code;
-    saveCategoryCodes();
+    itemTypeCodes[name] = code;
+    saveItemTypeCodes();
     renderSkuCategoryOptions(name);
     closeCategoryCreator();
     updateSkuPreview();
-    showToast(`品类“${name}”已添加并选中`);
+    showToast(`商品类型“${name}”已添加并选中`);
   }
 
   function openImageModal(button) {
@@ -1053,37 +1080,73 @@
     showToast(`${bundle.name} 已${type === "outbound" ? "出库" : "入库"} ${qty} 套`);
   }
 
+  function spuCodeFromForm() {
+    const season = $("skuSeason").value || "SS";
+    const year = String($("skuYear").value || new Date().getFullYear()).slice(-2);
+    const fabric = $("skuFabric").value || "W";
+    const itemType = itemTypeCodes[$("skuCategory").value] || "ST";
+    const sequence = String(Math.max(1, Number($("skuSequence").value || 1))).padStart(3, "0").slice(-3);
+    return `COZ${season}${year}-${fabric}${itemType}${sequence}`;
+  }
+
+  function updateNextSpuSequence() {
+    const seasonYear = `COZ${$("skuSeason").value || "SS"}${String($("skuYear").value || new Date().getFullYear()).slice(-2)}-`;
+    const sequences = state.products.map((product) => String(product.baseSku || ""))
+      .filter((spu) => spu.startsWith(seasonYear) && /\d{3}$/.test(spu))
+      .map((spu) => Number(spu.slice(-3)))
+      .filter(Number.isFinite);
+    $("skuSequence").value = String(Math.min(999, Math.max(0, ...sequences) + 1)).padStart(3, "0");
+    updateSkuPreview();
+  }
+
   function updateSkuPreview() {
-    const category = categoryCodes[$("skuCategory").value] || "TOP";
-    const style = $("skuStyle").value.trim().toUpperCase() || "JA2608";
-    const color = $("skuColor").value.trim().toUpperCase() || "BLK";
-    const size = $("skuSize").value;
-    $("skuPreview").textContent = `JA-FW26-${category}-${style}-${color}-${size}`;
+    const sequence = String($("skuSequence").value || "").replace(/\D/g, "").slice(0, 3);
+    if ($("skuSequence").value !== sequence) $("skuSequence").value = sequence;
+    $("skuPreview").textContent = spuCodeFromForm();
   }
 
   function submitSku(event) {
     event.preventDefault();
-    const category = $("skuCategory").value;
-    const style = $("skuStyle").value.trim().toUpperCase();
-    const colorCode = $("skuColor").value.trim().toUpperCase();
+    const itemType = $("skuCategory").value;
+    const originalStyle = $("skuStyle").value.trim();
+    const color = $("skuColor").value.trim();
     const size = $("skuSize").value;
-    const baseSku = `JA-FW26-${categoryCodes[category] || "TOP"}-${style}-${colorCode}`;
-    if (state.products.some((product) => `${product.baseSku}-${size}` === `${baseSku}-${size}`)) {
-      showToast("这个 SKU 已存在，请检查款号、颜色和尺码");
+    const baseSku = spuCodeFromForm();
+    const sequence = Number($("skuSequence").value);
+    if (!Number.isInteger(sequence) || sequence < 1 || sequence > 999) {
+      showToast("三位序号需为 001 至 999");
+      $("skuSequence").focus();
       return;
     }
+    if (state.products.some((product) => product.baseSku === baseSku)) {
+      showToast("这个 SPU 编码已存在，请调整三位序号");
+      return;
+    }
+    const image = safeImageUrl($("skuImageUrl").value);
+    const appearance = resolveColorAppearance(color);
     state.products.unshift({
       id: `P${Date.now()}`,
-      name: $("skuName").value.trim(), category, style, baseSku,
-      color: colorCode, colorHex: "#78817d", safety: Number($("skuSafety").value || 0),
-      image: "assets/fabric-images/APLS26081-61-1.jpg", sizes: { [size]: 0 }, warehouse: 0, store: 0, reserved: 0
+      name: $("skuName").value.trim(), category: itemType, style: originalStyle, originalStyle, baseSku,
+      sourceOrigin: "manual",
+      spuMeta: {
+        createdDate: $("skuCreatedDate").value,
+        year: Number($("skuYear").value),
+        season: $("skuSeason").value,
+        fabricType: $("skuFabric").value,
+        itemType,
+        itemTypeCode: itemTypeCodes[itemType],
+        sequence
+      },
+      color, colorHex: appearance.hex, colorAccent: appearance.accent, colorPattern: appearance.pattern,
+      safety: Number($("skuSafety").value || 0), image, sizes: { [size]: 0 }, skuBySize: { [size]: baseSku },
+      warehouse: 0, store: 0, reserved: 0
     });
     saveState();
     closeSkuModal();
     $("skuForm").reset();
     renderSkuCategoryOptions();
     renderAll();
-    showToast(`SKU ${baseSku}-${size} 已创建`);
+    showToast(`SPU ${baseSku} 已创建`);
   }
 
   function exportInventory() {
@@ -1109,6 +1172,7 @@
   }
 
   function stateFromCozSnapshot(snapshot) {
+    const manualProducts = (state.products || []).filter((product) => product.sourceOrigin === "manual");
     const groups = new Map();
     snapshot.inventory.forEach((item) => {
       const style = String(item.styleNo || item.sku || "").trim();
@@ -1153,12 +1217,12 @@
       if (item.sourceUpdatedAt && (!product.sourceUpdatedAt || item.sourceUpdatedAt > product.sourceUpdatedAt)) product.sourceUpdatedAt = item.sourceUpdatedAt;
     });
 
-    const products = [...groups.values()]
+    const syncedProducts = [...groups.values()]
       .sort((a, b) => a.style.localeCompare(b.style) || a.color.localeCompare(b.color))
       .map((product, index) => ({ id: `COZ-${String(index + 1).padStart(4, "0")}`, ...product }));
-    if (!products.length) throw new Error("CoZ 同步数据中没有有效 SKU");
+    if (!syncedProducts.length) throw new Error("CoZ 同步数据中没有有效 SKU");
     return {
-      products,
+      products: [...manualProducts, ...syncedProducts],
       movements: [],
       bundles: Array.isArray(state?.bundles) ? state.bundles : [],
       source: {
@@ -1269,7 +1333,8 @@
     $("statusFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
     $("movementSearch").addEventListener("input", renderMovements);
     document.querySelectorAll(".segmented button").forEach((button) => button.addEventListener("click", () => setMovementType(button.dataset.type)));
-    ["skuCategory", "skuStyle", "skuColor", "skuSize"].forEach((id) => $(id).addEventListener("input", updateSkuPreview));
+    ["skuSeason", "skuYear", "skuFabric", "skuCategory"].forEach((id) => $(id).addEventListener("change", updateNextSpuSequence));
+    $("skuSequence").addEventListener("input", updateSkuPreview);
     ["bundleSeason", "bundleColor", "bundleSize", "bundleFixedSku", "bundleCode1", "bundleCode2", "bundleCode3"].forEach((id) => $(id).addEventListener("input", renderBundleSkuPreview));
     [1, 2, 3].forEach((index) => $(`bundleComponent${index}`).addEventListener("change", () => updateBundleComponentCode(index)));
     $("bundleType").addEventListener("change", updateBundleTypeFields);

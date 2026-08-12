@@ -135,7 +135,7 @@
           <label class="search-box"><i data-lucide="search"></i><input id="inventorySearch" type="search" placeholder="搜索款式、SKU、颜色"></label>
           <select id="categoryFilter" aria-label="按品类筛选"><option value="">全部品类</option></select>
           <select id="statusFilter" aria-label="按库存状态筛选"><option value="">全部状态</option><option value="low">低库存</option><option value="healthy">库存正常</option></select>
-          <button class="button secondary" id="addSkuBtn" type="button"><i data-lucide="plus"></i>新增 SKU</button>
+          <button class="button secondary" id="addSkuBtn" type="button"><i data-lucide="plus"></i>新增 SPU</button>
         </div>
 
         <section class="panel inventory-panel">
@@ -246,29 +246,40 @@
   <div class="modal" id="skuModal" hidden>
     <div class="modal-backdrop" data-close-sku></div>
     <section class="modal-panel wide" role="dialog" aria-modal="true" aria-labelledby="skuModalTitle">
-      <header class="modal-head"><div><span class="section-kicker">NEW VARIANT</span><h2 id="skuModalTitle">新增成衣 SKU</h2></div><button class="icon-button" data-close-sku type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <header class="modal-head"><div><span class="section-kicker">NEW SPU</span><h2 id="skuModalTitle">新增成衣 SPU</h2></div><button class="icon-button" data-close-sku type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
       <form id="skuForm">
         <div class="form-grid">
-          <label><span>款式名称</span><input id="skuName" required placeholder="例如：轻量针织开衫"></label>
+          <label><span>款式名称</span><input id="skuName" required placeholder="例如：条纹短袖衬衫"></label>
           <div class="form-field category-field">
-            <div class="field-title"><label for="skuCategory">品类</label><button class="inline-add" id="addCategoryBtn" type="button" aria-expanded="false" aria-controls="categoryCreator"><i data-lucide="plus"></i>添加品类</button></div>
+            <div class="field-title"><label for="skuCategory">商品类型</label><button class="inline-add" id="addCategoryBtn" type="button" aria-expanded="false" aria-controls="categoryCreator"><i data-lucide="plus"></i>添加类型</button></div>
             <select id="skuCategory"></select>
             <div class="category-creator" id="categoryCreator" hidden>
-              <input id="newCategoryName" maxlength="16" placeholder="品类名称，例如：家居服" aria-label="品类名称">
-              <input id="newCategoryCode" maxlength="5" placeholder="SKU 缩写，例如：HOM" aria-label="SKU 缩写">
+              <input id="newCategoryName" maxlength="24" placeholder="类型名称，例如：Robe" aria-label="类型名称">
+              <input id="newCategoryCode" maxlength="4" placeholder="类型缩写，例如：RB" aria-label="类型缩写">
               <div class="category-creator-actions">
                 <button class="mini-icon-button" id="cancelCategoryBtn" type="button" title="取消添加品类" aria-label="取消添加品类"><i data-lucide="x"></i></button>
                 <button class="mini-icon-button confirm" id="saveCategoryBtn" type="button" title="保存品类" aria-label="保存品类"><i data-lucide="check"></i></button>
               </div>
             </div>
           </div>
-          <label><span>款号</span><input id="skuStyle" required placeholder="例如：JA2608"></label>
-          <label><span>颜色代码</span><input id="skuColor" required maxlength="3" placeholder="例如：BLK"></label>
+          <label><span>创建日期</span><input id="skuCreatedDate" type="date" required></label>
+          <label><span>年份</span><select id="skuYear"><option>2025</option><option selected>2026</option><option>2027</option></select></label>
+          <label><span>季节</span><select id="skuSeason"><option value="SS" selected>SS · 春夏</option><option value="AW">AW · 秋冬</option></select></label>
+          <label><span>面料类型</span><select id="skuFabric"><option value="W" selected>Woven · 梭织</option><option value="K">Knit · 针织</option></select></label>
+          <label><span>三位序号</span><input id="skuSequence" required inputmode="numeric" maxlength="3" pattern="\d{1,3}" value="001" placeholder="例如：001"></label>
+          <label><span>原始款号</span><input id="skuStyle" required placeholder="例如：CoZ25-1201WT0025"></label>
+          <label class="span-2"><span>图片链接（可选）</span><input id="skuImageUrl" type="url" placeholder="https://..."></label>
+        </div>
+        <div class="variant-section">
+          <div class="field-title"><strong>初始库存变体</strong><small>颜色和尺码不进入 SPU 编码。</small></div>
+          <div class="form-grid">
+          <label><span>颜色</span><input id="skuColor" required placeholder="例如：Light Blue / 浅蓝色"></label>
           <label><span>尺码</span><select id="skuSize"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option></select></label>
           <label><span>安全库存</span><input id="skuSafety" type="number" min="0" value="5"></label>
+          </div>
         </div>
-        <div class="sku-preview"><span>SKU 编码预览</span><code id="skuPreview">JA-FW26-TOP-JA2608-BLK-M</code><small>品牌-季节-品类-款号-颜色-尺码</small></div>
-        <div class="form-actions"><button class="button secondary" data-close-sku type="button">取消</button><button class="button primary" type="submit">创建 SKU</button></div>
+        <div class="sku-preview"><span>SPU 编码预览</span><code id="skuPreview">COZSS26-WST001</code><small>COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号</small></div>
+        <div class="form-actions"><button class="button secondary" data-close-sku type="button">取消</button><button class="button primary" type="submit">创建 SPU</button></div>
       </form>
     </section>
   </div>

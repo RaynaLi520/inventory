@@ -323,6 +323,12 @@ select, input[type="number"], input[type="text"] { height: 38px; border: 1px sol
 .modal-panel label > span { color: #56615d; font-size: 9px; font-weight: 650; }
 .modal-panel select, .modal-panel input { width: 100%; padding: 0 10px; }
 .form-row, .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid .span-2 { grid-column: 1 / -1; }
+.variant-section { margin: 3px 0 15px; padding: 14px; border: 1px solid var(--line); background: var(--canvas); }
+.variant-section > .field-title { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.variant-section > .field-title strong { font-size: 14px; }
+.variant-section > .field-title small { color: var(--muted); font-size: 12px; }
+.variant-section .form-grid > label { margin-bottom: 0; }
 .field-title { min-height: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .field-title > label { color: #56615d; font-size: 9px; font-weight: 650; }
 .inline-add { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; border: 0; color: var(--green); background: transparent; font-size: 10px; font-weight: 700; cursor: pointer; }
@@ -543,6 +549,7 @@ body.dark-theme .product-image-placeholder { color: #9cafA7; background: #1a2b26
 body.dark-theme .channel-card > p, body.dark-theme .activity p { color: #b9c9c1; }
 body.dark-theme .sku-preview { background: #1d3a31; }
 body.dark-theme .category-creator { border-color: var(--line); background: #14241f; }
+body.dark-theme .variant-section { border-color: var(--line); background: #14241f; }
 
 @media (max-width: 640px) {
   .control-button { width: 38px; padding: 0; justify-content: center; }
@@ -550,6 +557,8 @@ body.dark-theme .category-creator { border-color: var(--line); background: #1424
   .top-actions > .button.primary { display: none; }
   .mobile-nav button { font-size: 11px; }
   .category-creator { grid-template-columns: 1fr auto; }
+  .form-grid .span-2 { grid-column: auto; }
+  .variant-section > .field-title { flex-direction: column; gap: 2px; }
   .bundle-components { grid-template-columns: 1fr; }
   .bundle-components .field-title { grid-column: auto; flex-direction: column; gap: 2px; }
   .category-creator input:first-child { grid-column: 1 / -1; }
