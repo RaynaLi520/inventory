@@ -26,6 +26,9 @@
         <button class="nav-item" data-view="inventory" type="button">
           <i data-lucide="boxes"></i><span>成衣库存</span><b id="navLowCount">0</b>
         </button>
+        <button class="nav-item" data-view="bundles" type="button">
+          <i data-lucide="package-2"></i><span>套装组合</span>
+        </button>
         <button class="nav-item" data-view="movements" type="button">
           <i data-lucide="arrow-left-right"></i><span>出入库流水</span>
         </button>
@@ -152,6 +155,26 @@
         </section>
       </section>
 
+      <section class="view" id="bundlesView">
+        <div class="toolbar">
+          <div class="view-intro"><span class="section-kicker">BUNDLE / BOM</span><strong>套装组合</strong><small>单件库存可组成虚拟套装，固定 SET 可独立管理。</small></div>
+          <button class="button secondary" id="addBundleBtn" type="button"><i data-lucide="plus"></i>新建套装</button>
+        </div>
+        <section class="panel inventory-panel">
+          <div class="section-head inventory-head">
+            <div><span class="section-kicker">SELLABLE BUNDLES</span><h2>套装库存与组成</h2></div>
+            <div class="table-summary"><strong id="bundleCount">0</strong> 个套装 <span>·</span> 可售 <strong id="bundleAvailable">0</strong> 套</div>
+          </div>
+          <div class="table-wrap">
+            <table class="stock-table bundle-table">
+              <thead><tr><th>套装 / SKU</th><th>类型</th><th>组成</th><th>颜色 / 尺码</th><th class="num">可售</th><th>状态</th><th></th></tr></thead>
+              <tbody id="bundleRows"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="bundleEmpty"><i data-lucide="package-open"></i><strong>还没有套装</strong><p>新建虚拟套装后，系统会按组件库存实时计算可售套数。</p></div>
+        </section>
+      </section>
+
       <section class="view" id="movementsView">
         <section class="movement-summary">
           <div><span>今日入库</span><strong id="todayInbound">0</strong><small>件</small></div>
@@ -192,6 +215,7 @@
     <nav class="mobile-nav" aria-label="移动端导航">
       <button class="active" data-view="overview" type="button"><i data-lucide="layout-dashboard"></i><span>概览</span></button>
       <button data-view="inventory" type="button"><i data-lucide="boxes"></i><span>库存</span></button>
+      <button data-view="bundles" type="button"><i data-lucide="package-2"></i><span>套装</span></button>
       <button class="mobile-action" id="mobileMoveBtn" type="button"><i data-lucide="plus"></i><span>出入库</span></button>
       <button data-view="movements" type="button"><i data-lucide="arrow-left-right"></i><span>流水</span></button>
       <button data-view="channels" type="button"><i data-lucide="store"></i><span>渠道</span></button>
@@ -245,6 +269,32 @@
         </div>
         <div class="sku-preview"><span>SKU 编码预览</span><code id="skuPreview">JA-FW26-TOP-JA2608-BLK-M</code><small>品牌-季节-品类-款号-颜色-尺码</small></div>
         <div class="form-actions"><button class="button secondary" data-close-sku type="button">取消</button><button class="button primary" type="submit">创建 SKU</button></div>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal" id="bundleModal" hidden>
+    <div class="modal-backdrop" data-close-bundle></div>
+    <section class="modal-panel wide" role="dialog" aria-modal="true" aria-labelledby="bundleModalTitle">
+      <header class="modal-head"><div><span class="section-kicker">BUNDLE / BOM</span><h2 id="bundleModalTitle">新建套装</h2></div><button class="icon-button" data-close-bundle type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <form id="bundleForm">
+        <div class="form-grid">
+          <label><span>套装名称</span><input id="bundleName" required placeholder="例如：针织上衣 + 阔腿裤"></label>
+          <label><span>组合类型</span><select id="bundleType"><option value="virtual">虚拟套装 / BOM</option><option value="promo">销售组合促销</option><option value="fixed">固定 SET 套装</option></select></label>
+          <label><span>季节</span><input id="bundleSeason" maxlength="4" value="SS26" placeholder="例如：SS26"></label>
+          <label><span>颜色</span><input id="bundleColor" maxlength="12" placeholder="例如：蓝色条纹"></label>
+          <label><span>尺码</span><select id="bundleSize"><option value="">跟随组件尺码</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>F</option></select></label>
+          <label id="fixedSkuField" hidden><span>固定 SET SKU</span><input id="bundleFixedSku" placeholder="例如：COZSS26-WSET068"></label>
+          <label id="fixedStockField" hidden><span>固定套装库存</span><input id="bundleFixedStock" type="number" min="0" value="0"></label>
+        </div>
+        <div class="bundle-components">
+          <div class="field-title"><strong>套装组成</strong><small>最多 3 个组件；第三项可用于头花等配件。</small></div>
+          <div class="bundle-component"><label><span>组件 1</span><select id="bundleComponent1"></select></label><label><span>组合短码 1</span><input id="bundleCode1" maxlength="16" placeholder="例如：W1185"></label></div>
+          <div class="bundle-component"><label><span>组件 2</span><select id="bundleComponent2"></select></label><label><span>组合短码 2</span><input id="bundleCode2" maxlength="16" placeholder="例如：W1186"></label></div>
+          <div class="bundle-component"><label><span>组件 3（可选）</span><select id="bundleComponent3"></select></label><label><span>组合短码 3（可选）</span><input id="bundleCode3" maxlength="16" placeholder="例如：WACC01"></label></div>
+        </div>
+        <div class="sku-preview"><span>套装 SKU 编码预览</span><code id="bundleSkuPreview">待选择-颜色-尺码</code><small>虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。</small></div>
+        <div class="form-actions"><button class="button secondary" data-close-bundle type="button">取消</button><button class="button primary" type="submit">保存套装</button></div>
       </form>
     </section>
   </div>

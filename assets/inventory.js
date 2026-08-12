@@ -19,11 +19,13 @@
   const viewMeta = {
     overview: ["库存中台 / 今日", "经营概览"],
     inventory: ["商品中心 / SKU", "成衣库存"],
+    bundles: ["商品中心 / BOM", "套装组合"],
     movements: ["库存中心 / 流水", "出入库流水"],
     channels: ["全渠道 / 配额", "销售渠道"]
   };
   const translationPairs = [
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
+    ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装 / BOM", "Virtual bundle / BOM"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["套装库存正常", "Bundle available"], ["套装不可售", "Bundle unavailable"], ["删除套装", "Delete bundle"],
     ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
     ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
     ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], [" 个 SKU 需要处理", " SKUs need action"],
@@ -39,6 +41,7 @@
   const enToZh = new Map(translationPairs.map(([zh, en]) => [en, zh]));
 
   const seedState = {
+    bundles: [],
     products: [
       {
         id: "P001", name: "经典拉链卫衣", category: "上装", style: "JA2601", baseSku: "JA-FW26-TOP-JA2601-INK", color: "墨黑", colorHex: "#252827", safety: 5,
@@ -174,6 +177,9 @@
         sizes[label] = Number(sizes[label] || 0) + Number(qty || 0);
       });
       product.sizes = sizes;
+      if (product.reservedBySize) {
+        product.reservedBySize = Object.fromEntries(Object.entries(product.reservedBySize).map(([size, qty]) => [normalizeSizeLabel(size), Number(qty || 0)]));
+      }
       if (product.skuBySize) {
         product.skuBySize = Object.fromEntries(Object.entries(product.skuBySize).map(([size, sku]) => [normalizeSizeLabel(size), sku]));
       }
@@ -194,7 +200,7 @@
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (saved?.products?.length && Array.isArray(saved.movements)) return upgradeCozState(saved);
+      if (saved?.products?.length && Array.isArray(saved.movements)) return { ...upgradeCozState(saved), bundles: Array.isArray(saved.bundles) ? saved.bundles : [] };
     } catch (_) { /* Use the packaged inventory sample if local data is invalid. */ }
     return clone(seedState);
   }
@@ -207,6 +213,63 @@
     return history.filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(entry?.day) && Number.isFinite(Number(entry.available)))
       .map((entry) => ({ day: entry.day, available: Number(entry.available), syncedAt: entry.syncedAt || `${entry.day}T23:59:59` }))
       .sort((a, b) => a.day.localeCompare(b.day));
+  }
+  function bundleTail(sku) {
+    const value = String(sku || "").replace(/[^A-Za-z0-9]/g, "");
+    const match = value.match(/([A-Za-z])(\d+)$/);
+    return match ? `${match[1].toUpperCase()}${match[2]}` : value.slice(-8).toUpperCase();
+  }
+  function bundleColorCode(value) {
+    const raw = String(value || "COLOR").trim();
+    return /^[a-z0-9]+$/i.test(raw) ? raw.toUpperCase() : raw;
+  }
+  function bundleSku(bundle) {
+    if (bundle.type === "fixed" && bundle.fixedSku) return bundle.fixedSku;
+    const tails = (bundle.components || []).map((_, index) => {
+      const part = bundlePartRecords(bundle).find((record) => record.index === index)?.product;
+      return String(bundle.componentCodes?.[index] || bundleTail(part?.baseSku)).trim().toUpperCase();
+    }).filter(Boolean);
+    const color = bundleColorCode(bundle.color);
+    const size = bundle.size || "F";
+    return `${tails.join("+") || "BUNDLE"}-${color}-${size}`;
+  }
+  function bundlePartRecords(bundle) {
+    return (bundle.components || []).map((id, index) => {
+      const sku = bundle.componentSkus?.[index];
+      const color = bundle.componentColors?.[index];
+      const product = state.products.find((item) => item.id === id)
+        || state.products.find((item) => item.baseSku === (sku || id) && (!color || item.color === color));
+      return product ? { product, index } : null;
+    }).filter(Boolean);
+  }
+  function bundleParts(bundle) {
+    return bundlePartRecords(bundle).map(({ product }) => product);
+  }
+  function bundleComponentSize(product, bundleSize) {
+    if (bundleSize && product.sizes?.[bundleSize] != null) return bundleSize;
+    if (product.sizes?.F != null) return "F";
+    return "";
+  }
+  function componentAvailable(product, size) {
+    if (!product) return 0;
+    if (size) {
+      const componentSize = bundleComponentSize(product, size);
+      if (!componentSize) return 0;
+      const reserved = product.reservedBySize
+        ? Number(product.reservedBySize[componentSize] || 0)
+        : Math.min(Number(product.sizes[componentSize] || 0), Number(product.reserved || 0));
+      return Math.max(0, Number(product.sizes[componentSize]) - reserved);
+    }
+    return availableStock(product);
+  }
+  function bundleAvailable(bundle) {
+    if (bundle.type === "fixed") return Math.max(0, Number(bundle.fixedStock || 0));
+    const parts = bundleParts(bundle);
+    if (!parts.length || parts.length !== (bundle.components || []).length) return 0;
+    return Math.max(0, Math.min(...parts.map((product) => componentAvailable(product, bundle.size))));
+  }
+  function bundleTypeLabel(type) {
+    return type === "fixed" ? "固定 SET 套装" : type === "promo" ? "销售组合促销" : "虚拟套装 / BOM";
   }
   function loadStockHistory() {
     try {
@@ -528,6 +591,72 @@
     $("inventoryEmpty").hidden = products.length > 0;
   }
 
+  function bundleComponentOptions() {
+    const options = state.products.map((product) => ({
+      value: product.id,
+      label: `${product.baseSku} · ${product.name} · ${product.color} · ${orderedSizes(product).join("/")}`
+    }));
+    return `<option value="">请选择组件</option>${options.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join("")}`;
+  }
+
+  function renderBundleComponentOptions() {
+    ["bundleComponent1", "bundleComponent2", "bundleComponent3"].forEach((id) => {
+      const select = $(id);
+      if (select) select.innerHTML = bundleComponentOptions();
+    });
+  }
+
+  function renderBundleSkuPreview() {
+    const componentEntries = [1, 2, 3].map((index) => ({
+      id: $(`bundleComponent${index}`).value,
+      code: $(`bundleCode${index}`).value
+    })).filter((entry) => entry.id);
+    const draft = {
+      type: $("bundleType").value,
+      season: $("bundleSeason").value,
+      color: $("bundleColor").value,
+      size: $("bundleSize").value,
+      fixedSku: $("bundleFixedSku").value,
+      components: componentEntries.map((entry) => entry.id),
+      componentCodes: componentEntries.map((entry) => entry.code)
+    };
+    $("bundleSkuPreview").textContent = bundleSku(draft);
+  }
+
+  function updateBundleComponentCode(componentIndex) {
+    const productId = $(`bundleComponent${componentIndex}`).value;
+    const codeInput = $(`bundleCode${componentIndex}`);
+    const previousAutoCode = codeInput.dataset.autoCode || "";
+    const product = state.products.find((item) => item.id === productId);
+    const nextAutoCode = product ? bundleTail(product.baseSku) : "";
+    if (!codeInput.value || codeInput.value === previousAutoCode) codeInput.value = nextAutoCode;
+    codeInput.dataset.autoCode = nextAutoCode;
+    renderBundleSkuPreview();
+  }
+
+  function renderBundleRows() {
+    const bundles = Array.isArray(state.bundles) ? state.bundles : [];
+    $("bundleCount").textContent = bundles.length;
+    $("bundleAvailable").textContent = formatNumber(bundles.reduce((sum, bundle) => sum + bundleAvailable(bundle), 0));
+    $("bundleRows").innerHTML = bundles.map((bundle) => {
+      const partRecords = bundlePartRecords(bundle);
+      const parts = partRecords.map(({ product }) => product);
+      const available = bundleAvailable(bundle);
+      const sku = bundleSku(bundle);
+      const status = available > 0 ? "套装库存正常" : "套装不可售";
+      return `<tr>
+        <td><strong>${escapeHtml(bundle.name)}</strong><code class="bundle-code">${escapeHtml(sku)}</code></td>
+        <td><span class="bundle-type ${escapeHtml(bundle.type)}">${escapeHtml(bundleTypeLabel(bundle.type))}</span></td>
+        <td><div class="bundle-parts">${partRecords.map(({ product, index }) => `<span class="bundle-part">${escapeHtml(product.name)}<code>${escapeHtml(bundle.componentCodes?.[index] || bundleTail(product.baseSku))}</code></span>`).join("") || "<span>-</span>"}</div></td>
+        <td>${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}</td>
+        <td class="num"><span class="stock-number">${formatNumber(available)}</span></td>
+        <td><span class="status ${available > 0 ? "healthy" : "low"}">${status}</span></td>
+        <td><div class="bundle-actions"><button type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装">删除</button></div></td>
+      </tr>`;
+    }).join("");
+    $("bundleEmpty").hidden = bundles.length > 0;
+  }
+
   function shortSku(sku) {
     const parts = String(sku).split("-");
     return parts.length > 3 ? parts.slice(-3).join("-") : sku;
@@ -614,7 +743,9 @@
 
   function renderMovementSkuOptions() {
     const current = $("movementSku").value;
-    $("movementSku").innerHTML = state.products.flatMap((product) => orderedSizes(product).map((size) => `<option value="${product.id}|${size}">${escapeHtml(skuForSize(product, size))} · ${escapeHtml(product.name)}</option>`)).join("");
+    const products = state.products.flatMap((product) => orderedSizes(product).map((size) => `<option value="product|${product.id}|${size}">${escapeHtml(skuForSize(product, size))} · ${escapeHtml(product.name)}</option>`)).join("");
+    const bundles = (state.bundles || []).map((bundle) => `<option value="bundle|${bundle.id}|${escapeHtml(bundle.size || "F")}">[套装] ${escapeHtml(bundleSku(bundle))} · ${escapeHtml(bundle.name)}</option>`).join("");
+    $("movementSku").innerHTML = products + bundles;
     if ([...$("movementSku").options].some((option) => option.value === current)) $("movementSku").value = current;
   }
 
@@ -624,6 +755,7 @@
     renderMovementSkuOptions();
     renderOverview();
     renderInventory();
+    renderBundleRows();
     renderMovements();
     renderChannels();
     renderSyncState();
@@ -647,7 +779,7 @@
     if (productId) {
       const product = state.products.find((item) => item.id === productId);
       const preferredSize = size || orderedSizes(product)[0] || "M";
-      $("movementSku").value = `${productId}|${preferredSize}`;
+      $("movementSku").value = `product|${productId}|${preferredSize}`;
     }
     $("movementModal").hidden = false;
     document.body.style.overflow = "hidden";
@@ -665,6 +797,100 @@
     document.body.style.overflow = "hidden";
     updateSkuPreview();
     setTimeout(() => $("skuName").focus(), 20);
+  }
+
+  function openBundleModal() {
+    $("bundleForm").reset();
+    $("bundleSeason").value = "SS26";
+    $("fixedSkuField").hidden = true;
+    $("fixedStockField").hidden = true;
+    renderBundleComponentOptions();
+    ["bundleCode1", "bundleCode2", "bundleCode3"].forEach((id) => { if ($(id)) $(id).value = ""; });
+    renderBundleSkuPreview();
+    $("bundleModal").hidden = false;
+    document.body.style.overflow = "hidden";
+    setTimeout(() => $("bundleName").focus(), 20);
+  }
+
+  function closeBundleModal() {
+    $("bundleModal").hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function updateBundleTypeFields() {
+    const fixed = $("bundleType").value === "fixed";
+    $("fixedSkuField").hidden = !fixed;
+    $("fixedStockField").hidden = !fixed;
+    renderBundleSkuPreview();
+  }
+
+  function submitBundle(event) {
+    event.preventDefault();
+    const type = $("bundleType").value;
+    const componentEntries = [1, 2, 3].map((index) => ({
+      id: $(`bundleComponent${index}`).value,
+      code: $(`bundleCode${index}`).value
+    })).filter((entry) => entry.id);
+    const components = componentEntries.map((entry) => entry.id);
+    if (type !== "fixed" && (!$("bundleComponent1").value || !$("bundleComponent2").value)) {
+      showToast("请选择组件 1 和组件 2");
+      return;
+    }
+    if (new Set(components).size !== components.length) {
+      showToast("同一个单品不能在套装中重复选择");
+      return;
+    }
+    if (type !== "fixed" && (!$("bundleColor").value.trim() || !$("bundleSize").value)) {
+      showToast("虚拟套装需要填写颜色并选择尺码");
+      return;
+    }
+    if (type === "fixed" && !$("bundleFixedSku").value.trim()) {
+      showToast("请输入固定 SET SKU，例如 COZSS26-WSET068");
+      return;
+    }
+    const componentProducts = components.map((id) => state.products.find((product) => product.id === id)).filter(Boolean);
+    const componentCodes = componentEntries.map((entry, index) => entry.code.trim().toUpperCase() || bundleTail(componentProducts[index]?.baseSku));
+    const bundle = {
+      id: `B${Date.now()}`,
+      name: $("bundleName").value.trim(),
+      type,
+      season: $("bundleSeason").value.trim().toUpperCase() || "SS26",
+      color: $("bundleColor").value.trim(),
+      size: $("bundleSize").value,
+      fixedSku: $("bundleFixedSku").value.trim().toUpperCase(),
+      fixedStock: Math.max(0, Number($("bundleFixedStock").value || 0)),
+      components,
+      componentSkus: componentProducts.map((product) => product.baseSku),
+      componentColors: componentProducts.map((product) => product.color),
+      componentCodes,
+      createdAt: new Date().toISOString()
+    };
+    if (!bundle.name) {
+      showToast("请输入套装名称");
+      return;
+    }
+    if ((state.bundles || []).some((item) => bundleSku(item) === bundleSku(bundle))) {
+      showToast(`套装 SKU ${bundleSku(bundle)} 已存在`);
+      return;
+    }
+    state.bundles = [...(state.bundles || []), bundle];
+    saveState();
+    closeBundleModal();
+    renderAll();
+    showToast(`套装 ${bundleSku(bundle)} 已创建`);
+  }
+
+  function deleteBundle(id) {
+    const bundle = (state.bundles || []).find((item) => item.id === id);
+    if (!bundle) return;
+    const confirmation = currentLang === "zh"
+      ? `确认删除套装 ${bundleSku(bundle)}？`
+      : `Delete bundle ${bundleSku(bundle)}?`;
+    if (!window.confirm(confirmation)) return;
+    state.bundles = state.bundles.filter((item) => item.id !== id);
+    saveState();
+    renderAll();
+    showToast(`套装 ${bundleSku(bundle)} 已删除`);
   }
 
   function closeSkuModal() {
@@ -746,7 +972,11 @@
 
   function submitMovement(event) {
     event.preventDefault();
-    const [productId, size] = $("movementSku").value.split("|");
+    const [kind, productId, size] = $("movementSku").value.split("|");
+    if (kind === "bundle") {
+      submitBundleMovement(productId);
+      return;
+    }
     const product = state.products.find((item) => item.id === productId);
     const type = $("movementType").value;
     const locationKey = $("movementLocation").value;
@@ -780,6 +1010,47 @@
     setMovementType("inbound");
     renderAll();
     showToast(`${product.name} ${size} 码已${type === "inbound" ? "入库" : "出库"} ${qty} 件`);
+  }
+
+  function submitBundleMovement(bundleId) {
+    const bundle = (state.bundles || []).find((item) => item.id === bundleId);
+    const type = $("movementType").value;
+    const qty = Math.max(1, Number($("movementQty").value || 1));
+    if (!bundle) return;
+    if (type === "inbound" && bundle.type !== "fixed") {
+      showToast("虚拟套装没有独立入库，请给组成单品入库");
+      return;
+    }
+    if (type === "outbound" && bundleAvailable(bundle) < qty) {
+      showToast(`${bundle.name} 可售不足 ${qty} 套`);
+      return;
+    }
+    const locationKey = $("movementLocation").value;
+    const location = locationKey === "warehouse" ? "上海总仓" : "静安门店";
+    const direction = type === "inbound" ? 1 : -1;
+    if (bundle.type === "fixed") {
+      bundle.fixedStock = Number(bundle.fixedStock || 0) + qty * direction;
+    } else {
+      bundleParts(bundle).forEach((product) => {
+        const targetSize = bundleComponentSize(product, bundle.size);
+        if (!targetSize) return;
+        product.sizes[targetSize] = Number(product.sizes[targetSize] || 0) - qty;
+        if (Number.isFinite(Number(product[locationKey]))) product[locationKey] = Math.max(0, Number(product[locationKey]) - qty);
+      });
+    }
+    const now = new Date();
+    state.movements.unshift({
+      id: `${type === "inbound" ? "IN" : "OUT"}-${compactDateKey()}-${String(state.movements.length + 1).padStart(3, "0")}`,
+      time: localTimestamp(now), type, sku: bundleSku(bundle), location, qty: qty * direction,
+      operator: "Rayna Li", note: $("movementNote").value.trim() || `${bundleTypeLabel(bundle.type)}${type === "outbound" ? "销售" : "入库"}`
+    });
+    recordStockSnapshot(totalAvailable(), now);
+    saveState();
+    closeMovementModal();
+    $("movementForm").reset();
+    setMovementType("inbound");
+    renderAll();
+    showToast(`${bundle.name} 已${type === "outbound" ? "出库" : "入库"} ${qty} 套`);
   }
 
   function updateSkuPreview() {
@@ -860,6 +1131,7 @@
           image: safeImageUrl(item.imageUrl),
           imagePath: item.imagePath || "",
           sizes: {},
+          reservedBySize: {},
           skuBySize: {},
           warehouse: 0,
           store: 0,
@@ -872,6 +1144,7 @@
       if (!product.image) product.image = safeImageUrl(item.imageUrl);
       if (!product.imagePath && item.imagePath) product.imagePath = item.imagePath;
       product.sizes[size] = Number(product.sizes[size] || 0) + Number(item.stockedQuantity || 0);
+      product.reservedBySize[size] = Number(product.reservedBySize[size] || 0) + Number(item.reservedQuantity || 0);
       if (!product.skuBySize[size]) product.skuBySize[size] = String(item.sku);
       product.warehouse += Number(item.stockedQuantity || 0);
       product.reserved += Number(item.reservedQuantity || 0);
@@ -887,6 +1160,7 @@
     return {
       products,
       movements: [],
+      bundles: Array.isArray(state?.bundles) ? state.bundles : [],
       source: {
         type: "coz",
         brand: "CoZ",
@@ -909,6 +1183,15 @@
     if (snapshot?.brand !== "CoZ" || !Array.isArray(snapshot.inventory) || snapshot.inventory.length > 50000) return;
     try {
       state = stateFromCozSnapshot(snapshot);
+      state.bundles = (state.bundles || []).map((bundle) => ({
+        ...bundle,
+        components: (bundle.components || []).map((id, index) => {
+          const previousSku = bundle.componentSkus?.[index];
+          const previousColor = bundle.componentColors?.[index];
+          return state.products.find((product) => product.id === id)
+            ?.id || state.products.find((product) => product.baseSku === previousSku && (!previousColor || product.color === previousColor))?.id || id;
+        })
+      }));
       recordStockSnapshot(totalAvailable(), snapshot.syncedAt || new Date());
       saveState();
       renderAll();
@@ -934,8 +1217,11 @@
       if (jumpButton) switchView(jumpButton.dataset.jump);
       const moveButton = event.target.closest("[data-move-product]");
       if (moveButton) openMovementModal(moveButton.dataset.moveProduct);
+      const deleteBundleButton = event.target.closest("[data-delete-bundle]");
+      if (deleteBundleButton) deleteBundle(deleteBundleButton.dataset.deleteBundle);
       if (event.target.closest("[data-close-modal]")) closeMovementModal();
       if (event.target.closest("[data-close-sku]")) closeSkuModal();
+      if (event.target.closest("[data-close-bundle]")) closeBundleModal();
       if (event.target.closest("[data-close-image]")) closeImageModal();
     });
     document.addEventListener("dblclick", (event) => {
@@ -964,6 +1250,7 @@
     $("mobileMoveBtn").addEventListener("click", () => openMovementModal());
     $("scanBtn").addEventListener("click", () => { openMovementModal(); showToast("请选择或扫描 SKU 后调整库存"); });
     $("addSkuBtn").addEventListener("click", openSkuModal);
+    $("addBundleBtn").addEventListener("click", openBundleModal);
     $("addCategoryBtn").addEventListener("click", openCategoryCreator);
     $("cancelCategoryBtn").addEventListener("click", closeCategoryCreator);
     $("saveCategoryBtn").addEventListener("click", addCategory);
@@ -975,6 +1262,7 @@
     }));
     $("movementForm").addEventListener("submit", submitMovement);
     $("skuForm").addEventListener("submit", submitSku);
+    $("bundleForm").addEventListener("submit", submitBundle);
     $("exportBtn").addEventListener("click", exportInventory);
     $("inventorySearch").addEventListener("input", () => { renderInventory(); refreshIcons(); applyLanguage(); });
     $("categoryFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
@@ -982,6 +1270,9 @@
     $("movementSearch").addEventListener("input", renderMovements);
     document.querySelectorAll(".segmented button").forEach((button) => button.addEventListener("click", () => setMovementType(button.dataset.type)));
     ["skuCategory", "skuStyle", "skuColor", "skuSize"].forEach((id) => $(id).addEventListener("input", updateSkuPreview));
+    ["bundleSeason", "bundleColor", "bundleSize", "bundleFixedSku", "bundleCode1", "bundleCode2", "bundleCode3"].forEach((id) => $(id).addEventListener("input", renderBundleSkuPreview));
+    [1, 2, 3].forEach((index) => $(`bundleComponent${index}`).addEventListener("change", () => updateBundleComponentCode(index)));
+    $("bundleType").addEventListener("change", updateBundleTypeFields);
     $("saveRulesBtn").addEventListener("click", () => showToast("库存同步规则已保存"));
     $("languageToggle").addEventListener("click", () => {
       currentLang = currentLang === "zh" ? "en" : "zh";
@@ -997,6 +1288,7 @@
       if (event.key !== "Escape") return;
       if (!$("movementModal").hidden) closeMovementModal();
       if (!$("skuModal").hidden) closeSkuModal();
+      if (!$("bundleModal").hidden) closeBundleModal();
       if (!$("imageModal").hidden) closeImageModal();
     });
   }
