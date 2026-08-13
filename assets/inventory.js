@@ -289,9 +289,14 @@
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (saved?.products?.length && Array.isArray(saved.movements)) return { ...upgradeCozState(saved), bundles: Array.isArray(saved.bundles) ? saved.bundles : [] };
+      if (saved?.products?.length && Array.isArray(saved.movements)) return { ...upgradeCozState(saved), bundles: mergeBundleSeed(saved.bundles) };
     } catch (_) { /* Use the packaged inventory sample if local data is invalid. */ }
     return clone(seedState);
+  }
+  function mergeBundleSeed(existingBundles) {
+    const imported = Array.isArray(window.BUNDLE_SEED) ? window.BUNDLE_SEED : [];
+    const custom = (Array.isArray(existingBundles) ? existingBundles : []).filter((bundle) => !String(bundle.id || "").startsWith("IMPORT-"));
+    return [...custom, ...clone(imported)];
   }
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -313,6 +318,7 @@
     return /^[a-z0-9]+$/i.test(raw) ? raw.toUpperCase() : raw;
   }
   function bundleSku(bundle) {
+    if (bundle.importedSku) return bundle.importedSku;
     if (bundle.type === "fixed" && bundle.fixedSku) return bundle.fixedSku;
     const tails = (bundle.components || []).map((_, index) => {
       const part = bundlePartRecords(bundle).find((record) => record.index === index)?.product;
@@ -327,6 +333,7 @@
       const sku = bundle.componentSkus?.[index];
       const color = bundle.componentColors?.[index];
       const product = state.products.find((item) => item.id === id)
+        || state.products.find((item) => [item.baseSku, item.sourceBaseSku, item.style, item.originalStyle].includes(bundle.componentSourceSkus?.[index]) && (!color || item.color === color))
         || state.products.find((item) => item.baseSku === (sku || id) && (!color || item.color === color));
       return product ? { product, index } : null;
     }).filter(Boolean);
@@ -334,15 +341,16 @@
   function bundleParts(bundle) {
     return bundlePartRecords(bundle).map(({ product }) => product);
   }
-  function bundleComponentSize(product, bundleSize) {
+  function bundleComponentSize(product, bundleSize, configuredSize = "") {
+    if (configuredSize && product.sizes?.[configuredSize] != null) return configuredSize;
     if (bundleSize && product.sizes?.[bundleSize] != null) return bundleSize;
     if (product.sizes?.F != null) return "F";
     return "";
   }
-  function componentAvailable(product, size) {
+  function componentAvailable(product, size, configuredSize = "") {
     if (!product) return 0;
     if (size) {
-      const componentSize = bundleComponentSize(product, size);
+      const componentSize = bundleComponentSize(product, size, configuredSize);
       if (!componentSize) return 0;
       const reserved = product.reservedBySize
         ? Number(product.reservedBySize[componentSize] || 0)
@@ -355,7 +363,7 @@
     if (bundle.type === "fixed") return Math.max(0, Number(bundle.fixedStock || 0));
     const parts = bundleParts(bundle);
     if (!parts.length || parts.length !== (bundle.components || []).length) return 0;
-    return Math.max(0, Math.min(...parts.map((product) => componentAvailable(product, bundle.size))));
+    return Math.max(0, Math.min(...parts.map((product, index) => componentAvailable(product, bundle.size, bundle.componentSizes?.[index]))));
   }
   function bundleTypeLabel(type) {
     return type === "fixed" ? "固定 SET 套装" : type === "promo" ? "销售组合促销" : "虚拟套装 / BOM";
@@ -438,8 +446,9 @@
     Object.assign(fabricTypeCodes, { Woven: "W", Knit: "K" }, document.fabricTypeCodes || {});
     Object.keys(colorMappings).forEach((key) => delete colorMappings[key]);
     Object.assign(colorMappings, document.colorMappings || {}, defaultColorMappings);
-    bundleSeasons.splice(0, bundleSeasons.length, ...[...new Set(["SS26", "AW26", ...(document.bundleSeasons || []), ...(document.state.bundles || []).map((bundle) => bundle.season)].map((value) => String(value || "").trim().toUpperCase()).filter(Boolean))]);
-    bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(document.state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
+    state.bundles = mergeBundleSeed(state.bundles);
+    bundleSeasons.splice(0, bundleSeasons.length, ...[...new Set(["SS26", "AW26", ...(document.bundleSeasons || []), ...(state.bundles || []).map((bundle) => bundle.season)].map((value) => String(value || "").trim().toUpperCase()).filter(Boolean))]);
+    bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
     stockHistory = normalizeStockHistory(document.stockHistory);
     persistLocalCache();
     return true;
@@ -1517,8 +1526,8 @@
     if (bundle.type === "fixed") {
       bundle.fixedStock = Number(bundle.fixedStock || 0) + qty * direction;
     } else {
-      bundleParts(bundle).forEach((product) => {
-        const targetSize = bundleComponentSize(product, bundle.size);
+      bundleParts(bundle).forEach((product, index) => {
+        const targetSize = bundleComponentSize(product, bundle.size, bundle.componentSizes?.[index]);
         if (!targetSize) return;
         product.sizes[targetSize] = Number(product.sizes[targetSize] || 0) - qty;
         if (Number.isFinite(Number(product[locationKey]))) product[locationKey] = Math.max(0, Number(product[locationKey]) - qty);
@@ -1831,7 +1840,7 @@
     return {
       products: [...manualProducts, ...syncedProducts],
       movements: [],
-      bundles: Array.isArray(state?.bundles) ? state.bundles : [],
+      bundles: mergeBundleSeed(state?.bundles),
       source: {
         type: "coz",
         brand: "CoZ",
