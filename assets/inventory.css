@@ -230,7 +230,6 @@ tbody tr:hover { background: #fafcfb; }
 .view-intro { display: flex; flex-direction: column; gap: 3px; margin-right: auto; }
 .view-intro strong { font-size: 20px; }
 .view-intro small { color: var(--muted); font-size: 12px; }
-.bundle-view-intro { margin: 0 0 14px; }
 .bundle-toolbar .search-box { flex: 1 1 320px; max-width: 520px; }
 .bundle-toolbar select { min-width: 132px; }
 .search-box { height: 38px; min-width: 260px; display: flex; align-items: center; gap: 8px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 5px; background: var(--surface); }
