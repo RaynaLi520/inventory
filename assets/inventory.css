@@ -201,6 +201,7 @@ tbody tr:hover { background: #fafcfb; }
 .status::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .status.healthy { color: var(--green); background: var(--green-soft); }
 .status.low { color: var(--red); background: var(--red-soft); }
+.status.unavailable { color: #6e7773; background: #e9eeeb; }
 .row-action { display: grid; place-items: center; width: 29px; height: 29px; padding: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; cursor: pointer; }
 .row-action:hover { border-color: var(--line); background: #fff; }
 .row-action svg { width: 15px; }

@@ -941,7 +941,10 @@
       return (!term || searchable.includes(term))
         && (!type || bundle.type === type)
         && (!size || bundle.size === size)
-        && (!status || (status === "available" ? available > 0 : available <= 0));
+        && (!status
+          || (status === "healthy" && available > 5)
+          || (status === "low" && available > 0 && available <= 5)
+          || (status === "unavailable" && available <= 0));
     });
     $("bundleCount").textContent = bundles.length;
     $("bundleAvailable").textContent = formatNumber(bundles.reduce((sum, bundle) => sum + bundleAvailable(bundle), 0));
@@ -950,14 +953,18 @@
       const parts = partRecords.map(({ product }) => product);
       const available = bundleAvailable(bundle);
       const sku = bundleSku(bundle);
-      const status = available > 0 ? "库存正常" : "不可售";
+      const inventoryStatus = available <= 0
+        ? { label: "不可售", className: "unavailable" }
+        : available <= 5
+          ? { label: "低库存", className: "low" }
+          : { label: "库存正常", className: "healthy" };
       return `<tr>
         <td><strong>${escapeHtml(bundle.name)}</strong><code class="bundle-code">${escapeHtml(sku)}</code></td>
         <td><span class="bundle-type ${escapeHtml(bundle.type)}">${escapeHtml(bundleTypeLabel(bundle.type))}</span></td>
         <td><div class="bundle-parts">${partRecords.map(({ product, index }) => `<span class="bundle-part">${escapeHtml(product.name)}<code>${escapeHtml(bundle.componentCodes?.[index] || bundleTail(product.baseSku))}</code></span>`).join("") || "<span>-</span>"}</div></td>
         <td>${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}</td>
         <td class="num"><span class="stock-number">${formatNumber(available)}</span></td>
-        <td><span class="status ${available > 0 ? "healthy" : "low"}">${status}</span></td>
+        <td><span class="status ${inventoryStatus.className}">${inventoryStatus.label}</span></td>
         <td><div class="row-actions"><button class="row-action" type="button" data-edit-bundle="${escapeHtml(bundle.id)}" title="编辑套装" aria-label="编辑套装"><i data-lucide="pencil"></i></button><button class="row-action danger" type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装" aria-label="删除套装"><i data-lucide="trash-2"></i></button></div></td>
       </tr>`;
     }).join("");
@@ -981,7 +988,7 @@
       + ["virtual", "promo", "fixed"].map((type) => `<option value="${type}">${escapeHtml(bundleTypeLabel(type))}</option>`).join("");
     $("bundleSizeFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部尺码" : "All sizes"}</option>`
       + sizes.map((size) => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join("");
-    $("bundleStatusFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部状态" : "All statuses"}</option><option value="available">${currentLang === "zh" ? "可售" : "Available"}</option><option value="unavailable">${currentLang === "zh" ? "不可售" : "Unavailable"}</option>`;
+    $("bundleStatusFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部状态" : "All statuses"}</option><option value="healthy">${currentLang === "zh" ? "库存正常" : "Healthy"}</option><option value="low">${currentLang === "zh" ? "低库存（≤5）" : "Low stock (≤5)"}</option><option value="unavailable">${currentLang === "zh" ? "不可售" : "Unavailable"}</option>`;
     $("bundleTypeFilter").value = selections.type;
     $("bundleSizeFilter").value = selections.size;
     $("bundleStatusFilter").value = selections.status;
