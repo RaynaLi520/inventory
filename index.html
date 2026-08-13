@@ -136,6 +136,7 @@
           <div class="inventory-search-combobox"><label class="search-box"><i data-lucide="search"></i><input id="inventorySearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inventorySearchResults" autocomplete="off" placeholder="搜索款式、SKU、颜色"></label><div class="inventory-search-results" id="inventorySearchResults" role="listbox" hidden></div></div>
           <select id="categoryFilter" aria-label="按品类筛选"><option value="">全部品类</option></select>
           <select id="statusFilter" aria-label="按库存状态筛选"><option value="">全部状态</option><option value="low">低库存</option><option value="healthy">库存正常</option></select>
+          <button class="button secondary trash-button" id="openTrashBtn" type="button"><i data-lucide="trash-2"></i>回收站 <span id="trashCount">0</span></button>
           <button class="button secondary" id="addSkuBtn" type="button"><i data-lucide="plus"></i>新增 SPU</button>
         </div>
 
@@ -157,7 +158,7 @@
       </section>
 
       <section class="view" id="bundlesView">
-        <div class="view-intro bundle-view-intro"><span class="section-kicker">BUNDLE / BOM</span><strong>套装组合</strong><small>单件库存可组成虚拟套装，固定 SET 可独立管理。</small></div>
+        <div class="view-intro bundle-view-intro"><span class="section-kicker">BUNDLE CATALOG</span><strong>套装组合</strong><small>单件库存可组成虚拟套装，固定 SET 可独立管理。</small></div>
         <div class="toolbar bundle-toolbar">
           <label class="search-box"><i data-lucide="search"></i><input id="bundleSearch" type="search" placeholder="搜索套装、SKU、组件或颜色"></label>
           <select id="bundleTypeFilter" aria-label="按套装类型筛选"></select>
@@ -315,6 +316,7 @@
           <label><span>颜色代码</span><input id="skuColorCode" required maxlength="5" placeholder="选择颜色后自动带出"></label>
           <label><span>安全库存</span><input id="skuSafety" type="number" min="0" value="5"></label>
           </div>
+          <p class="color-code-notice" id="colorCodeNotice" role="status" hidden></p>
           <div class="sku-variant-list"><div class="sku-variant-head"><span>启用</span><span>尺码</span><span id="variantStockHeading">初始库存</span><span>CoZ 原始 SKU</span><span>品牌 SKU</span></div><div id="skuVariantRows"></div></div>
           <p class="variant-source-note" id="variantSourceNote" hidden>库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。</p>
         </div>
@@ -328,11 +330,11 @@
   <div class="modal" id="bundleModal" hidden>
     <div class="modal-backdrop" data-close-bundle></div>
     <section class="modal-panel wide" role="dialog" aria-modal="true" aria-labelledby="bundleModalTitle">
-      <header class="modal-head"><div><span class="section-kicker">BUNDLE / BOM</span><h2 id="bundleModalTitle">新建套装</h2></div><button class="icon-button" data-close-bundle type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <header class="modal-head"><div><span class="section-kicker">BUNDLE CATALOG</span><h2 id="bundleModalTitle">新建套装</h2></div><button class="icon-button" data-close-bundle type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
       <form id="bundleForm">
         <div class="form-grid">
           <label><span>套装名称</span><input id="bundleName" required placeholder="例如：针织上衣 + 阔腿裤"></label>
-          <label><span>组合类型</span><select id="bundleType"><option value="virtual">虚拟套装 / BOM</option><option value="promo">销售组合促销</option><option value="fixed">固定 SET 套装</option></select></label>
+          <label><span>组合类型</span><select id="bundleType"><option value="virtual">虚拟套装</option><option value="promo">销售组合促销</option><option value="fixed">固定 SET 套装</option></select></label>
           <div class="form-field category-field">
             <div class="field-title"><label for="bundleSeason">季节</label><button class="inline-add" id="addBundleSeasonBtn" type="button" aria-expanded="false" aria-controls="bundleSeasonCreator"><i data-lucide="plus"></i>添加季节</button></div>
             <select id="bundleSeason"></select>
@@ -365,6 +367,18 @@
     </section>
   </div>
 
+  <div class="modal" id="trashModal" hidden>
+    <div class="modal-backdrop" data-close-trash></div>
+    <section class="modal-panel wide trash-panel" role="dialog" aria-modal="true" aria-labelledby="trashModalTitle">
+      <header class="modal-head"><div><span class="section-kicker">RECYCLE BIN</span><h2 id="trashModalTitle">款式回收站</h2></div><button class="icon-button" data-close-trash type="button" aria-label="关闭回收站"><i data-lucide="x"></i></button></header>
+      <div class="trash-body">
+        <p class="trash-help">删除的款式不会在下一次 CoZ 同步时重新出现。恢复后会重新参与库存和套装计算。</p>
+        <div class="table-wrap"><table class="stock-table trash-table"><thead><tr><th>款式 / SKU</th><th>颜色</th><th>删除时间</th><th></th></tr></thead><tbody id="trashRows"></tbody></table></div>
+        <div class="empty-state" id="trashEmpty"><i data-lucide="archive-restore"></i><strong>回收站为空</strong><p>删除的款式会保留在这里。</p></div>
+      </div>
+    </section>
+  </div>
+
   <div class="modal image-modal" id="imageModal" hidden>
     <div class="modal-backdrop" data-close-image></div>
     <section class="image-viewer-panel" role="dialog" aria-modal="true" aria-labelledby="imageModalTitle">
@@ -384,6 +398,7 @@
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/supabase-config.js"></script>
+  <script src="assets/image-catalog.js"></script>
   <script src="assets/bundle-seed.js"></script>
   <script src="assets/inventory.js"></script>
 </body>

@@ -37,6 +37,32 @@ with check (id = 'default');
 comment on table public.inventory_platform_state is
   'Cloud state for the JA garment inventory dashboard. Public access is temporary until app authentication is enabled.';
 
+-- Product media. The browser and CoZ bridge save files as SKC_YYYYMMDDHHMMSS.ext.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('product-images', 'product-images', true, 15728640, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "product images can be read" on storage.objects;
+create policy "product images can be read"
+on storage.objects for select to public
+using (bucket_id = 'product-images');
+
+drop policy if exists "product images can be uploaded" on storage.objects;
+create policy "product images can be uploaded"
+on storage.objects for insert to anon, authenticated
+with check (bucket_id = 'product-images' and name ~ '^[A-Z0-9+_-]+_[0-9]{14}\.(jpg|jpeg|png|webp)$');
+
+drop policy if exists "product images can be updated" on storage.objects;
+create policy "product images can be updated"
+on storage.objects for update to anon, authenticated
+using (bucket_id = 'product-images')
+with check (bucket_id = 'product-images' and name ~ '^[A-Z0-9+_-]+_[0-9]{14}\.(jpg|jpeg|png|webp)$');
+
+drop policy if exists "product images can be deleted" on storage.objects;
+create policy "product images can be deleted"
+on storage.objects for delete to anon, authenticated
+using (bucket_id = 'product-images');
+
 do $$
 begin
   if not exists (

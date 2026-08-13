@@ -42,13 +42,13 @@
   const viewMeta = {
     overview: ["库存中台 / 今日", "经营概览"],
     inventory: ["商品中心 / SKU", "成衣库存"],
-    bundles: ["商品中心 / BOM", "套装组合"],
+    bundles: ["商品中心 / 套装", "套装组合"],
     movements: ["库存中心 / 流水", "出入库流水"],
     channels: ["全渠道 / 配额", "销售渠道"]
   };
   const translationPairs = [
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
-    ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装 / BOM", "Virtual bundle / BOM"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["添加季节", "Add season"], ["新季节", "New season"], ["添加颜色", "Add color"], ["新颜色", "New color"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["输入款号、名称或颜色检索", "Search style, name, or color"], ["搜索套装、SKU、组件或颜色", "Search bundle, SKU, component, or color"], ["清除组件", "Clear component"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["不可售", "Unavailable"], ["删除套装", "Delete bundle"],
+    ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装", "Virtual bundle"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["添加季节", "Add season"], ["新季节", "New season"], ["添加颜色", "Add color"], ["新颜色", "New color"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["输入款号、名称或颜色检索", "Search style, name, or color"], ["搜索套装、SKU、组件或颜色", "Search bundle, SKU, component, or color"], ["清除组件", "Clear component"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["不可售", "Unavailable"], ["删除套装", "Delete bundle"],
     ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
     ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
     ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], [" 个 SKU 需要处理", " SKUs need action"],
@@ -56,6 +56,7 @@
     ["个 SKU · 实时可售", "SKUs · sellable now"], ["件", "pcs"], ["件可售库存", "sellable pcs"], ["重点款库存", "Priority stock"], ["全部 SKU", "All SKUs"], ["渠道库存", "Channel stock"], ["最近动态", "Recent activity"], ["库存总览", "Stock overview"], ["库存正常", "Healthy"], ["低库存", "Low stock"], ["LIVE STOCK", "LIVE STOCK"], ["ALLOCATION", "ALLOCATION"],
     ["品牌小程序", "Brand mini-program"], ["天猫旗舰店", "Tmall flagship"], ["静安门店", "Jing'an store"], ["机动库存", "Buffer stock"], ["渠道可售", "Channel sellable"], ["今日订单", "Orders today"], ["同步正常", "Sync healthy"], ["微信自营商城", "WeChat direct store"], ["平台电商", "Marketplace"], ["线下直营", "Offline retail"], ["2 分钟前同步", "Synced 2 min ago"],
     ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SPU", "New SPU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
+    ["回收站", "Recycle bin"], ["款式回收站", "Style recycle bin"], ["删除款式", "Delete style"], ["恢复", "Restore"], ["彻底删除", "Delete permanently"], ["删除时间", "Deleted at"], ["回收站为空", "Recycle bin is empty"], ["删除的款式会保留在这里。", "Deleted styles remain here."], ["删除的款式不会在下一次 CoZ 同步时重新出现。恢复后会重新参与库存和套装计算。", "Deleted styles stay excluded from future CoZ syncs. Restored styles rejoin inventory and bundle calculations."],
     ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["备注", "Note"],
     ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
     ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款式名称", "Style name"], ["商品类型", "Item type"], ["添加类型", "Add type"], ["类型名称", "Type name"], ["类型缩写", "Type code"], ["商品图片", "Product image"], ["创建日期", "Creation date"], ["年份", "Year"], ["添加年份", "Add year"], ["新年份", "New year"], ["季节", "Season"], ["面料类型", "Fabric type"], ["添加面料类型", "Add fabric type"], ["面料类型名称", "Fabric type name"], ["面料类型代码", "Fabric type code"], ["SS · 春夏", "SS · Spring/Summer"], ["AW · 秋冬", "AW · Autumn/Winter"], ["三位序号", "3-digit sequence"], ["原始款号", "Original style no."], ["图片链接（可选）", "Image URL (optional)"], ["SKU 变体", "SKU variants"], ["一个 SPU 可同时生成多个尺码 SKU。", "Create multiple size SKUs under one SPU."], ["颜色代码", "Color code"], ["生成", "Create"], ["启用", "Enabled"], ["尺码", "Size"], ["初始库存", "Opening stock"], ["CoZ 库存", "CoZ stock"], ["CoZ 原始 SKU", "Original CoZ SKU"], ["品牌 SKU", "Brand SKU"], ["库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。", "Stock and original SKUs are synced from CoZ. Brand SKUs can be edited."], ["未同步", "Not synced"], ["SKU 编码", "SKU code"], ["安全库存", "Safety stock"], ["新增成衣 SPU", "New garment SPU"], ["编辑 SPU 和 SKU", "Edit SPU and SKU"], ["SPU 编码预览", "SPU code preview"], ["COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号", "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence"], ["创建 SPU 和 SKU", "Create SPU and SKUs"], ["保存修改", "Save changes"]
@@ -122,6 +123,7 @@
   let cloudRevision = 0;
   let cloudChannel = null;
   let pendingSkuImage = "";
+  let pendingSkuImageName = "";
   let skuImageRemoved = false;
 
   function localDateKey(date = new Date()) {
@@ -192,7 +194,40 @@
     const labels = itemTypeLabels[value];
     return labels ? labels[currentLang === "zh" ? 0 : 1] : String(value || "");
   }
+  function itemTypeCatalogLabel(value) {
+    const labels = itemTypeLabels[value];
+    const english = labels?.[1] || String(value || "");
+    const chinese = labels?.[0] || String(value || "");
+    return `${english} · ${chinese} · ${itemTypeCodes[value] || "--"}`;
+  }
+  function productSourceKey(product) {
+    return `${String(product?.sourceBaseSku || product?.style || product?.originalStyle || product?.baseSku || "").trim().toLowerCase()}\u0000${String(product?.color || "").trim().toLowerCase()}`;
+  }
+  function imageTimestamp(date = new Date()) {
+    return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}${String(date.getSeconds()).padStart(2, "0")}`;
+  }
+  function normalizedImageName(skc, extension = "jpg", date = new Date()) {
+    const safeSkc = String(skc || "SKC").trim().toUpperCase().replace(/[^A-Z0-9+_-]+/g, "-").replace(/^-+|-+$/g, "") || "SKC";
+    const safeExtension = String(extension || "jpg").toLowerCase().replace("jpeg", "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
+    return `${safeSkc}_${imageTimestamp(date)}.${safeExtension}`;
+  }
+  function applyImageCatalog(saved) {
+    const catalog = Array.isArray(window.COZ_IMAGE_CATALOG) ? window.COZ_IMAGE_CATALOG : [];
+    if (!catalog.length || !Array.isArray(saved?.products)) return;
+    const byKey = new Map(catalog.map((entry) => [`${String(entry.style || "").trim().toLowerCase()}\u0000${String(entry.color || "").trim().toLowerCase()}`, entry]));
+    saved.products.forEach((product) => {
+      const entry = byKey.get(productSourceKey(product));
+      if (!entry) return;
+      product.imageSourceName ||= entry.sourceName;
+      product.imageName ||= entry.imageName;
+      product.imageSyncStatus ||= product.image ? "available" : "pending-source-download";
+    });
+  }
   function upgradeCozState(saved) {
+    if (!saved || !Array.isArray(saved.products)) return saved;
+    saved.trashProducts = Array.isArray(saved.trashProducts) ? saved.trashProducts : [];
+    saved.deletedProductKeys = Array.isArray(saved.deletedProductKeys) ? [...new Set(saved.deletedProductKeys)] : [];
+    applyImageCatalog(saved);
     if (saved?.source?.type !== "coz") return saved;
     saved.products.forEach((product) => {
       const appearance = resolveColorAppearance(product.color);
@@ -303,7 +338,7 @@
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (saved?.products?.length && Array.isArray(saved.movements)) return { ...upgradeCozState(saved), bundles: mergeBundleSeed(saved.bundles) };
     } catch (_) { /* Use the packaged inventory sample if local data is invalid. */ }
-    return clone(seedState);
+    return { ...clone(seedState), trashProducts: [], deletedProductKeys: [] };
   }
   function mergeBundleSeed(existingBundles) {
     const imported = Array.isArray(window.BUNDLE_SEED) ? window.BUNDLE_SEED : [];
@@ -379,7 +414,7 @@
     return Math.max(0, Math.min(...parts.map((product, index) => componentAvailable(product, bundle.size, bundle.componentSizes?.[index]))));
   }
   function bundleTypeLabel(type) {
-    return type === "fixed" ? "固定 SET 套装" : type === "promo" ? "销售组合促销" : "虚拟套装 / BOM";
+    return type === "fixed" ? "固定 SET 套装" : type === "promo" ? "销售组合促销" : "虚拟套装";
   }
   function loadStockHistory() {
     try {
@@ -626,11 +661,11 @@
   }
 
   function productCell(product) {
-    const missingImageTitle = product.imagePath ? "已获取图片记录，等待商品图片源同步" : "CoZ 暂未提供商品图片";
+    const missingImageTitle = product.imageName || product.imagePath ? `图片记录：${product.imageName || product.imagePath}，等待源文件同步` : "CoZ 暂未提供商品图片";
     const image = product.image
       ? `<button class="product-image-button" type="button" data-image-preview data-image-src="${escapeHtml(product.image)}" data-image-name="${escapeHtml(product.name)}" data-image-sku="${escapeHtml(product.baseSku)}" title="双击查看大图" aria-label="查看 ${escapeHtml(product.name)} 大图"><img class="product-thumb" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} 商品图片"></button>`
       : `<span class="product-image-placeholder" title="${missingImageTitle}"><i data-lucide="image-off"></i></span>`;
-    return `<div class="product-cell">${image}<div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(product.baseSku)}</code></div></div>`;
+    return `<div class="product-cell">${image}<div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(product.baseSku)}</code>${product.imageName ? `<small class="image-name">${escapeHtml(product.imageName)}</small>` : ""}</div></div>`;
   }
 
   function statusBadge(product) {
@@ -732,7 +767,7 @@
         <td class="num">${cozProduct && !product.reservedReported ? "--" : formatNumber(product.reserved)}</td>
         <td class="num"><span class="stock-number">${formatNumber(availableStock(product))}</span></td>
         <td>${statusBadge(product)}</td>
-        <td><div class="row-actions"><button class="row-action" data-edit-product="${product.id}" type="button" title="编辑 SPU 和 SKU"><i data-lucide="pencil"></i></button><button class="row-action" data-move-product="${product.id}" type="button" title="调整库存"><i data-lucide="arrow-left-right"></i></button></div></td>
+        <td><div class="row-actions"><button class="row-action" data-edit-product="${product.id}" type="button" title="编辑 SPU 和 SKU"><i data-lucide="pencil"></i></button><button class="row-action" data-move-product="${product.id}" type="button" title="调整库存"><i data-lucide="arrow-left-right"></i></button><button class="row-action danger" data-trash-product="${product.id}" type="button" title="删除款式"><i data-lucide="trash-2"></i></button></div></td>
       </tr>`;
     }).join("");
     $("inventoryEmpty").hidden = products.length > 0;
@@ -996,7 +1031,7 @@
   function renderSkuCategoryOptions(selectedCategory) {
     const select = $("skuCategory");
     const selected = selectedCategory || select.value;
-    select.innerHTML = Object.entries(itemTypeCodes).map(([name, code]) => `<option value="${escapeHtml(name)}">${escapeHtml(itemTypeLabel(name))} · ${escapeHtml(code)}</option>`).join("");
+    select.innerHTML = Object.keys(itemTypeCodes).map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(itemTypeCatalogLabel(name))}</option>`).join("");
     if ([...select.options].some((option) => option.value === selected)) select.value = selected;
   }
 
@@ -1032,14 +1067,64 @@
   function selectMappedColor(color, code) {
     $("skuColor").value = color;
     $("skuColorCode").value = code;
+    renderColorCodeNotice([]);
     closeColorResults();
     updateGeneratedSkuCodes();
+  }
+  function parsedSkuColorCode(product, sku, size) {
+    const prefix = `${String(product?.baseSku || "")}-`;
+    const suffix = `-${size}`;
+    const value = String(sku || "");
+    return value.startsWith(prefix) && value.endsWith(suffix) && value.length > prefix.length + suffix.length
+      ? value.slice(prefix.length, -suffix.length).trim().toUpperCase()
+      : "";
+  }
+  function colorCodeCandidates(productOrColor) {
+    const color = String(typeof productOrColor === "string" ? productOrColor : productOrColor?.color || "").trim();
+    if (!color) return [];
+    const candidates = new Set();
+    const add = (value) => {
+      const code = String(value || "").trim().toUpperCase();
+      if (/^[A-Z0-9]{1,5}$/.test(code)) candidates.add(code);
+    };
+    add(colorMappings[color]);
+    state.products.filter((product) => String(product.color || "").trim().toLowerCase() === color.toLowerCase()).forEach((product) => {
+      add(product.colorCode);
+      Object.entries(product.skuBySize || {}).forEach(([size, sku]) => add(parsedSkuColorCode(product, sku, size)));
+    });
+    if (typeof productOrColor === "object") {
+      add(productOrColor.colorCode);
+      Object.entries(productOrColor.skuBySize || {}).forEach(([size, sku]) => add(parsedSkuColorCode(productOrColor, sku, size)));
+    }
+    return [...candidates].sort();
+  }
+  function renderColorCodeNotice(candidates, color = $("skuColor").value.trim()) {
+    const notice = $("colorCodeNotice");
+    if (!candidates.length) {
+      notice.hidden = true;
+      notice.textContent = "";
+      return;
+    }
+    notice.hidden = false;
+    notice.classList.toggle("conflict", candidates.length > 1);
+    notice.textContent = candidates.length > 1
+      ? `颜色“${color}”存在多个颜色代码：${candidates.join("、")}。系统暂不填写，请确认后手动选择。`
+      : `已根据颜色“${color}”自动使用颜色代码 ${candidates[0]}。`;
+  }
+  function applyColorCodeCandidates(productOrColor) {
+    const candidates = colorCodeCandidates(productOrColor);
+    $("skuColorCode").value = candidates.length === 1 ? candidates[0] : "";
+    renderColorCodeNotice(candidates);
+    updateGeneratedSkuCodes();
+    return candidates;
   }
   function applyExactColorMapping() {
     const value = $("skuColor").value.trim().toLowerCase();
     const entry = Object.entries(colorMappings).find(([color]) => color.toLowerCase() === value);
-    if (entry) {
-      $("skuColorCode").value = entry[1];
+    if (entry) applyColorCodeCandidates(entry[0]);
+    else {
+      $("skuColorCode").value = "";
+      renderColorCodeNotice([]);
       updateGeneratedSkuCodes();
     }
   }
@@ -1113,12 +1198,77 @@
     renderMovementSkuOptions();
     renderOverview();
     renderInventory();
+    renderTrash();
     renderBundleRows();
     renderMovements();
     renderChannels();
     renderSyncState();
     refreshIcons();
     applyLanguage();
+  }
+
+  function renderTrash() {
+    const products = state.trashProducts || [];
+    $("trashCount").textContent = products.length;
+    $("trashRows").innerHTML = products.map((product) => `<tr>
+      <td>${productCell(product)}</td>
+      <td class="color-cell">${colorSwatch(product)}${escapeHtml(product.color)}</td>
+      <td>${escapeHtml(product.deletedAt ? new Date(product.deletedAt).toLocaleString("zh-CN", { hour12: false }) : "--")}</td>
+      <td><div class="trash-actions"><button class="button secondary" type="button" data-restore-product="${escapeHtml(product.id)}"><i data-lucide="archive-restore"></i>恢复</button><button class="button danger" type="button" data-purge-product="${escapeHtml(product.id)}"><i data-lucide="trash-2"></i>彻底删除</button></div></td>
+    </tr>`).join("");
+    $("trashEmpty").hidden = products.length > 0;
+    $("trashRows").closest(".table-wrap").hidden = products.length === 0;
+  }
+
+  function trashProduct(id) {
+    const product = state.products.find((item) => item.id === id);
+    if (!product) return;
+    const linkedBundles = (state.bundles || []).filter((bundle) => (bundle.components || []).includes(id));
+    const detail = linkedBundles.length ? `\n该款被 ${linkedBundles.length} 个套装引用，删除后这些套装将暂时不可售。` : "";
+    if (!window.confirm(`确认删除款式 ${product.baseSku} · ${product.color}？${detail}\n删除后可在回收站恢复。`)) return;
+    state.products = state.products.filter((item) => item.id !== id);
+    state.deletedProductKeys = [...new Set([...(state.deletedProductKeys || []), productSourceKey(product)])];
+    state.trashProducts = [{ ...clone(product), deletedAt: new Date().toISOString(), deletedSourceKey: productSourceKey(product) }, ...(state.trashProducts || []).filter((item) => item.id !== id)];
+    saveState();
+    renderAll();
+    showToast(`款式 ${product.baseSku} 已移入回收站`);
+  }
+
+  function restoreProduct(id) {
+    const product = (state.trashProducts || []).find((item) => item.id === id);
+    if (!product) return;
+    if (state.products.some((item) => item.id === id || productSourceKey(item) === productSourceKey(product))) {
+      showToast("现有库存中已存在同款同色，无法直接恢复");
+      return;
+    }
+    const restored = clone(product);
+    delete restored.deletedAt;
+    delete restored.deletedSourceKey;
+    state.products.unshift(restored);
+    state.trashProducts = state.trashProducts.filter((item) => item.id !== id);
+    state.deletedProductKeys = (state.deletedProductKeys || []).filter((key) => key !== productSourceKey(restored));
+    saveState();
+    renderAll();
+    showToast(`款式 ${restored.baseSku} 已恢复`);
+  }
+
+  function purgeProduct(id) {
+    const product = (state.trashProducts || []).find((item) => item.id === id);
+    if (!product || !window.confirm(`彻底删除 ${product.baseSku} · ${product.color}？此操作无法恢复。`)) return;
+    state.trashProducts = state.trashProducts.filter((item) => item.id !== id);
+    saveState();
+    renderAll();
+    showToast(`款式 ${product.baseSku} 已彻底删除`);
+  }
+
+  function openTrashModal() {
+    renderTrash();
+    $("trashModal").hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+  function closeTrashModal() {
+    $("trashModal").hidden = true;
+    document.body.style.overflow = "";
   }
 
   function switchView(view) {
@@ -1161,9 +1311,11 @@
       const stock = Number(localSize ? product.localSizes?.[size] : product?.sizes?.[size] || 0);
       const existingSku = product?.skuBySize?.[size];
       const colorCode = String($("skuColorCode").value || "").trim().toUpperCase();
-      const sku = existingSku || (cozProduct && !colorCode ? "" : `${spuCodeFromForm()}-${colorCode || "COLOR"}-${size}`);
-      const generatedCodes = [product?.colorCode, colorMappings[product?.color]].filter(Boolean).map((value) => String(value).trim().toUpperCase());
+      const generatedCodes = colorCodeCandidates(product);
       const isGeneratedSku = existingSku && generatedCodes.some((code) => existingSku === `${product.baseSku}-${code}-${size}`);
+      const sku = existingSku && (!isGeneratedSku || generatedCodes.length <= 1)
+        ? existingSku
+        : (cozProduct && !colorCode ? "" : `${spuCodeFromForm()}-${colorCode || "COLOR"}-${size}`);
       const sourceSku = product?.sourceSkuBySize?.[size] || (cozProduct ? "本地新增" : "--");
       return `<div class="sku-variant-row" data-variant-size="${escapeHtml(size)}" ${cozProduct ? 'data-coz-product="true"' : ""} ${sourceSynced ? 'data-source-synced="true"' : ""}><input class="variant-enabled" type="checkbox" aria-label="启用 ${escapeHtml(size)} 码 SKU" ${checked ? "checked" : ""} ${sourceSynced ? "disabled" : ""}><span class="variant-size">${escapeHtml(size)}</span><input class="variant-stock" type="number" min="0" value="${stock}" aria-label="${escapeHtml(size)} 码库存" ${sourceSynced ? "disabled" : ""}><input class="variant-source-sku" value="${escapeHtml(sourceSku)}" aria-label="${escapeHtml(size)} 码 CoZ 原始 SKU" disabled><input class="variant-sku" value="${escapeHtml(sku)}" ${existingSku && !isGeneratedSku ? 'data-manual="true"' : ""} aria-label="${escapeHtml(size)} 码品牌 SKU"></div>`;
     }).join("");
@@ -1181,18 +1333,8 @@
   }
 
   function inferColorCode(product) {
-    if (colorMappings[product.color]) return String(colorMappings[product.color]).trim().toUpperCase();
-    if (product.colorCode) return String(product.colorCode).trim().toUpperCase();
-    const baseSku = String(product.baseSku || "");
-    for (const size of orderedSizes(product)) {
-      const sku = String(product.skuBySize?.[size] || "");
-      const prefix = `${baseSku}-`;
-      const suffix = `-${size}`;
-      if (sku.startsWith(prefix) && sku.endsWith(suffix) && sku.length > prefix.length + suffix.length) {
-        return sku.slice(prefix.length, -suffix.length).toUpperCase();
-      }
-    }
-    return "";
+    const candidates = colorCodeCandidates(product);
+    return candidates.length === 1 ? candidates[0] : "";
   }
 
   function setPendingSkuImage(value) {
@@ -1205,6 +1347,12 @@
     placeholder.hidden = Boolean(pendingSkuImage);
     $("skuImageDropzone").classList.toggle("has-image", Boolean(pendingSkuImage));
     $("clearSkuImageBtn").hidden = !pendingSkuImage;
+  }
+
+  function skuForImageName(product = null) {
+    const baseSku = String(product?.baseSku || $("skuPreview")?.textContent || $("skuStyle")?.value || "SKC").trim();
+    const colorCode = String(product ? inferColorCode(product) : $("skuColorCode")?.value || "").trim().toUpperCase();
+    return colorCode ? `${baseSku}-${colorCode}` : baseSku;
   }
 
   function compressProductImage(file) {
@@ -1243,9 +1391,12 @@
   async function useSkuImageFile(file) {
     try {
       const dataUrl = await compressProductImage(file);
+      const extension = file?.type?.split("/")[1] || "jpg";
+      const product = state.products.find((item) => item.id === $("editingProductId").value);
+      pendingSkuImageName = normalizedImageName(skuForImageName(product), extension);
       $("skuImageUrl").value = "";
       setPendingSkuImage(dataUrl);
-      showToast("图片已添加，保存 SPU 后同步到云端");
+      showToast(`图片已重命名为 ${pendingSkuImageName}`);
     } catch (error) {
       showToast(error.message || "图片添加失败");
     }
@@ -1254,6 +1405,7 @@
   function openSkuModal(productId = "") {
     $("skuForm").reset();
     skuImageRemoved = false;
+    pendingSkuImageName = "";
     setPendingSkuImage("");
     $("editingProductId").value = productId;
     renderSkuCategoryOptions();
@@ -1278,12 +1430,16 @@
       $("skuImageUrl").value = /^https:/i.test(product.image || "") ? product.image : "";
       setPendingSkuImage(product.image || "");
       $("skuColor").value = product.color || "";
-      $("skuColorCode").value = inferColorCode(product);
+      const colorCandidates = colorCodeCandidates(product);
+      $("skuColorCode").value = colorCandidates.length === 1 ? colorCandidates[0] : "";
+      renderColorCodeNotice(colorCandidates, product.color);
+      pendingSkuImageName = product.imageName || "";
       $("skuSafety").value = Number(product.safety || 0);
       $("skuModalTitle").textContent = "编辑 SPU 和 SKU";
       $("skuSubmitButton").textContent = "保存修改";
       renderSkuVariantRows(product);
     } else {
+      renderColorCodeNotice([]);
       updateNextSpuSequence();
       $("skuModalTitle").textContent = "新增成衣 SPU";
       $("skuSubmitButton").textContent = "创建 SPU 和 SKU";
@@ -1401,6 +1557,7 @@
     closeSkuColorCreator();
     closeColorResults();
     setPendingSkuImage("");
+    pendingSkuImageName = "";
     document.body.style.overflow = "";
   }
 
@@ -1763,7 +1920,10 @@
         sequence
       },
       color, colorCode, colorHex: appearance.hex, colorAccent: appearance.accent, colorPattern: appearance.pattern,
-      safety: Number($("skuSafety").value || 0), image: image || (!skuImageRemoved ? editingProduct?.image : "") || ""
+      safety: Number($("skuSafety").value || 0), image: image || (!skuImageRemoved ? editingProduct?.image : "") || "",
+      imageName: image ? (pendingSkuImageName || editingProduct?.imageName || normalizedImageName(`${baseSku}-${colorCode}`, "jpg")) : "",
+      imageUpdatedAt: image ? new Date().toISOString() : null,
+      imageSyncStatus: image ? "available" : (editingProduct?.imageSyncStatus || "missing")
     };
     const productData = {
       id: editingId || `P${Date.now()}`,
@@ -1872,6 +2032,8 @@
 
   function stateFromCozSnapshot(snapshot) {
     const currentProducts = state.products || [];
+    const trashProducts = state.trashProducts || [];
+    const deletedSourceKeys = new Set([...(state.deletedProductKeys || []), ...trashProducts.map((product) => product.deletedSourceKey || productSourceKey(product))].map((key) => String(key).toLowerCase()));
     const manualProducts = currentProducts.filter((product) => product.sourceOrigin === "manual" && !product.sourceBaseSku);
     const mappings = currentProducts.filter((product) => product.sourceBaseSku || isCozProduct(product));
     const mappingBySource = new Map(mappings.map((product) => [`${product.sourceBaseSku || product.style || product.baseSku}\u0000${product.color}`, product]));
@@ -1898,6 +2060,9 @@
           safety: 0,
           image: safeImageUrl(item.imageUrl),
           imagePath: item.imagePath || "",
+          imageName: item.imageUrl ? normalizedImageName(`${style}-${colorMappings[color] || "COLOR"}`, "jpg") : (item.imageName || ""),
+          imageSourceName: item.imageSourceName || item.imagePath || "",
+          imageSyncStatus: item.imageUrl ? "available" : "pending-source-download",
           sizes: {},
           reservedBySize: {},
           skuBySize: {},
@@ -1912,6 +2077,9 @@
       const product = groups.get(key);
       if (!product.image) product.image = safeImageUrl(item.imageUrl);
       if (!product.imagePath && item.imagePath) product.imagePath = item.imagePath;
+      if (!product.imageName && item.imageName) product.imageName = item.imageName;
+      if (!product.imageSourceName && (item.imageSourceName || item.imagePath)) product.imageSourceName = item.imageSourceName || item.imagePath;
+      if (item.imageUrl) product.imageSyncStatus = "available";
       product.sizes[size] = Number(product.sizes[size] || 0) + Number(item.stockedQuantity || 0);
       product.reservedBySize[size] = Number(product.reservedBySize[size] || 0) + Number(item.reservedQuantity || 0);
       if (!product.sourceSkuBySize[size]) product.sourceSkuBySize[size] = String(item.sku);
@@ -1923,6 +2091,7 @@
     });
 
     const syncedProducts = [...groups.entries()]
+      .filter(([key]) => !deletedSourceKeys.has(key.toLowerCase()))
       .map(([key, product]) => {
         const mapping = mappingBySource.get(key);
         if (!mapping) return product;
@@ -1941,6 +2110,10 @@
           colorPattern: mapping.colorPattern || product.colorPattern,
           safety: Number(mapping.safety || 0),
           image: mapping.image || product.image,
+          imageName: mapping.imageName || product.imageName || "",
+          imageSourceName: mapping.imageSourceName || product.imageSourceName || "",
+          imageUpdatedAt: mapping.imageUpdatedAt || product.imageUpdatedAt || null,
+          imageSyncStatus: mapping.imageSyncStatus || product.imageSyncStatus || "missing",
           skuBySize: { ...(mapping.skuBySize || {}) },
           localSizes,
           sizes: { ...product.sizes, ...localSizes },
@@ -1954,6 +2127,8 @@
     if (!syncedProducts.length) throw new Error("CoZ 同步数据中没有有效 SKU");
     return {
       products: [...manualProducts, ...syncedProducts],
+      trashProducts,
+      deletedProductKeys: [...deletedSourceKeys],
       movements: [],
       bundles: mergeBundleSeed(state?.bundles),
       source: {
@@ -2014,6 +2189,12 @@
       if (moveButton) openMovementModal(moveButton.dataset.moveProduct);
       const editButton = event.target.closest("[data-edit-product]");
       if (editButton) openSkuModal(editButton.dataset.editProduct);
+      const trashButton = event.target.closest("[data-trash-product]");
+      if (trashButton) trashProduct(trashButton.dataset.trashProduct);
+      const restoreButton = event.target.closest("[data-restore-product]");
+      if (restoreButton) restoreProduct(restoreButton.dataset.restoreProduct);
+      const purgeButton = event.target.closest("[data-purge-product]");
+      if (purgeButton) purgeProduct(purgeButton.dataset.purgeProduct);
       const deleteBundleButton = event.target.closest("[data-delete-bundle]");
       if (deleteBundleButton) deleteBundle(deleteBundleButton.dataset.deleteBundle);
       const componentResult = event.target.closest("[data-component-id]");
@@ -2059,6 +2240,8 @@
     $("mobileMoveBtn").addEventListener("click", () => openMovementModal());
     $("scanBtn").addEventListener("click", () => { openMovementModal(); showToast("请选择或扫描 SKU 后调整库存"); });
     $("addSkuBtn").addEventListener("click", () => openSkuModal());
+    $("openTrashBtn").addEventListener("click", openTrashModal);
+    document.querySelectorAll("[data-close-trash]").forEach((node) => node.addEventListener("click", closeTrashModal));
     $("addBundleBtn").addEventListener("click", openBundleModal);
     $("addCategoryBtn").addEventListener("click", openCategoryCreator);
     $("cancelCategoryBtn").addEventListener("click", closeCategoryCreator);
@@ -2147,6 +2330,7 @@
     $("skuColorCode").addEventListener("input", updateGeneratedSkuCodes);
     $("skuColor").addEventListener("focus", () => renderColorResults($("skuColor").value));
     $("skuColor").addEventListener("input", () => { renderColorResults($("skuColor").value); applyExactColorMapping(); });
+    $("skuColor").addEventListener("change", () => applyColorCodeCandidates($("skuColor").value.trim()));
     $("skuColor").addEventListener("keydown", (event) => {
       const options = [...$("skuColorResults").querySelectorAll(".color-result")];
       const current = options.findIndex((option) => option.classList.contains("active"));
@@ -2197,6 +2381,7 @@
       if (!$("movementModal").hidden) closeMovementModal();
       if (!$("skuModal").hidden) closeSkuModal();
       if (!$("bundleModal").hidden) closeBundleModal();
+      if (!$("trashModal").hidden) closeTrashModal();
       if (!$("imageModal").hidden) closeImageModal();
     });
   }
