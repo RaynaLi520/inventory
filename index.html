@@ -245,7 +245,7 @@
 
   <div class="modal" id="skuModal" hidden>
     <div class="modal-backdrop" data-close-sku></div>
-    <section class="modal-panel wide" role="dialog" aria-modal="true" aria-labelledby="skuModalTitle">
+    <section class="modal-panel wide sku-editor-panel" role="dialog" aria-modal="true" aria-labelledby="skuModalTitle">
       <header class="modal-head"><div><span class="section-kicker">NEW SPU</span><h2 id="skuModalTitle">新增成衣 SPU</h2></div><button class="icon-button" data-close-sku type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
       <form id="skuForm">
         <div class="form-grid">
@@ -292,7 +292,8 @@
           <label><span>颜色代码</span><input id="skuColorCode" required maxlength="5" placeholder="例如：LBL"></label>
           <label><span>安全库存</span><input id="skuSafety" type="number" min="0" value="5"></label>
           </div>
-          <div class="sku-variant-list"><div class="sku-variant-head"><span>生成</span><span>尺码</span><span>初始库存</span><span>SKU 编码</span></div><div id="skuVariantRows"></div></div>
+          <div class="sku-variant-list"><div class="sku-variant-head"><span>启用</span><span>尺码</span><span id="variantStockHeading">初始库存</span><span>CoZ 原始 SKU</span><span>品牌 SKU</span></div><div id="skuVariantRows"></div></div>
+          <p class="variant-source-note" id="variantSourceNote" hidden>库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。</p>
         </div>
         <div class="sku-preview"><span>SPU 编码预览</span><code id="skuPreview">COZSS26-WST001</code><small>COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号</small></div>
         <input id="editingProductId" type="hidden">

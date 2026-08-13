@@ -49,7 +49,7 @@
     ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SPU", "New SPU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
     ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["备注", "Note"],
     ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
-    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款式名称", "Style name"], ["商品类型", "Item type"], ["添加类型", "Add type"], ["类型名称", "Type name"], ["类型缩写", "Type code"], ["商品图片", "Product image"], ["创建日期", "Creation date"], ["年份", "Year"], ["添加年份", "Add year"], ["新年份", "New year"], ["季节", "Season"], ["面料类型", "Fabric type"], ["添加面料类型", "Add fabric type"], ["面料类型名称", "Fabric type name"], ["面料类型代码", "Fabric type code"], ["SS · 春夏", "SS · Spring/Summer"], ["AW · 秋冬", "AW · Autumn/Winter"], ["三位序号", "3-digit sequence"], ["原始款号", "Original style no."], ["图片链接（可选）", "Image URL (optional)"], ["SKU 变体", "SKU variants"], ["一个 SPU 可同时生成多个尺码 SKU。", "Create multiple size SKUs under one SPU."], ["颜色代码", "Color code"], ["生成", "Create"], ["尺码", "Size"], ["初始库存", "Opening stock"], ["SKU 编码", "SKU code"], ["安全库存", "Safety stock"], ["新增成衣 SPU", "New garment SPU"], ["编辑 SPU 和 SKU", "Edit SPU and SKU"], ["SPU 编码预览", "SPU code preview"], ["COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号", "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence"], ["创建 SPU 和 SKU", "Create SPU and SKUs"], ["保存修改", "Save changes"]
+    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款式名称", "Style name"], ["商品类型", "Item type"], ["添加类型", "Add type"], ["类型名称", "Type name"], ["类型缩写", "Type code"], ["商品图片", "Product image"], ["创建日期", "Creation date"], ["年份", "Year"], ["添加年份", "Add year"], ["新年份", "New year"], ["季节", "Season"], ["面料类型", "Fabric type"], ["添加面料类型", "Add fabric type"], ["面料类型名称", "Fabric type name"], ["面料类型代码", "Fabric type code"], ["SS · 春夏", "SS · Spring/Summer"], ["AW · 秋冬", "AW · Autumn/Winter"], ["三位序号", "3-digit sequence"], ["原始款号", "Original style no."], ["图片链接（可选）", "Image URL (optional)"], ["SKU 变体", "SKU variants"], ["一个 SPU 可同时生成多个尺码 SKU。", "Create multiple size SKUs under one SPU."], ["颜色代码", "Color code"], ["生成", "Create"], ["启用", "Enabled"], ["尺码", "Size"], ["初始库存", "Opening stock"], ["CoZ 库存", "CoZ stock"], ["CoZ 原始 SKU", "Original CoZ SKU"], ["品牌 SKU", "Brand SKU"], ["库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。", "Stock and original SKUs are synced from CoZ. Brand SKUs can be edited."], ["未同步", "Not synced"], ["SKU 编码", "SKU code"], ["安全库存", "Safety stock"], ["新增成衣 SPU", "New garment SPU"], ["编辑 SPU 和 SKU", "Edit SPU and SKU"], ["SPU 编码预览", "SPU code preview"], ["COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号", "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence"], ["创建 SPU 和 SKU", "Create SPU and SKUs"], ["保存修改", "Save changes"]
   ];
   const zhToEn = new Map(translationPairs);
   const enToZh = new Map(translationPairs.map(([zh, en]) => [en, zh]));
@@ -196,6 +196,18 @@
       }
       if (product.skuBySize) {
         product.skuBySize = Object.fromEntries(Object.entries(product.skuBySize).map(([size, sku]) => [normalizeSizeLabel(size), sku]));
+      }
+      if (product.sourceSkuBySize) {
+        product.sourceSkuBySize = Object.fromEntries(Object.entries(product.sourceSkuBySize).map(([size, sku]) => [normalizeSizeLabel(size), sku]));
+      }
+      const skuValues = Object.values(product.skuBySize || {}).filter(Boolean).map(String);
+      if (!product.sourceSkuBySize && skuValues.length && skuValues.every((sku) => /^\d+$/.test(sku))) {
+        product.sourceSkuBySize = { ...product.skuBySize };
+        product.skuBySize = {};
+      }
+      if (product.sourceOrigin !== "manual" || product.sourceBaseSku) {
+        product.sourceOrigin = "coz";
+        product.sourceBaseSku ||= product.style || product.baseSku;
       }
     });
     return saved;
@@ -494,7 +506,10 @@
     const availableSizes = Object.keys(product.sizes || {});
     return [...sizeOrder.filter((size) => availableSizes.includes(size)), ...availableSizes.filter((size) => !sizeOrder.includes(size)).sort()];
   }
-  function skuForSize(product, size) { return product.skuBySize?.[size] || `${product.baseSku}-${size}`; }
+  function skuForSize(product, size) { return product.skuBySize?.[size] || product.sourceSkuBySize?.[size] || `${product.baseSku}-${size}`; }
+  function isCozProduct(product) {
+    return product?.sourceOrigin === "coz" || Boolean(product?.sourceBaseSku) || (state.source?.type === "coz" && !product?.sourceOrigin);
+  }
   function totalStock(product) { return Object.values(product.sizes).reduce((sum, qty) => sum + Number(qty || 0), 0); }
   function availableStock(product) { return Math.max(0, totalStock(product) - Number(product.reserved || 0)); }
   function isLow(product) { return Object.values(product.sizes).some((qty) => Number(qty) <= Number(product.safety)); }
@@ -645,7 +660,7 @@
     const category = $("categoryFilter").value;
     const status = $("statusFilter").value;
     return state.products.filter((product) => {
-      const matchesTerm = !term || [product.name, product.style, product.baseSku, product.color].some((value) => String(value).toLowerCase().includes(term));
+      const matchesTerm = !term || [product.name, product.style, product.baseSku, product.sourceBaseSku, product.color, ...Object.values(product.skuBySize || {}), ...Object.values(product.sourceSkuBySize || {})].some((value) => String(value).toLowerCase().includes(term));
       const matchesCategory = !category || product.category === category;
       const matchesStatus = !status || (status === "low" ? isLow(product) : !isLow(product));
       return matchesTerm && matchesCategory && matchesStatus;
@@ -654,21 +669,23 @@
 
   function renderInventory() {
     const products = getFilteredProducts();
-    const isCoz = state.source?.type === "coz";
     $("resultCount").textContent = products.reduce((sum, product) => sum + Object.keys(product.sizes).length, 0);
     $("resultAvailable").textContent = formatNumber(products.reduce((sum, product) => sum + availableStock(product), 0));
-    $("inventoryRows").innerHTML = products.map((product) => `
+    $("inventoryRows").innerHTML = products.map((product) => {
+      const cozProduct = isCozProduct(product);
+      return `
       <tr>
         <td>${productCell(product)}</td>
         <td class="color-cell">${colorSwatch(product)}${escapeHtml(product.color)}</td>
         <td>${renderSizeBand(product)}</td>
-        <td class="num">${isCoz ? "--" : formatNumber(product.warehouse)}</td>
-        <td class="num">${isCoz ? "--" : formatNumber(product.store)}</td>
-        <td class="num">${isCoz && !product.reservedReported ? "--" : formatNumber(product.reserved)}</td>
+        <td class="num" title="${cozProduct ? "CoZ 总库存" : "仓库库存"}">${formatNumber(product.warehouse)}</td>
+        <td class="num">${cozProduct ? "--" : formatNumber(product.store)}</td>
+        <td class="num">${cozProduct && !product.reservedReported ? "--" : formatNumber(product.reserved)}</td>
         <td class="num"><span class="stock-number">${formatNumber(availableStock(product))}</span></td>
         <td>${statusBadge(product)}</td>
         <td><div class="row-actions"><button class="row-action" data-edit-product="${product.id}" type="button" title="编辑 SPU 和 SKU"><i data-lucide="pencil"></i></button><button class="row-action" data-move-product="${product.id}" type="button" title="调整库存"><i data-lucide="arrow-left-right"></i></button></div></td>
-      </tr>`).join("");
+      </tr>`;
+    }).join("");
     $("inventoryEmpty").hidden = products.length > 0;
   }
 
@@ -683,7 +700,7 @@
   function matchingBundleComponents(query) {
     const terms = String(query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
     return state.products.filter((product) => {
-      const searchable = [product.baseSku, product.style, product.originalStyle, product.name, product.color, ...orderedSizes(product), ...Object.values(product.skuBySize || {})].join(" ").toLowerCase();
+      const searchable = [product.baseSku, product.sourceBaseSku, product.style, product.originalStyle, product.name, product.color, ...orderedSizes(product), ...Object.values(product.skuBySize || {}), ...Object.values(product.sourceSkuBySize || {})].join(" ").toLowerCase();
       return terms.every((term) => searchable.includes(term));
     }).slice(0, 40);
   }
@@ -949,22 +966,30 @@
   }
 
   function renderSkuVariantRows(product = null) {
-    const sizes = [...new Set([...sizeOrder, ...Object.keys(product?.sizes || {})])];
+    const cozProduct = Boolean(product && isCozProduct(product));
+    const sizes = cozProduct ? orderedSizes(product) : [...new Set([...sizeOrder, ...Object.keys(product?.sizes || {})])];
+    $("variantStockHeading").textContent = cozProduct ? "CoZ 库存" : "初始库存";
+    $("variantSourceNote").hidden = !cozProduct;
     $("skuVariantRows").innerHTML = sizes.map((size) => {
       const checked = product ? product.sizes?.[size] != null : ["S", "M", "L"].includes(size);
       const stock = Number(product?.sizes?.[size] || 0);
       const existingSku = product?.skuBySize?.[size];
-      const sku = existingSku || `${spuCodeFromForm()}-${String($("skuColorCode").value || "COLOR").trim().toUpperCase()}-${size}`;
+      const colorCode = String($("skuColorCode").value || "").trim().toUpperCase();
+      const sku = existingSku || (cozProduct && !colorCode ? "" : `${spuCodeFromForm()}-${colorCode || "COLOR"}-${size}`);
       const isGeneratedSku = existingSku && product?.colorCode && existingSku === `${product.baseSku}-${product.colorCode}-${size}`;
-      return `<div class="sku-variant-row" data-variant-size="${escapeHtml(size)}"><input class="variant-enabled" type="checkbox" aria-label="生成 ${escapeHtml(size)} 码 SKU" ${checked ? "checked" : ""}><span class="variant-size">${escapeHtml(size)}</span><input class="variant-stock" type="number" min="0" value="${stock}" aria-label="${escapeHtml(size)} 码初始库存"><input class="variant-sku" value="${escapeHtml(sku)}" ${existingSku && !isGeneratedSku ? 'data-manual="true"' : ""} aria-label="${escapeHtml(size)} 码 SKU 编码"></div>`;
+      const sourceSku = product?.sourceSkuBySize?.[size] || (cozProduct ? "未同步" : "--");
+      return `<div class="sku-variant-row" data-variant-size="${escapeHtml(size)}" ${cozProduct ? 'data-coz-product="true"' : ""}><input class="variant-enabled" type="checkbox" aria-label="启用 ${escapeHtml(size)} 码 SKU" ${checked ? "checked" : ""} ${cozProduct ? "disabled" : ""}><span class="variant-size">${escapeHtml(size)}</span><input class="variant-stock" type="number" min="0" value="${stock}" aria-label="${escapeHtml(size)} 码库存" ${cozProduct ? "disabled" : ""}><input class="variant-source-sku" value="${escapeHtml(sourceSku)}" aria-label="${escapeHtml(size)} 码 CoZ 原始 SKU" disabled><input class="variant-sku" value="${escapeHtml(sku)}" ${existingSku && !isGeneratedSku ? 'data-manual="true"' : ""} aria-label="${escapeHtml(size)} 码品牌 SKU"></div>`;
     }).join("");
   }
 
   function updateGeneratedSkuCodes() {
+    const colorCode = String($("skuColorCode").value || "").trim().toUpperCase();
     document.querySelectorAll("#skuVariantRows .sku-variant-row").forEach((row) => {
       const input = row.querySelector(".variant-sku");
       if (input.dataset.manual === "true") return;
-      input.value = `${spuCodeFromForm()}-${String($("skuColorCode").value || "COLOR").trim().toUpperCase()}-${row.dataset.variantSize}`;
+      input.value = row.dataset.cozProduct === "true" && !colorCode
+        ? ""
+        : `${spuCodeFromForm()}-${colorCode || "COLOR"}-${row.dataset.variantSize}`;
     });
   }
 
@@ -1440,15 +1465,19 @@
       showToast("请至少选择一个尺码 SKU");
       return;
     }
-    if (variants.some((variant) => !variant.sku)) {
+    const cozEdit = Boolean(editingProduct && isCozProduct(editingProduct));
+    if (!cozEdit && variants.some((variant) => !variant.sku)) {
       showToast("每个已选尺码都需要 SKU 编码");
       return;
     }
-    if (new Set(variants.map((variant) => variant.sku)).size !== variants.length) {
+    if (new Set(variants.map((variant) => variant.sku).filter(Boolean)).size !== variants.filter((variant) => variant.sku).length) {
       showToast("同一款式中不能有重复 SKU 编码");
       return;
     }
-    const occupiedSkus = new Set(state.products.filter((product) => product.id !== editingId).flatMap((product) => orderedSizes(product).map((size) => skuForSize(product, size))));
+    const occupiedSkus = new Set(state.products.filter((product) => product.id !== editingId).flatMap((product) => [
+      ...Object.values(product.skuBySize || {}),
+      ...Object.values(product.sourceSkuBySize || {})
+    ]).filter(Boolean));
     const duplicateSku = variants.find((variant) => occupiedSkus.has(variant.sku));
     if (duplicateSku) {
       showToast(`SKU ${duplicateSku.sku} 已存在`);
@@ -1464,11 +1493,8 @@
     const appearance = resolveColorAppearance(color);
     const sizes = Object.fromEntries(variants.map((variant) => [variant.size, variant.stock]));
     const skuBySize = Object.fromEntries(variants.map((variant) => [variant.size, variant.sku]));
-    const productData = {
-      id: editingProduct?.sourceOrigin !== "manual" && editingId ? `MANUAL-${Date.now()}` : editingId || `P${Date.now()}`,
+    const commonProductData = {
       name: $("skuName").value.trim(), category: itemType, style: originalStyle, originalStyle, baseSku,
-      sourceOrigin: "manual",
-      sourceBaseSku: editingProduct?.sourceBaseSku || editingProduct?.baseSku || baseSku,
       spuMeta: {
         createdDate: $("skuCreatedDate").value,
         year: Number($("skuYear").value),
@@ -1479,29 +1505,55 @@
         sequence
       },
       color, colorCode, colorHex: appearance.hex, colorAccent: appearance.accent, colorPattern: appearance.pattern,
-      safety: Number($("skuSafety").value || 0), image: image || editingProduct?.image || "", sizes, skuBySize,
+      safety: Number($("skuSafety").value || 0), image: image || editingProduct?.image || ""
+    };
+    const productData = {
+      id: editingId || `P${Date.now()}`,
+      ...commonProductData,
+      sourceOrigin: "manual",
+      sizes, skuBySize,
       warehouse: Object.values(sizes).reduce((sum, qty) => sum + qty, 0), store: 0,
       reserved: Math.min(Object.values(sizes).reduce((sum, qty) => sum + qty, 0), Number(editingProduct?.reserved || 0))
     };
     if (editingProduct) {
       const previousBaseSku = editingProduct.baseSku;
-      const sharedProducts = state.products.filter((product) => product.baseSku === previousBaseSku && product.id !== editingId);
+      const cozProduct = isCozProduct(editingProduct);
+      const sourceBaseSku = editingProduct.sourceBaseSku || editingProduct.style || previousBaseSku;
+      const sharedProducts = state.products.filter((product) => product.id !== editingId && (
+        cozProduct
+          ? isCozProduct(product) && (product.sourceBaseSku || product.style || product.baseSku) === sourceBaseSku
+          : product.baseSku === previousBaseSku
+      ));
       sharedProducts.forEach((product, index) => {
-        const originalProductBaseSku = product.baseSku;
-        product.name = productData.name;
-        product.category = productData.category;
-        product.style = productData.style;
-        product.originalStyle = productData.originalStyle;
+        product.name = commonProductData.name;
+        product.category = commonProductData.category;
+        product.style = commonProductData.style;
+        product.originalStyle = commonProductData.originalStyle;
         product.baseSku = baseSku;
-        product.spuMeta = clone(productData.spuMeta);
-        product.sourceBaseSku = product.sourceBaseSku || originalProductBaseSku;
-        if (product.sourceOrigin !== "manual") product.id = `MANUAL-${Date.now()}-${index + 1}`;
-        product.sourceOrigin = "manual";
+        product.spuMeta = clone(commonProductData.spuMeta);
+        product.sourceBaseSku ||= sourceBaseSku;
+        if (cozProduct) product.sourceOrigin = "coz";
         Object.entries(product.skuBySize || {}).forEach(([size, sku]) => {
           if (String(sku).startsWith(`${previousBaseSku}-`)) product.skuBySize[size] = `${baseSku}-${String(sku).slice(previousBaseSku.length + 1)}`;
         });
       });
-      Object.assign(editingProduct, productData);
+      if (cozProduct) {
+        Object.assign(editingProduct, commonProductData, {
+          id: editingProduct.id,
+          sourceOrigin: "coz",
+          sourceBaseSku,
+          sourceSkuBySize: { ...(editingProduct.sourceSkuBySize || {}) },
+          sizes: { ...editingProduct.sizes },
+          reservedBySize: editingProduct.reservedBySize ? { ...editingProduct.reservedBySize } : undefined,
+          skuBySize,
+          warehouse: editingProduct.warehouse,
+          store: editingProduct.store,
+          reserved: editingProduct.reserved,
+          reservedReported: editingProduct.reservedReported
+        });
+      } else {
+        Object.assign(editingProduct, productData);
+      }
       (state.bundles || []).forEach((bundle) => {
         bundle.componentSkus = (bundle.componentSkus || []).map((sku) => sku === previousBaseSku ? baseSku : sku);
       });
@@ -1517,9 +1569,9 @@
   }
 
   function exportInventory() {
-    const headers = ["SKU", "款式", "品类", "颜色", "尺码", "库存", "安全库存", "状态"];
+    const headers = ["品牌 SKU", "CoZ 原始 SKU", "品牌 SPU", "CoZ 原始款号", "款式", "品类", "颜色", "尺码", "库存", "安全库存", "状态"];
     const rows = state.products.flatMap((product) => Object.entries(product.sizes).map(([size, qty]) => [
-      skuForSize(product, size), product.name, product.category, product.color, size, qty, product.safety, qty <= product.safety ? "低库存" : "正常"
+      product.skuBySize?.[size] || "", product.sourceSkuBySize?.[size] || "", product.baseSku, product.sourceBaseSku || "", product.name, product.category, product.color, size, qty, product.safety, qty <= product.safety ? "低库存" : "正常"
     ]));
     const csv = "\ufeff" + [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -1539,8 +1591,10 @@
   }
 
   function stateFromCozSnapshot(snapshot) {
-    const manualProducts = (state.products || []).filter((product) => product.sourceOrigin === "manual");
-    const manualKeys = new Set(manualProducts.flatMap((product) => [product.baseSku, product.sourceBaseSku].filter(Boolean).map((baseSku) => `${baseSku}\u0000${product.color}`)));
+    const currentProducts = state.products || [];
+    const manualProducts = currentProducts.filter((product) => product.sourceOrigin === "manual" && !product.sourceBaseSku);
+    const mappings = currentProducts.filter((product) => product.sourceBaseSku || isCozProduct(product));
+    const mappingBySource = new Map(mappings.map((product) => [`${product.sourceBaseSku || product.style || product.baseSku}\u0000${product.color}`, product]));
     const groups = new Map();
     snapshot.inventory.forEach((item) => {
       const style = String(item.styleNo || item.sku || "").trim();
@@ -1555,6 +1609,8 @@
           category: item.category || "成衣",
           style,
           baseSku: style,
+          sourceBaseSku: style,
+          sourceOrigin: "coz",
           color,
           colorHex: appearance.hex,
           colorAccent: appearance.accent,
@@ -1565,6 +1621,7 @@
           sizes: {},
           reservedBySize: {},
           skuBySize: {},
+          sourceSkuBySize: {},
           warehouse: 0,
           store: 0,
           reserved: 0,
@@ -1577,7 +1634,7 @@
       if (!product.imagePath && item.imagePath) product.imagePath = item.imagePath;
       product.sizes[size] = Number(product.sizes[size] || 0) + Number(item.stockedQuantity || 0);
       product.reservedBySize[size] = Number(product.reservedBySize[size] || 0) + Number(item.reservedQuantity || 0);
-      if (!product.skuBySize[size]) product.skuBySize[size] = String(item.sku);
+      if (!product.sourceSkuBySize[size]) product.sourceSkuBySize[size] = String(item.sku);
       product.warehouse += Number(item.stockedQuantity || 0);
       product.reserved += Number(item.reservedQuantity || 0);
       product.reservedReported ||= Boolean(item.reservedReported);
@@ -1586,10 +1643,30 @@
     });
 
     const syncedProducts = [...groups.entries()]
-      .filter(([key]) => !manualKeys.has(key))
-      .map(([, product]) => product)
+      .map(([key, product]) => {
+        const mapping = mappingBySource.get(key);
+        if (!mapping) return product;
+        return {
+          ...product,
+          id: mapping.id,
+          name: mapping.name || product.name,
+          category: mapping.category || product.category,
+          originalStyle: mapping.originalStyle || mapping.style || product.style,
+          baseSku: mapping.baseSku || product.baseSku,
+          spuMeta: mapping.spuMeta ? clone(mapping.spuMeta) : undefined,
+          colorCode: mapping.colorCode || "",
+          colorHex: mapping.colorHex || product.colorHex,
+          colorAccent: mapping.colorAccent || product.colorAccent,
+          colorPattern: mapping.colorPattern || product.colorPattern,
+          safety: Number(mapping.safety || 0),
+          image: mapping.image || product.image,
+          skuBySize: { ...(mapping.skuBySize || {}) },
+          sourceOrigin: "coz",
+          sourceBaseSku: product.sourceBaseSku
+        };
+      })
       .sort((a, b) => a.style.localeCompare(b.style) || a.color.localeCompare(b.color))
-      .map((product, index) => ({ id: `COZ-${String(index + 1).padStart(4, "0")}`, ...product }));
+      .map((product, index) => ({ id: product.id || `COZ-${String(index + 1).padStart(4, "0")}`, ...product }));
     if (!syncedProducts.length) throw new Error("CoZ 同步数据中没有有效 SKU");
     return {
       products: [...manualProducts, ...syncedProducts],
