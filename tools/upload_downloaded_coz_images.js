@@ -53,13 +53,20 @@ async function main() {
       item.imageUpdatedAt = new Date().toISOString();
       item.imageSyncStatus = 'available';
     }
-    uploaded.push({ source: asset.name, objectName, matchedProducts: matches.length });
+    uploaded.push({ source: asset.name, objectName, matchedProducts: matches.length, style: product?.style || product?.sourceBaseSku || skc, color: product?.color || '', imageUrl: publicUrl });
   }
   document.state.products = products;
   document.imageCatalog = Array.isArray(document.imageCatalog) ? document.imageCatalog : [];
   for (const row of document.imageCatalog) {
     const hit = uploaded.find((item) => sourceKey(item.source) === sourceKey(row.sourceName));
     if (hit) { row.imageName = hit.objectName; row.status = 'available'; row.imageUrl = `${projectUrl}/storage/v1/object/public/product-images/${encodeURIComponent(hit.objectName)}`; }
+  }
+  const existingCatalog = new Set(document.imageCatalog.map((row) => `${clean(row.style)}\0${clean(row.color)}\0${clean(row.sourceName)}`));
+  for (const item of uploaded) {
+    const key = `${clean(item.style)}\0${clean(item.color)}\0${clean(item.source)}`;
+    if (!existingCatalog.has(key)) {
+      document.imageCatalog.push({ style: item.style, color: item.color, sourceName: item.source, imageName: item.objectName, imageUrl: item.imageUrl, status: 'available' });
+    }
   }
   await client.query("update public.inventory_platform_state set data=$1::jsonb, updated_at=now() where id='default'", [JSON.stringify(document)]);
   await client.end();
