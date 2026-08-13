@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CoZ 当前图片清单导出
 // @namespace    https://henan-inventory.vercel.app/
-// @version      1.1.0
+// @version      1.2.0
 // @description  导出当前 CoZ 图片页已加载的图片文件名，生成 mapping.csv 模板。
 // @match        http://it.justinallen.com:8899/coz/*
 // @grant        none
@@ -32,6 +32,9 @@
       const match = background.match(/url\(["']?([^"')]+)["']?\)/i);
       names.push(sourceNameFromUrl(match?.[1]));
     });
+    performance.getEntriesByType("resource").forEach((entry) => names.push(sourceNameFromUrl(entry.name)));
+    const html = document.documentElement?.outerHTML || "";
+    for (const match of html.matchAll(/(?:https?:\/\/[^"'\s]+)?\/Upload\/([^"'?#\s]+)/gi)) names.push(sourceNameFromUrl(match[0]));
     return names.filter(Boolean);
   };
   function exportCsv() {
