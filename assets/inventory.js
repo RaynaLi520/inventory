@@ -6,6 +6,7 @@
   const ITEM_TYPE_STORAGE_KEY = "coz-spu-item-types-v1";
   const SPU_YEAR_STORAGE_KEY = "coz-spu-years-v1";
   const FABRIC_TYPE_STORAGE_KEY = "coz-spu-fabric-types-v1";
+  const COLOR_MAPPING_STORAGE_KEY = "coz-color-mappings-v1";
   const BUNDLE_SEASON_STORAGE_KEY = "coz-bundle-seasons-v1";
   const BUNDLE_COLOR_STORAGE_KEY = "coz-bundle-colors-v1";
   const STOCK_HISTORY_KEY = "ja-garment-stock-history-v1";
@@ -28,6 +29,8 @@
   const itemTypeCodes = loadItemTypeCodes();
   const spuYears = loadSpuYears();
   const fabricTypeCodes = loadFabricTypeCodes();
+  const defaultColorMappings = Object.fromEntries(`蓝色|BL,米色|BG,灰色|GY,米灰条|GS,杏色|AP,咖色|CF,黑色|BK,灰绿|GG,粉色|PK,绿色|GR,黄色|YL,酒红|WR,白色|WT,藏青|NV,紫竖条|PS,蓝竖条|BS,白色印花|WP,粉条爱心|PH,咖条爱心|CH,橙色|OR,紫色|PP,紫灰|PG,浅蓝|LB,蓝白条纹|BW1,粉红条纹|PR1,卡其蓝条纹|CL1,淡蓝色|LB1,藏青格|ZQ1,Berry/浆果色|BR1,Navy/藏青|NV1,咖色格|CS1,浆果色|JG,藏青彩条纹|ZC,浆果红彩条纹|JC,灰褐色|HH,Andesite Brown/灰褐色|HH1,摩卡棕|MB,粉蜡黄|PY,Cream/奶白|MW,Black/黑色|BK1,Light Blue/浅蓝色|LB2,Taupe/浅灰褐|HH2,深红粉条|CRN,绿白条|GWB,蓝红条|BRB,Cherry Red/樱桃红|CR,树莓红白条|RWS,浅紫罗兰白条|LVWS,Lime Green/青柠绿|LG,绿色条纹|GS1,Blue/蓝色|BL1,Brown/咖色|BW,White/白色|WT1,黄色狗印花|YDP,蓝樱桃印花|BCP,蓝色条纹|BL2,Pink and Red and Stripe/粉红条纹|PRS,浅杏橙条|LAOS,粉白格|PWC,紫色条纹|PL1,Rust brown/铁锈棕|RBR,粉色条纹|PKS,黄色条纹|YLS,白底小熊|WBR`.split(",").map((entry) => entry.split("|")));
+  const colorMappings = loadColorMappings();
   const bundleSeasons = loadStringOptions(BUNDLE_SEASON_STORAGE_KEY, ["SS26", "AW26"]);
   const bundleColors = loadStringOptions(BUNDLE_COLOR_STORAGE_KEY, []);
   const viewMeta = {
@@ -209,6 +212,11 @@
         product.sourceOrigin = "coz";
         product.sourceBaseSku ||= product.style || product.baseSku;
       }
+      if (product.color && product.colorCode) colorMappings[product.color] = String(product.colorCode).trim().toUpperCase();
+      if ((product.sourceBaseSku || product.style) === "COZAW25-KACC053" && product.color === "Light Blue/浅蓝色" && product.sizes?.F != null) {
+        product.sourceSkuBySize ||= {};
+        product.sourceSkuBySize.F ||= "72500774932618";
+      }
     });
     return saved;
   }
@@ -243,6 +251,17 @@
       if (saved && typeof saved === "object" && !Array.isArray(saved)) return { Woven: "W", Knit: "K", ...saved };
     } catch (_) { /* Use the packaged fabric type mapping. */ }
     return { Woven: "W", Knit: "K" };
+  }
+  function loadColorMappings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(COLOR_MAPPING_STORAGE_KEY));
+      if (saved && typeof saved === "object" && !Array.isArray(saved)) return { ...defaultColorMappings, ...saved };
+    } catch (_) { /* Use the packaged color mappings if local data is invalid. */ }
+    return { ...defaultColorMappings };
+  }
+  function saveColorMappings() {
+    localStorage.setItem(COLOR_MAPPING_STORAGE_KEY, JSON.stringify(colorMappings));
+    queueCloudSave();
   }
   function loadStringOptions(storageKey, defaults) {
     try {
@@ -354,6 +373,7 @@
       itemTypeCodes: { ...itemTypeCodes },
       spuYears: [...spuYears],
       fabricTypeCodes: { ...fabricTypeCodes },
+      colorMappings: { ...colorMappings },
       bundleSeasons: [...bundleSeasons],
       bundleColors: [...bundleColors],
       stockHistory
@@ -366,6 +386,7 @@
     localStorage.setItem(ITEM_TYPE_STORAGE_KEY, JSON.stringify(itemTypeCodes));
     localStorage.setItem(SPU_YEAR_STORAGE_KEY, JSON.stringify(spuYears));
     localStorage.setItem(FABRIC_TYPE_STORAGE_KEY, JSON.stringify(fabricTypeCodes));
+    localStorage.setItem(COLOR_MAPPING_STORAGE_KEY, JSON.stringify(colorMappings));
     localStorage.setItem(BUNDLE_SEASON_STORAGE_KEY, JSON.stringify(bundleSeasons));
     localStorage.setItem(BUNDLE_COLOR_STORAGE_KEY, JSON.stringify(bundleColors));
     localStorage.setItem(STOCK_HISTORY_KEY, JSON.stringify(stockHistory));
@@ -413,6 +434,11 @@
     spuYears.splice(0, spuYears.length, ...[...new Set([2025, 2026, 2027, ...(document.spuYears || [])].map(Number).filter((year) => Number.isInteger(year) && year >= 2000 && year <= 2099))].sort());
     Object.keys(fabricTypeCodes).forEach((key) => delete fabricTypeCodes[key]);
     Object.assign(fabricTypeCodes, { Woven: "W", Knit: "K" }, document.fabricTypeCodes || {});
+    Object.keys(colorMappings).forEach((key) => delete colorMappings[key]);
+    Object.assign(colorMappings, defaultColorMappings, document.colorMappings || {});
+    state.products.forEach((product) => {
+      if (product.color && product.colorCode) colorMappings[product.color] = String(product.colorCode).trim().toUpperCase();
+    });
     bundleSeasons.splice(0, bundleSeasons.length, ...[...new Set(["SS26", "AW26", ...(document.bundleSeasons || []), ...(document.state.bundles || []).map((bundle) => bundle.season)].map((value) => String(value || "").trim().toUpperCase()).filter(Boolean))]);
     bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(document.state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
     stockHistory = normalizeStockHistory(document.stockHistory);
@@ -897,6 +923,74 @@
     if (selectedFabric && [...$("skuFabric").options].some((option) => option.value === selectedFabric)) $("skuFabric").value = selectedFabric;
   }
 
+  function matchingColors(query = "") {
+    const term = String(query).trim().toLowerCase();
+    return Object.entries(colorMappings).filter(([color, code]) => !term || `${color} ${code}`.toLowerCase().includes(term)).slice(0, 40);
+  }
+  function renderColorResults(query = "") {
+    const results = $("skuColorResults");
+    const matches = matchingColors(query);
+    results.innerHTML = matches.length
+      ? matches.map(([color, code], index) => `<button class="color-result${index === 0 ? " active" : ""}" type="button" role="option" data-color-name="${escapeHtml(color)}" data-color-code="${escapeHtml(code)}"><span>${escapeHtml(color)}</span><code>${escapeHtml(code)}</code></button>`).join("")
+      : `<div class="color-result-empty">${currentLang === "zh" ? "没有匹配颜色，可点击“添加颜色”创建" : "No matching color. Use Add color to create one."}</div>`;
+    results.hidden = false;
+    $("skuColor").setAttribute("aria-expanded", "true");
+  }
+  function closeColorResults() {
+    $("skuColorResults").hidden = true;
+    $("skuColor").setAttribute("aria-expanded", "false");
+  }
+  function selectMappedColor(color, code) {
+    $("skuColor").value = color;
+    $("skuColorCode").value = code;
+    closeColorResults();
+    updateGeneratedSkuCodes();
+  }
+  function applyExactColorMapping() {
+    const value = $("skuColor").value.trim().toLowerCase();
+    const entry = Object.entries(colorMappings).find(([color]) => color.toLowerCase() === value);
+    if (entry) {
+      $("skuColorCode").value = entry[1];
+      updateGeneratedSkuCodes();
+    }
+  }
+  function openSkuColorCreator() {
+    $("skuColorCreator").hidden = false;
+    $("addSkuColorBtn").setAttribute("aria-expanded", "true");
+    closeColorResults();
+    $("newSkuColor").value = $("skuColor").value.trim();
+    setTimeout(() => $("newSkuColor").focus(), 20);
+  }
+  function closeSkuColorCreator() {
+    $("skuColorCreator").hidden = true;
+    $("addSkuColorBtn").setAttribute("aria-expanded", "false");
+    $("newSkuColor").value = "";
+    $("newSkuColorCode").value = "";
+  }
+  function addSkuColorMapping() {
+    const color = $("newSkuColor").value.trim();
+    const code = $("newSkuColorCode").value.trim().toUpperCase();
+    if (!color || !/^[A-Z0-9]{1,5}$/.test(code)) {
+      showToast("请输入颜色名称和 1 至 5 位英文或数字代码");
+      return;
+    }
+    const sameColor = Object.keys(colorMappings).find((value) => value.toLowerCase() === color.toLowerCase());
+    const sameCode = Object.entries(colorMappings).find(([, value]) => value === code);
+    if (sameColor && colorMappings[sameColor] !== code) {
+      showToast(`${sameColor} 已对应 ${colorMappings[sameColor]}`);
+      return;
+    }
+    if (sameCode && sameCode[0].toLowerCase() !== color.toLowerCase()) {
+      showToast(`颜色代码 ${code} 已对应 ${sameCode[0]}`);
+      return;
+    }
+    colorMappings[color] = code;
+    saveColorMappings();
+    selectMappedColor(color, code);
+    closeSkuColorCreator();
+    showToast(`颜色 ${color} · ${code} 已添加`);
+  }
+
   function renderSyncState() {
     const node = document.querySelector(".sync-state");
     if (!node) return;
@@ -1151,6 +1245,8 @@
     closeCategoryCreator();
     closeYearCreator();
     closeFabricCreator();
+    closeSkuColorCreator();
+    closeColorResults();
     document.body.style.overflow = "";
   }
 
@@ -1445,21 +1541,34 @@
     const itemType = $("skuCategory").value;
     const originalStyle = $("skuStyle").value.trim();
     const color = $("skuColor").value.trim();
-    const baseSku = spuCodeFromForm();
+    const matchingManualProduct = !editingProduct ? state.products.find((product) =>
+      !isCozProduct(product)
+      && String(product.originalStyle || product.style || "").trim().toLowerCase() === originalStyle.toLowerCase()
+      && String(product.color || "").trim().toLowerCase() === color.toLowerCase()
+    ) : null;
+    const baseSku = matchingManualProduct?.baseSku || spuCodeFromForm();
     const sequence = Number($("skuSequence").value);
     if (!Number.isInteger(sequence) || sequence < 1 || sequence > 999) {
       showToast("三位序号需为 001 至 999");
       $("skuSequence").focus();
       return;
     }
-    if (state.products.some((product) => product.id !== editingId && product.baseSku === baseSku && String(product.color || "").trim().toLowerCase() === color.toLowerCase())) {
+    if (!matchingManualProduct && state.products.some((product) => product.id !== editingId && product.baseSku === baseSku && String(product.color || "").trim().toLowerCase() === color.toLowerCase())) {
       showToast("这个 SPU 编码已存在，请调整三位序号");
+      return;
+    }
+    const colorCode = $("skuColorCode").value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{1,5}$/.test(colorCode)) {
+      showToast("颜色代码需为 1 至 5 位英文字母或数字");
+      $("skuColorCode").focus();
       return;
     }
     const variants = [...document.querySelectorAll("#skuVariantRows .sku-variant-row")].filter((row) => row.querySelector(".variant-enabled").checked).map((row) => ({
       size: row.dataset.variantSize,
       stock: Math.max(0, Number(row.querySelector(".variant-stock").value || 0)),
-      sku: row.querySelector(".variant-sku").value.trim().toUpperCase()
+      sku: matchingManualProduct && row.querySelector(".variant-sku").dataset.manual !== "true"
+        ? `${matchingManualProduct.baseSku}-${colorCode}-${row.dataset.variantSize}`
+        : row.querySelector(".variant-sku").value.trim().toUpperCase()
     }));
     if (!variants.length) {
       showToast("请至少选择一个尺码 SKU");
@@ -1474,7 +1583,7 @@
       showToast("同一款式中不能有重复 SKU 编码");
       return;
     }
-    const occupiedSkus = new Set(state.products.filter((product) => product.id !== editingId).flatMap((product) => [
+    const occupiedSkus = new Set(state.products.filter((product) => product.id !== editingId && product.id !== matchingManualProduct?.id).flatMap((product) => [
       ...Object.values(product.skuBySize || {}),
       ...Object.values(product.sourceSkuBySize || {})
     ]).filter(Boolean));
@@ -1484,15 +1593,9 @@
       return;
     }
     const image = safeImageUrl($("skuImageUrl").value);
-    const colorCode = $("skuColorCode").value.trim().toUpperCase();
-    if (!/^[A-Z0-9]{1,5}$/.test(colorCode)) {
-      showToast("颜色代码需为 1 至 5 位英文字母或数字");
-      $("skuColorCode").focus();
-      return;
-    }
     const appearance = resolveColorAppearance(color);
     const sizes = Object.fromEntries(variants.map((variant) => [variant.size, variant.stock]));
-    const skuBySize = Object.fromEntries(variants.map((variant) => [variant.size, variant.sku]));
+    const skuBySize = Object.fromEntries(variants.filter((variant) => variant.sku).map((variant) => [variant.size, variant.sku]));
     const commonProductData = {
       name: $("skuName").value.trim(), category: itemType, style: originalStyle, originalStyle, baseSku,
       spuMeta: {
@@ -1557,6 +1660,23 @@
       (state.bundles || []).forEach((bundle) => {
         bundle.componentSkus = (bundle.componentSkus || []).map((sku) => sku === previousBaseSku ? baseSku : sku);
       });
+    } else if (matchingManualProduct) {
+      const addedVariants = variants.filter((variant) => matchingManualProduct.sizes?.[variant.size] == null);
+      if (!addedVariants.length) {
+        showToast(`SPU ${matchingManualProduct.baseSku} 已包含所选尺码，请直接编辑该 SPU`);
+        return;
+      }
+      const mergedSizes = { ...matchingManualProduct.sizes, ...Object.fromEntries(addedVariants.map((variant) => [variant.size, variant.stock])) };
+      const mergedSkuBySize = { ...(matchingManualProduct.skuBySize || {}), ...Object.fromEntries(addedVariants.filter((variant) => variant.sku).map((variant) => [variant.size, variant.sku])) };
+      Object.assign(matchingManualProduct, commonProductData, {
+        baseSku: matchingManualProduct.baseSku,
+        sourceOrigin: "manual",
+        sizes: mergedSizes,
+        skuBySize: mergedSkuBySize,
+        warehouse: Object.values(mergedSizes).reduce((sum, qty) => sum + Number(qty || 0), 0),
+        store: Number(matchingManualProduct.store || 0),
+        reserved: Math.min(Object.values(mergedSizes).reduce((sum, qty) => sum + Number(qty || 0), 0), Number(matchingManualProduct.reserved || 0))
+      });
     } else {
       state.products.unshift(productData);
     }
@@ -1565,7 +1685,7 @@
     $("skuForm").reset();
     renderSkuCategoryOptions();
     renderAll();
-    showToast(editingProduct ? `SPU ${baseSku} 和 SKU 已更新` : `SPU ${baseSku} 与 ${variants.length} 个 SKU 已创建`);
+    showToast(editingProduct ? `SPU ${baseSku} 和 SKU 已更新` : matchingManualProduct ? `新尺码已合并到 SPU ${baseSku}` : `SPU ${baseSku} 与 ${variants.length} 个 SKU 已创建`);
   }
 
   function exportInventory() {
@@ -1738,6 +1858,9 @@
       if (clearComponentButton) clearBundleComponent(Number(clearComponentButton.dataset.clearComponent));
       const componentPicker = event.target.closest("[data-component-picker]");
       if (!componentPicker) [1, 2, 3].forEach(closeBundleComponentResults);
+      const colorResult = event.target.closest("[data-color-name]");
+      if (colorResult) selectMappedColor(colorResult.dataset.colorName, colorResult.dataset.colorCode);
+      if (!event.target.closest(".color-combobox")) closeColorResults();
       if (event.target.closest("[data-close-modal]")) closeMovementModal();
       if (event.target.closest("[data-close-sku]")) closeSkuModal();
       if (event.target.closest("[data-close-bundle]")) closeBundleModal();
@@ -1779,6 +1902,9 @@
     $("addFabricBtn").addEventListener("click", openFabricCreator);
     $("cancelFabricBtn").addEventListener("click", closeFabricCreator);
     $("saveFabricBtn").addEventListener("click", addFabricType);
+    $("addSkuColorBtn").addEventListener("click", openSkuColorCreator);
+    $("cancelSkuColorBtn").addEventListener("click", closeSkuColorCreator);
+    $("saveSkuColorBtn").addEventListener("click", addSkuColorMapping);
     $("addBundleSeasonBtn").addEventListener("click", openBundleSeasonCreator);
     $("cancelBundleSeasonBtn").addEventListener("click", closeBundleSeasonCreator);
     $("saveBundleSeasonBtn").addEventListener("click", addBundleSeason);
@@ -1793,6 +1919,7 @@
     }));
     $("newYear").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addYear(); } });
     ["newFabricName", "newFabricCode"].forEach((id) => $(id).addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addFabricType(); } }));
+    ["newSkuColor", "newSkuColorCode"].forEach((id) => $(id).addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addSkuColorMapping(); } }));
     $("newBundleSeason").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addBundleSeason(); } });
     $("newBundleColor").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addBundleColor(); } });
     $("movementForm").addEventListener("submit", submitMovement);
@@ -1807,6 +1934,23 @@
     ["skuSeason", "skuYear", "skuFabric", "skuCategory"].forEach((id) => $(id).addEventListener("change", updateNextSpuSequence));
     $("skuSequence").addEventListener("input", updateSkuPreview);
     $("skuColorCode").addEventListener("input", updateGeneratedSkuCodes);
+    $("skuColor").addEventListener("focus", () => renderColorResults($("skuColor").value));
+    $("skuColor").addEventListener("input", () => { renderColorResults($("skuColor").value); applyExactColorMapping(); });
+    $("skuColor").addEventListener("keydown", (event) => {
+      const options = [...$("skuColorResults").querySelectorAll(".color-result")];
+      const current = options.findIndex((option) => option.classList.contains("active"));
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if ($("skuColorResults").hidden) renderColorResults($("skuColor").value);
+        const next = event.key === "ArrowDown" ? Math.min(options.length - 1, current + 1) : Math.max(0, current - 1);
+        options.forEach((option, index) => option.classList.toggle("active", index === next));
+        options[next]?.scrollIntoView({ block: "nearest" });
+      } else if (event.key === "Enter" && !$("skuColorResults").hidden && options.length) {
+        event.preventDefault();
+        const option = options[Math.max(0, current)];
+        selectMappedColor(option.dataset.colorName, option.dataset.colorCode);
+      } else if (event.key === "Escape") closeColorResults();
+    });
     $("skuVariantRows").addEventListener("input", (event) => { if (event.target.classList.contains("variant-sku")) event.target.dataset.manual = "true"; });
     ["bundleSeason", "bundleColor", "bundleSize", "bundleFixedSku", "bundleCode1", "bundleCode2", "bundleCode3"].forEach((id) => $(id).addEventListener("input", renderBundleSkuPreview));
     [1, 2, 3].forEach((index) => {

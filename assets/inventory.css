@@ -354,6 +354,15 @@ select, input[type="number"], input[type="text"] { height: 38px; border: 1px sol
 .sku-variant-row .variant-size { font-weight: 750; }
 .sku-variant-row input:disabled { color: var(--muted); background: color-mix(in srgb, var(--canvas) 88%, var(--line)); cursor: not-allowed; opacity: 1; }
 .variant-source-note { margin: 9px 0 0; color: var(--muted); font-size: 12px; }
+.color-mapping-field { position: relative; }
+.color-combobox { position: relative; }
+.color-results { position: absolute; z-index: 8; top: calc(100% + 4px); left: 0; right: 0; max-height: 240px; overflow-y: auto; border: 1px solid var(--line-strong); background: var(--surface); box-shadow: 0 12px 28px rgba(16, 35, 29, .16); }
+.color-result { width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border: 0; border-top: 1px solid var(--line); color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
+.color-result:first-child { border-top: 0; }
+.color-result:hover, .color-result.active { background: var(--pale); }
+.color-result code { color: var(--green); font-weight: 800; }
+.color-result-empty { padding: 12px; color: var(--muted); font-size: 12px; }
+.color-creator { margin-top: 7px; }
 .row-actions { display: flex; gap: 3px; }
 .field-title { min-height: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .field-title > label { color: #56615d; font-size: 9px; font-weight: 650; }
