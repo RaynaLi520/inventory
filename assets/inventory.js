@@ -39,6 +39,7 @@
   const colorMappings = loadColorMappings();
   const bundleSeasons = loadStringOptions(BUNDLE_SEASON_STORAGE_KEY, ["SS26", "AW26"]);
   const bundleColors = loadStringOptions(BUNDLE_COLOR_STORAGE_KEY, []);
+  let imageCatalog = Array.isArray(window.COZ_IMAGE_CATALOG) ? [...window.COZ_IMAGE_CATALOG] : [];
   const viewMeta = {
     overview: ["库存中台 / 今日", "经营概览"],
     inventory: ["商品中心 / SKU", "成衣库存"],
@@ -212,14 +213,14 @@
     return `${safeSkc}_${imageTimestamp(date)}.${safeExtension}`;
   }
   function applyImageCatalog(saved) {
-    const catalog = Array.isArray(window.COZ_IMAGE_CATALOG) ? window.COZ_IMAGE_CATALOG : [];
-    if (!catalog.length || !Array.isArray(saved?.products)) return;
-    const byKey = new Map(catalog.map((entry) => [`${String(entry.style || "").trim().toLowerCase()}\u0000${String(entry.color || "").trim().toLowerCase()}`, entry]));
+    if (!imageCatalog.length || !Array.isArray(saved?.products)) return;
+    const byKey = new Map(imageCatalog.map((entry) => [`${String(entry.style || "").trim().toLowerCase()}\u0000${String(entry.color || "").trim().toLowerCase()}`, entry]));
     saved.products.forEach((product) => {
       const entry = byKey.get(productSourceKey(product));
       if (!entry) return;
       product.imageSourceName ||= entry.sourceName;
       product.imageName ||= entry.imageName;
+      if (!product.image && entry.status === "available") product.image = safeImageUrl(entry.imageUrl);
       product.imageSyncStatus ||= product.image ? "available" : "pending-source-download";
     });
   }
@@ -444,6 +445,7 @@
       colorMappings: { ...colorMappings },
       bundleSeasons: [...bundleSeasons],
       bundleColors: [...bundleColors],
+      imageCatalog: clone(imageCatalog),
       stockHistory
     };
   }
@@ -495,6 +497,7 @@
 
   function applyCloudDocument(document) {
     if (!document?.state?.products?.length || !Array.isArray(document.state.movements)) return false;
+    if (Array.isArray(document.imageCatalog)) imageCatalog = clone(document.imageCatalog);
     state = upgradeCozState(clone(document.state));
     Object.keys(categoryCodes).forEach((key) => delete categoryCodes[key]);
     Object.assign(categoryCodes, defaultCategoryCodes, document.categoryCodes || {});

@@ -7,6 +7,7 @@ __pycache__/
 coz-response*.json
 coz-inventory*.json
 coz-inventory*.csv
+coz-image-import-report.json
 tools/coz_inventory_bridge.user.js
 
 .vercel
