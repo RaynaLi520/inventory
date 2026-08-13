@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CoZ 当前图片清单导出
 // @namespace    https://henan-inventory.vercel.app/
-// @version      1.0.0
+// @version      1.1.0
 // @description  导出当前 CoZ 图片页已加载的图片文件名，生成 mapping.csv 模板。
 // @match        http://it.justinallen.com:8899/coz/*
 // @grant        none
@@ -10,10 +10,30 @@
 (() => {
   "use strict";
   const id = "coz-image-manifest-exporter";
-  const sourceImages = () => [...document.querySelectorAll("img")].map((image) => {
-    const src = image.currentSrc || image.src || "";
-    try { return decodeURIComponent(src).split("/Upload/")[1]?.split("?")[0] || ""; } catch (_) { return ""; }
-  }).filter(Boolean);
+  function sourceNameFromUrl(value) {
+    const raw = String(value || "");
+    if (!raw || /GeneratedResources|Resources\/Images/i.test(raw)) return "";
+    try {
+      const decoded = decodeURIComponent(raw);
+      const match = decoded.match(/(?:^|\/)(?:Upload\/)?([^/?#]+\.(?:jpe?g|png|webp))(?:[?#]|$)/i);
+      return match ? match[1] : "";
+    } catch (_) { return ""; }
+  }
+  const sourceImages = () => {
+    const names = [];
+    document.querySelectorAll("img").forEach((image) => {
+      names.push(sourceNameFromUrl(image.currentSrc || image.src));
+      ["data-src", "data-original", "data-lazy-src"].forEach((attribute) => names.push(sourceNameFromUrl(image.getAttribute(attribute))));
+    });
+    document.querySelectorAll("[imagename], [forguncyimage], [style*='background-image']").forEach((element) => {
+      names.push(sourceNameFromUrl(element.getAttribute("imagename")));
+      names.push(sourceNameFromUrl(element.getAttribute("data-src")));
+      const background = element.style.backgroundImage || element.getAttribute("style") || "";
+      const match = background.match(/url\(["']?([^"')]+)["']?\)/i);
+      names.push(sourceNameFromUrl(match?.[1]));
+    });
+    return names.filter(Boolean);
+  };
   function exportCsv() {
     const names = [...new Set(sourceImages())];
     const csv = ["style,color,file", ...names.map((name) => `,,"${name.replaceAll('"', '""')}"`)].join("\r\n");
