@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#173f35">
   <title>JA 成衣库存中台</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="assets/inventory.css">
 </head>
@@ -156,8 +157,12 @@
       </section>
 
       <section class="view" id="bundlesView">
-        <div class="toolbar">
-          <div class="view-intro"><span class="section-kicker">BUNDLE / BOM</span><strong>套装组合</strong><small>单件库存可组成虚拟套装，固定 SET 可独立管理。</small></div>
+        <div class="view-intro bundle-view-intro"><span class="section-kicker">BUNDLE / BOM</span><strong>套装组合</strong><small>单件库存可组成虚拟套装，固定 SET 可独立管理。</small></div>
+        <div class="toolbar bundle-toolbar">
+          <label class="search-box"><i data-lucide="search"></i><input id="bundleSearch" type="search" placeholder="搜索套装、SKU、组件或颜色"></label>
+          <select id="bundleTypeFilter" aria-label="按套装类型筛选"></select>
+          <select id="bundleSizeFilter" aria-label="按套装尺码筛选"></select>
+          <select id="bundleStatusFilter" aria-label="按套装状态筛选"></select>
           <button class="button secondary" id="addBundleBtn" type="button"><i data-lucide="plus"></i>新建套装</button>
         </div>
         <section class="panel inventory-panel">
@@ -283,7 +288,21 @@
           </div>
           <label><span>三位序号</span><input id="skuSequence" required inputmode="numeric" maxlength="3" pattern="\d{1,3}" value="001" placeholder="例如：001"></label>
           <label><span>原始款号</span><input id="skuStyle" required placeholder="例如：CoZ25-1201WT0025"></label>
-          <label class="span-2"><span>图片链接（可选）</span><input id="skuImageUrl" type="url" placeholder="https://..."></label>
+          <div class="form-field span-2 product-image-field">
+            <div class="field-title"><label for="skuImageUrl">商品图片（可选）</label><button class="inline-add" id="clearSkuImageBtn" type="button" hidden><i data-lucide="trash-2"></i>移除图片</button></div>
+            <div class="image-input-layout">
+              <button class="image-dropzone" id="skuImageDropzone" type="button">
+                <span class="image-upload-placeholder"><i data-lucide="image-plus"></i><strong>上传或粘贴图片</strong><small>点击选择、拖入图片，或按 Ctrl+V 粘贴</small></span>
+                <img id="skuImagePreview" alt="商品图片预览" hidden>
+              </button>
+              <div class="image-input-details">
+                <label for="skuImageUrl">也可以使用图片链接</label>
+                <input id="skuImageUrl" type="url" placeholder="https://...">
+                <small>图片会自动压缩后保存到云端。</small>
+              </div>
+            </div>
+            <input id="skuImageFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+          </div>
         </div>
         <div class="variant-section">
           <div class="field-title"><strong>SKU 变体</strong><small>一个 SPU 可同时生成多个尺码 SKU。</small></div>

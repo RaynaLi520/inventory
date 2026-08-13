@@ -26,6 +26,12 @@
     Shirt: "ST", Pant: "PT", Short: "SO", Dress: "DR", Cami: "CM", Tank: "TK",
     Top: "TP", Tee: "TE", Accessories: "ACC", "PJ Set": "SET", Skirt: "SK", Robe: "RB", Blazer: "BZ"
   };
+  const itemTypeLabels = {
+    Shirt: ["衬衫", "Shirt"], Pant: ["长裤", "Pants"], Short: ["短裤", "Shorts"], Dress: ["连衣裙", "Dress"],
+    Cami: ["吊带", "Camisole"], Tank: ["背心", "Tank top"], Top: ["上装", "Top"], Tee: ["T恤", "T-shirt"],
+    Accessories: ["配饰", "Accessories"], "PJ Set": ["家居套装", "PJ set"], Skirt: ["半裙", "Skirt"],
+    Robe: ["睡袍", "Robe"], Blazer: ["西装外套", "Blazer"], "成衣": ["成衣", "Garment"]
+  };
   const itemTypeCodes = loadItemTypeCodes();
   const spuYears = loadSpuYears();
   const fabricTypeCodes = loadFabricTypeCodes();
@@ -42,7 +48,7 @@
   };
   const translationPairs = [
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
-    ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装 / BOM", "Virtual bundle / BOM"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["添加季节", "Add season"], ["新季节", "New season"], ["添加颜色", "Add color"], ["新颜色", "New color"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["输入款号、名称或颜色检索", "Search style, name, or color"], ["清除组件", "Clear component"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["套装库存正常", "Bundle available"], ["套装不可售", "Bundle unavailable"], ["删除套装", "Delete bundle"],
+    ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装 / BOM", "Virtual bundle / BOM"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["添加季节", "Add season"], ["新季节", "New season"], ["添加颜色", "Add color"], ["新颜色", "New color"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["输入款号、名称或颜色检索", "Search style, name, or color"], ["搜索套装、SKU、组件或颜色", "Search bundle, SKU, component, or color"], ["清除组件", "Clear component"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["不可售", "Unavailable"], ["删除套装", "Delete bundle"],
     ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
     ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
     ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], [" 个 SKU 需要处理", " SKUs need action"],
@@ -115,6 +121,8 @@
   let cloudSaveTimer = null;
   let cloudRevision = 0;
   let cloudChannel = null;
+  let pendingSkuImage = "";
+  let skuImageRemoved = false;
 
   function localDateKey(date = new Date()) {
     const year = date.getFullYear();
@@ -179,6 +187,10 @@
       const url = new URL(raw);
       return url.protocol === "https:" ? url.href : "";
     } catch (_) { return ""; }
+  }
+  function itemTypeLabel(value) {
+    const labels = itemTypeLabels[value];
+    return labels ? labels[currentLang === "zh" ? 0 : 1] : String(value || "");
   }
   function upgradeCozState(saved) {
     if (saved?.source?.type !== "coz") return saved;
@@ -299,7 +311,8 @@
     return [...custom, ...clone(imported)];
   }
   function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch (_) { /* Cloud persistence remains available if images exceed localStorage quota. */ }
     queueCloudSave();
   }
   function normalizeStockHistory(history) {
@@ -391,7 +404,8 @@
   }
 
   function persistLocalCache() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch (_) { /* Large product images can exceed browser storage; Supabase remains authoritative. */ }
     localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryCodes));
     localStorage.setItem(ITEM_TYPE_STORAGE_KEY, JSON.stringify(itemTypeCodes));
     localStorage.setItem(SPU_YEAR_STORAGE_KEY, JSON.stringify(spuYears));
@@ -579,6 +593,7 @@
       languageButton.title = currentLang === "zh" ? "切换语言" : "Switch language";
     }
     if (themeButton) themeButton.title = currentLang === "zh" ? "切换主题" : "Switch theme";
+    if ($("bundleSearch")) $("bundleSearch").placeholder = currentLang === "zh" ? "搜索套装、SKU、组件或颜色" : "Search bundle, SKU, component, or color";
     if ($("skuYear") && $("skuFabric")) renderSpuOptionSelectors($("skuYear").value, $("skuFabric").value);
     if ($("bundleSeason") && $("bundleColor")) renderBundleOptionSelectors($("bundleSeason").value, $("bundleColor").value);
     [1, 2, 3].forEach((index) => {
@@ -862,7 +877,22 @@
   }
 
   function renderBundleRows() {
-    const bundles = Array.isArray(state.bundles) ? state.bundles : [];
+    const allBundles = Array.isArray(state.bundles) ? state.bundles : [];
+    const term = String($("bundleSearch").value || "").trim().toLowerCase();
+    const type = $("bundleTypeFilter").value;
+    const size = $("bundleSizeFilter").value;
+    const status = $("bundleStatusFilter").value;
+    const bundles = allBundles.filter((bundle) => {
+      const available = bundleAvailable(bundle);
+      const records = bundlePartRecords(bundle);
+      const searchable = [bundle.name, bundleSku(bundle), bundle.color, bundle.size, bundle.season,
+        ...(bundle.componentCodes || []), ...(bundle.componentSkus || []), ...(bundle.componentSourceSkus || []),
+        ...records.flatMap(({ product }) => [product.name, product.baseSku, product.sourceBaseSku])].join(" ").toLowerCase();
+      return (!term || searchable.includes(term))
+        && (!type || bundle.type === type)
+        && (!size || bundle.size === size)
+        && (!status || (status === "available" ? available > 0 : available <= 0));
+    });
     $("bundleCount").textContent = bundles.length;
     $("bundleAvailable").textContent = formatNumber(bundles.reduce((sum, bundle) => sum + bundleAvailable(bundle), 0));
     $("bundleRows").innerHTML = bundles.map((bundle) => {
@@ -870,7 +900,7 @@
       const parts = partRecords.map(({ product }) => product);
       const available = bundleAvailable(bundle);
       const sku = bundleSku(bundle);
-      const status = available > 0 ? "套装库存正常" : "套装不可售";
+      const status = available > 0 ? "库存正常" : "不可售";
       return `<tr>
         <td><strong>${escapeHtml(bundle.name)}</strong><code class="bundle-code">${escapeHtml(sku)}</code></td>
         <td><span class="bundle-type ${escapeHtml(bundle.type)}">${escapeHtml(bundleTypeLabel(bundle.type))}</span></td>
@@ -882,6 +912,29 @@
       </tr>`;
     }).join("");
     $("bundleEmpty").hidden = bundles.length > 0;
+    if (!bundles.length) {
+      const filtered = Boolean(term || type || size || status);
+      $("bundleEmpty").querySelector("strong").textContent = filtered ? "没有匹配的套装" : "还没有套装";
+      $("bundleEmpty").querySelector("p").textContent = filtered ? "请调整搜索词或筛选条件。" : "新建虚拟套装后，系统会按组件库存实时计算可售套数。";
+    }
+  }
+
+  function renderBundleFilters() {
+    const selections = {
+      type: $("bundleTypeFilter").value,
+      size: $("bundleSizeFilter").value,
+      status: $("bundleStatusFilter").value
+    };
+    const sizes = [...new Set((state.bundles || []).map((bundle) => bundle.size).filter(Boolean))]
+      .sort((a, b) => sizeOrder.indexOf(a) - sizeOrder.indexOf(b));
+    $("bundleTypeFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部类型" : "All types"}</option>`
+      + ["virtual", "promo", "fixed"].map((type) => `<option value="${type}">${escapeHtml(bundleTypeLabel(type))}</option>`).join("");
+    $("bundleSizeFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部尺码" : "All sizes"}</option>`
+      + sizes.map((size) => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join("");
+    $("bundleStatusFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部状态" : "All statuses"}</option><option value="available">${currentLang === "zh" ? "可售" : "Available"}</option><option value="unavailable">${currentLang === "zh" ? "不可售" : "Unavailable"}</option>`;
+    $("bundleTypeFilter").value = selections.type;
+    $("bundleSizeFilter").value = selections.size;
+    $("bundleStatusFilter").value = selections.status;
   }
 
   function shortSku(sku) {
@@ -936,14 +989,14 @@
   function renderCategoryOptions() {
     const selected = $("categoryFilter").value;
     const categories = [...new Set(state.products.map((product) => product.category))];
-    $("categoryFilter").innerHTML = '<option value="">全部品类</option>' + categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join("");
+    $("categoryFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部品类" : "All categories"}</option>` + categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(itemTypeLabel(category))}</option>`).join("");
     $("categoryFilter").value = selected;
   }
 
   function renderSkuCategoryOptions(selectedCategory) {
     const select = $("skuCategory");
     const selected = selectedCategory || select.value;
-    select.innerHTML = Object.entries(itemTypeCodes).map(([name, code]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} · ${escapeHtml(code)}</option>`).join("");
+    select.innerHTML = Object.entries(itemTypeCodes).map(([name, code]) => `<option value="${escapeHtml(name)}">${escapeHtml(itemTypeLabel(name))} · ${escapeHtml(code)}</option>`).join("");
     if ([...select.options].some((option) => option.value === selected)) select.value = selected;
   }
 
@@ -1056,6 +1109,7 @@
   function renderAll() {
     renderCategoryOptions();
     renderSkuCategoryOptions();
+    renderBundleFilters();
     renderMovementSkuOptions();
     renderOverview();
     renderInventory();
@@ -1141,8 +1195,66 @@
     return "";
   }
 
+  function setPendingSkuImage(value) {
+    pendingSkuImage = safeImageUrl(value);
+    if (pendingSkuImage) skuImageRemoved = false;
+    const preview = $("skuImagePreview");
+    const placeholder = $("skuImageDropzone").querySelector(".image-upload-placeholder");
+    preview.src = pendingSkuImage || "";
+    preview.hidden = !pendingSkuImage;
+    placeholder.hidden = Boolean(pendingSkuImage);
+    $("skuImageDropzone").classList.toggle("has-image", Boolean(pendingSkuImage));
+    $("clearSkuImageBtn").hidden = !pendingSkuImage;
+  }
+
+  function compressProductImage(file) {
+    return new Promise((resolve, reject) => {
+      if (!file?.type?.startsWith("image/")) {
+        reject(new Error("请选择 PNG、JPG 或 WebP 图片"));
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        reject(new Error("图片不能超过 15MB"));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("无法读取图片"));
+      reader.onload = () => {
+        const image = new Image();
+        image.onerror = () => reject(new Error("图片格式无法识别"));
+        image.onload = () => {
+          const maxEdge = 1200;
+          const scale = Math.min(1, maxEdge / Math.max(image.naturalWidth, image.naturalHeight));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+          const context = canvas.getContext("2d");
+          context.fillStyle = "#ffffff";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", .82));
+        };
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function useSkuImageFile(file) {
+    try {
+      const dataUrl = await compressProductImage(file);
+      $("skuImageUrl").value = "";
+      setPendingSkuImage(dataUrl);
+      showToast("图片已添加，保存 SPU 后同步到云端");
+    } catch (error) {
+      showToast(error.message || "图片添加失败");
+    }
+  }
+
   function openSkuModal(productId = "") {
     $("skuForm").reset();
+    skuImageRemoved = false;
+    setPendingSkuImage("");
     $("editingProductId").value = productId;
     renderSkuCategoryOptions();
     renderSpuOptionSelectors(new Date().getFullYear(), "W");
@@ -1164,6 +1276,7 @@
       $("skuSequence").value = String(meta.sequence || match?.[5] || "001").padStart(3, "0");
       $("skuStyle").value = product.originalStyle || product.style || "";
       $("skuImageUrl").value = /^https:/i.test(product.image || "") ? product.image : "";
+      setPendingSkuImage(product.image || "");
       $("skuColor").value = product.color || "";
       $("skuColorCode").value = inferColorCode(product);
       $("skuSafety").value = Number(product.safety || 0);
@@ -1287,6 +1400,7 @@
     closeFabricCreator();
     closeSkuColorCreator();
     closeColorResults();
+    setPendingSkuImage("");
     document.body.style.overflow = "";
   }
 
@@ -1633,7 +1747,7 @@
       showToast(`SKU ${duplicateSku.sku} 已存在`);
       return;
     }
-    const image = safeImageUrl($("skuImageUrl").value);
+    const image = pendingSkuImage || safeImageUrl($("skuImageUrl").value);
     const appearance = resolveColorAppearance(color);
     const sizes = Object.fromEntries(variants.map((variant) => [variant.size, variant.stock]));
     const skuBySize = Object.fromEntries(variants.filter((variant) => variant.sku).map((variant) => [variant.size, variant.sku]));
@@ -1649,7 +1763,7 @@
         sequence
       },
       color, colorCode, colorHex: appearance.hex, colorAccent: appearance.accent, colorPattern: appearance.pattern,
-      safety: Number($("skuSafety").value || 0), image: image || editingProduct?.image || ""
+      safety: Number($("skuSafety").value || 0), image: image || (!skuImageRemoved ? editingProduct?.image : "") || ""
     };
     const productData = {
       id: editingId || `P${Date.now()}`,
@@ -1673,6 +1787,7 @@
         product.category = commonProductData.category;
         product.style = commonProductData.style;
         product.originalStyle = commonProductData.originalStyle;
+        product.image = commonProductData.image;
         product.baseSku = baseSku;
         product.spuMeta = clone(commonProductData.spuMeta);
         product.sourceBaseSku ||= sourceBaseSku;
@@ -1736,7 +1851,7 @@
   function exportInventory() {
     const headers = ["品牌 SKU", "CoZ 原始 SKU", "品牌 SPU", "CoZ 原始款号", "款式", "品类", "颜色", "尺码", "库存", "安全库存", "状态"];
     const rows = state.products.flatMap((product) => Object.entries(product.sizes).map(([size, qty]) => [
-      product.skuBySize?.[size] || "", product.sourceSkuBySize?.[size] || "", product.baseSku, product.sourceBaseSku || "", product.name, product.category, product.color, size, qty, product.safety, qty <= product.safety ? "低库存" : "正常"
+      product.skuBySize?.[size] || "", product.sourceSkuBySize?.[size] || "", product.baseSku, product.sourceBaseSku || "", product.name, itemTypeLabels[product.category]?.[0] || product.category, product.color, size, qty, product.safety, qty <= product.safety ? "低库存" : "正常"
     ]));
     const csv = "\ufeff" + [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -1963,6 +2078,33 @@
     $("addBundleColorBtn").addEventListener("click", openBundleColorCreator);
     $("cancelBundleColorBtn").addEventListener("click", closeBundleColorCreator);
     $("saveBundleColorBtn").addEventListener("click", addBundleColor);
+    $("skuImageDropzone").addEventListener("click", () => $("skuImageFile").click());
+    $("skuImageFile").addEventListener("change", (event) => useSkuImageFile(event.target.files?.[0]));
+    $("clearSkuImageBtn").addEventListener("click", () => {
+      skuImageRemoved = true;
+      $("skuImageUrl").value = "";
+      setPendingSkuImage("");
+    });
+    ["dragenter", "dragover"].forEach((eventName) => $("skuImageDropzone").addEventListener(eventName, (event) => {
+      event.preventDefault();
+      $("skuImageDropzone").classList.add("dragging");
+    }));
+    ["dragleave", "drop"].forEach((eventName) => $("skuImageDropzone").addEventListener(eventName, (event) => {
+      event.preventDefault();
+      $("skuImageDropzone").classList.remove("dragging");
+    }));
+    $("skuImageDropzone").addEventListener("drop", (event) => useSkuImageFile(event.dataTransfer.files?.[0]));
+    $("skuImageUrl").addEventListener("input", () => {
+      const value = safeImageUrl($("skuImageUrl").value);
+      if (value) setPendingSkuImage(value);
+    });
+    $("skuModal").addEventListener("paste", (event) => {
+      const file = [...(event.clipboardData?.items || [])].find((item) => item.type.startsWith("image/"))?.getAsFile();
+      if (file) {
+        event.preventDefault();
+        useSkuImageFile(file);
+      }
+    });
     ["newCategoryName", "newCategoryCode"].forEach((id) => $(id).addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -1997,6 +2139,7 @@
     });
     $("categoryFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
     $("statusFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
+    ["bundleSearch", "bundleTypeFilter", "bundleSizeFilter", "bundleStatusFilter"].forEach((id) => $(id).addEventListener(id === "bundleSearch" ? "input" : "change", () => { renderBundleRows(); refreshIcons(); applyLanguage(); }));
     $("movementSearch").addEventListener("input", renderMovements);
     document.querySelectorAll(".segmented button").forEach((button) => button.addEventListener("click", () => setMovementType(button.dataset.type)));
     ["skuSeason", "skuYear", "skuFabric", "skuCategory"].forEach((id) => $(id).addEventListener("change", updateNextSpuSequence));
