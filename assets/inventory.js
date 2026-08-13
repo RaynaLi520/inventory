@@ -342,8 +342,12 @@
   }
   function mergeBundleSeed(existingBundles) {
     const imported = Array.isArray(window.BUNDLE_SEED) ? window.BUNDLE_SEED : [];
-    const custom = (Array.isArray(existingBundles) ? existingBundles : []).filter((bundle) => !String(bundle.id || "").startsWith("IMPORT-"));
-    return [...custom, ...clone(imported)];
+    const existing = Array.isArray(existingBundles) ? existingBundles : [];
+    const custom = existing.filter((bundle) => !String(bundle.id || "").startsWith("IMPORT-"));
+    const editedImports = new Map(existing
+      .filter((bundle) => String(bundle.id || "").startsWith("IMPORT-") && bundle.updatedAt)
+      .map((bundle) => [bundle.id, bundle]));
+    return [...custom, ...imported.map((bundle) => clone(editedImports.get(bundle.id) || bundle))];
   }
   function saveState() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -366,13 +370,13 @@
     return /^[a-z0-9]+$/i.test(raw) ? raw.toUpperCase() : raw;
   }
   function bundleSku(bundle) {
-    if (bundle.importedSku) return bundle.importedSku;
+    if (bundle.importedSku && !bundle.updatedAt) return bundle.importedSku;
     if (bundle.type === "fixed" && bundle.fixedSku) return bundle.fixedSku;
     const tails = (bundle.components || []).map((_, index) => {
       const part = bundlePartRecords(bundle).find((record) => record.index === index)?.product;
       return String(bundle.componentCodes?.[index] || bundleTail(part?.baseSku)).trim().toUpperCase();
     }).filter(Boolean);
-    const color = bundleColorCode(bundle.color);
+    const color = bundleColorCode(bundle.colorCode || bundle.color);
     const size = bundle.size || "F";
     return `${tails.join("+") || "BUNDLE"}-${color}-${size}`;
   }
@@ -888,10 +892,15 @@
       id: $(`bundleComponent${index}`).value,
       code: $(`bundleCode${index}`).value
     })).filter((entry) => entry.id);
+    const editingBundle = (state.bundles || []).find((bundle) => bundle.id === $("editingBundleId").value);
+    const selectedColor = $("bundleColor").value;
     const draft = {
       type: $("bundleType").value,
       season: $("bundleSeason").value,
-      color: $("bundleColor").value,
+      color: selectedColor,
+      colorCode: editingBundle?.color === selectedColor
+        ? editingBundle.colorCode
+        : colorMappings[selectedColor],
       size: $("bundleSize").value,
       fixedSku: $("bundleFixedSku").value,
       components: componentEntries.map((entry) => entry.id),
@@ -943,7 +952,7 @@
         <td>${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}</td>
         <td class="num"><span class="stock-number">${formatNumber(available)}</span></td>
         <td><span class="status ${available > 0 ? "healthy" : "low"}">${status}</span></td>
-        <td><div class="bundle-actions"><button type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装">删除</button></div></td>
+        <td><div class="row-actions"><button class="row-action" type="button" data-edit-bundle="${escapeHtml(bundle.id)}" title="编辑套装" aria-label="编辑套装"><i data-lucide="pencil"></i></button><button class="row-action danger" type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装" aria-label="删除套装"><i data-lucide="trash-2"></i></button></div></td>
       </tr>`;
     }).join("");
     $("bundleEmpty").hidden = bundles.length > 0;
@@ -1452,13 +1461,33 @@
     setTimeout(() => $("skuName").focus(), 20);
   }
 
-  function openBundleModal() {
+  function openBundleModal(bundleId = "") {
+    const bundle = (state.bundles || []).find((item) => item.id === bundleId);
     $("bundleForm").reset();
-    renderBundleOptionSelectors("SS26", "");
-    $("fixedSkuField").hidden = true;
-    $("fixedStockField").hidden = true;
+    $("editingBundleId").value = bundle?.id || "";
+    $("bundleModalTitle").textContent = bundle ? "编辑套装" : "新建套装";
+    $("bundleSubmitButton").textContent = bundle ? "保存修改" : "保存套装";
+    renderBundleOptionSelectors(bundle?.season || "SS26", bundle?.color || "");
     renderBundleComponentOptions();
     ["bundleCode1", "bundleCode2", "bundleCode3"].forEach((id) => { if ($(id)) $(id).value = ""; });
+
+    if (bundle) {
+      $("bundleName").value = bundle.name || "";
+      $("bundleType").value = bundle.type || "virtual";
+      $("bundleSeason").value = bundle.season || $("bundleSeason").value;
+      $("bundleColor").value = bundle.color || "";
+      $("bundleSize").value = bundle.size || "";
+      $("bundleFixedSku").value = bundle.fixedSku || "";
+      $("bundleFixedStock").value = Math.max(0, Number(bundle.fixedStock || 0));
+      const recordsByIndex = new Map(bundlePartRecords(bundle).map((record) => [record.index, record.product]));
+      [1, 2, 3].forEach((componentNumber) => {
+        const componentIndex = componentNumber - 1;
+        const product = recordsByIndex.get(componentIndex);
+        if (product) selectBundleComponent(componentNumber, product.id);
+        $("bundleCode" + componentNumber).value = bundle.componentCodes?.[componentIndex] || (product ? bundleTail(product.baseSku) : "");
+      });
+    }
+    updateBundleTypeFields();
     renderBundleSkuPreview();
     $("bundleModal").hidden = false;
     document.body.style.overflow = "hidden";
@@ -1482,6 +1511,8 @@
 
   function submitBundle(event) {
     event.preventDefault();
+    const editingId = $("editingBundleId").value;
+    const editingBundle = (state.bundles || []).find((item) => item.id === editingId);
     const type = $("bundleType").value;
     const componentEntries = [1, 2, 3].map((index) => ({
       id: $(`bundleComponent${index}`).value,
@@ -1506,34 +1537,44 @@
     }
     const componentProducts = components.map((id) => state.products.find((product) => product.id === id)).filter(Boolean);
     const componentCodes = componentEntries.map((entry, index) => entry.code.trim().toUpperCase() || bundleTail(componentProducts[index]?.baseSku));
+    const now = new Date().toISOString();
     const bundle = {
-      id: `B${Date.now()}`,
+      ...(editingBundle || {}),
+      id: editingBundle?.id || `B${Date.now()}`,
       name: $("bundleName").value.trim(),
       type,
       season: $("bundleSeason").value.trim().toUpperCase() || "SS26",
       color: $("bundleColor").value.trim(),
+      colorCode: editingBundle?.color === $("bundleColor").value.trim()
+        ? String(editingBundle.colorCode || "").trim().toUpperCase()
+        : String(colorMappings[$("bundleColor").value.trim()] || "").trim().toUpperCase(),
       size: $("bundleSize").value,
       fixedSku: $("bundleFixedSku").value.trim().toUpperCase(),
       fixedStock: Math.max(0, Number($("bundleFixedStock").value || 0)),
       components,
       componentSkus: componentProducts.map((product) => product.baseSku),
+      componentSourceSkus: componentProducts.map((product) => product.sourceBaseSku || product.style || product.originalStyle || product.baseSku),
       componentColors: componentProducts.map((product) => product.color),
+      componentSizes: componentProducts.map((product) => bundleComponentSize(product, $("bundleSize").value)),
       componentCodes,
-      createdAt: new Date().toISOString()
+      createdAt: editingBundle?.createdAt || now,
+      updatedAt: now
     };
     if (!bundle.name) {
       showToast("请输入套装名称");
       return;
     }
-    if ((state.bundles || []).some((item) => bundleSku(item) === bundleSku(bundle))) {
+    if ((state.bundles || []).some((item) => item.id !== editingId && bundleSku(item) === bundleSku(bundle))) {
       showToast(`套装 SKU ${bundleSku(bundle)} 已存在`);
       return;
     }
-    state.bundles = [...(state.bundles || []), bundle];
+    state.bundles = editingBundle
+      ? state.bundles.map((item) => item.id === editingId ? bundle : item)
+      : [...(state.bundles || []), bundle];
     saveState();
     closeBundleModal();
     renderAll();
-    showToast(`套装 ${bundleSku(bundle)} 已创建`);
+    showToast(`套装 ${bundleSku(bundle)} 已${editingBundle ? "更新" : "创建"}`);
   }
 
   function deleteBundle(id) {
@@ -2195,6 +2236,8 @@
       if (restoreButton) restoreProduct(restoreButton.dataset.restoreProduct);
       const purgeButton = event.target.closest("[data-purge-product]");
       if (purgeButton) purgeProduct(purgeButton.dataset.purgeProduct);
+      const editBundleButton = event.target.closest("[data-edit-bundle]");
+      if (editBundleButton) openBundleModal(editBundleButton.dataset.editBundle);
       const deleteBundleButton = event.target.closest("[data-delete-bundle]");
       if (deleteBundleButton) deleteBundle(deleteBundleButton.dataset.deleteBundle);
       const componentResult = event.target.closest("[data-component-id]");
@@ -2242,7 +2285,7 @@
     $("addSkuBtn").addEventListener("click", () => openSkuModal());
     $("openTrashBtn").addEventListener("click", openTrashModal);
     document.querySelectorAll("[data-close-trash]").forEach((node) => node.addEventListener("click", closeTrashModal));
-    $("addBundleBtn").addEventListener("click", openBundleModal);
+    $("addBundleBtn").addEventListener("click", () => openBundleModal());
     $("addCategoryBtn").addEventListener("click", openCategoryCreator);
     $("cancelCategoryBtn").addEventListener("click", closeCategoryCreator);
     $("saveCategoryBtn").addEventListener("click", addCategory);

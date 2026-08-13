@@ -361,7 +361,8 @@
           <div class="bundle-component"><label><span>组件 3（可选）</span><div class="component-combobox" data-component-picker="3"><div class="component-search-control"><input id="bundleComponentSearch3" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="bundleComponentResults3" autocomplete="off" placeholder="输入款号、名称或颜色检索"><button class="component-clear" type="button" data-clear-component="3" title="清除组件" aria-label="清除组件 3"><i data-lucide="x"></i></button></div><input id="bundleComponent3" type="hidden"><div class="component-results" id="bundleComponentResults3" role="listbox" hidden></div></div></label><label><span>组合短码 3（可选）</span><input id="bundleCode3" maxlength="16" placeholder="例如：WACC01"></label></div>
         </div>
         <div class="sku-preview"><span>套装 SKU 编码预览</span><code id="bundleSkuPreview">待选择-颜色-尺码</code><small>虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。</small></div>
-        <div class="form-actions"><button class="button secondary" data-close-bundle type="button">取消</button><button class="button primary" type="submit">保存套装</button></div>
+        <input id="editingBundleId" type="hidden">
+        <div class="form-actions"><button class="button secondary" data-close-bundle type="button">取消</button><button class="button primary" id="bundleSubmitButton" type="submit">保存套装</button></div>
       </form>
     </section>
   </div>

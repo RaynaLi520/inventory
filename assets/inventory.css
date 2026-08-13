@@ -278,9 +278,6 @@ select, input[type="number"], input[type="text"], input[type="url"] { height: 38
 .bundle-type { color: var(--green); font-size: 12px; font-weight: 700; }
 .bundle-type.fixed { color: var(--blue); }
 .bundle-type.promo { color: var(--amber); }
-.bundle-actions { display: flex; gap: 5px; }
-.bundle-actions button { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); background: var(--surface); cursor: pointer; font-size: 13px; }
-.bundle-actions button:hover { color: var(--green); border-color: var(--green); }
 .inventory-head { min-height: 71px; }
 .table-summary { color: var(--muted); font-size: 9px; }
 .table-summary strong { color: var(--ink); font-size: 11px; }
