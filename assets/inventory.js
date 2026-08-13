@@ -203,6 +203,9 @@
       if (product.sourceSkuBySize) {
         product.sourceSkuBySize = Object.fromEntries(Object.entries(product.sourceSkuBySize).map(([size, sku]) => [normalizeSizeLabel(size), sku]));
       }
+      if (product.localSizes) {
+        product.localSizes = Object.fromEntries(Object.entries(product.localSizes).map(([size, qty]) => [normalizeSizeLabel(size), Number(qty || 0)]));
+      }
       const skuValues = Object.values(product.skuBySize || {}).filter(Boolean).map(String);
       if (!product.sourceSkuBySize && skuValues.length && skuValues.every((sku) => /^\d+$/.test(sku))) {
         product.sourceSkuBySize = { ...product.skuBySize };
@@ -212,7 +215,6 @@
         product.sourceOrigin = "coz";
         product.sourceBaseSku ||= product.style || product.baseSku;
       }
-      if (product.color && product.colorCode) colorMappings[product.color] = String(product.colorCode).trim().toUpperCase();
       if ((product.sourceBaseSku || product.style) === "COZAW25-KACC053" && product.color === "Light Blue/浅蓝色" && product.sizes?.F != null) {
         product.sourceSkuBySize ||= {};
         product.sourceSkuBySize.F ||= "72500774932618";
@@ -255,7 +257,7 @@
   function loadColorMappings() {
     try {
       const saved = JSON.parse(localStorage.getItem(COLOR_MAPPING_STORAGE_KEY));
-      if (saved && typeof saved === "object" && !Array.isArray(saved)) return { ...defaultColorMappings, ...saved };
+      if (saved && typeof saved === "object" && !Array.isArray(saved)) return { ...saved, ...defaultColorMappings };
     } catch (_) { /* Use the packaged color mappings if local data is invalid. */ }
     return { ...defaultColorMappings };
   }
@@ -435,10 +437,7 @@
     Object.keys(fabricTypeCodes).forEach((key) => delete fabricTypeCodes[key]);
     Object.assign(fabricTypeCodes, { Woven: "W", Knit: "K" }, document.fabricTypeCodes || {});
     Object.keys(colorMappings).forEach((key) => delete colorMappings[key]);
-    Object.assign(colorMappings, defaultColorMappings, document.colorMappings || {});
-    state.products.forEach((product) => {
-      if (product.color && product.colorCode) colorMappings[product.color] = String(product.colorCode).trim().toUpperCase();
-    });
+    Object.assign(colorMappings, document.colorMappings || {}, defaultColorMappings);
     bundleSeasons.splice(0, bundleSeasons.length, ...[...new Set(["SS26", "AW26", ...(document.bundleSeasons || []), ...(document.state.bundles || []).map((bundle) => bundle.season)].map((value) => String(value || "").trim().toUpperCase()).filter(Boolean))]);
     bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(document.state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
     stockHistory = normalizeStockHistory(document.stockHistory);
@@ -713,6 +712,34 @@
       </tr>`;
     }).join("");
     $("inventoryEmpty").hidden = products.length > 0;
+  }
+
+  function inventorySearchMatches(query = "") {
+    const term = String(query || "").trim().toLowerCase();
+    return state.products.filter((product) => {
+      const searchable = [product.name, product.baseSku, product.sourceBaseSku, product.style, product.color, ...Object.values(product.skuBySize || {}), ...Object.values(product.sourceSkuBySize || {})].join(" ").toLowerCase();
+      return !term || searchable.includes(term);
+    }).slice(0, 30);
+  }
+  function renderInventorySearchResults(query = "") {
+    const results = $("inventorySearchResults");
+    const matches = inventorySearchMatches(query);
+    results.innerHTML = matches.length
+      ? matches.map((product, index) => `<button class="inventory-search-result${index === 0 ? " active" : ""}" type="button" role="option" data-inventory-search-id="${escapeHtml(product.id)}"><strong>${escapeHtml(product.baseSku)}</strong><span>${escapeHtml(product.name)} · ${escapeHtml(product.color)} · ${escapeHtml(orderedSizes(product).join("/"))}</span></button>`).join("")
+      : `<div class="component-result-empty">${currentLang === "zh" ? "没有匹配的商品" : "No matching products"}</div>`;
+    results.hidden = false;
+    $("inventorySearch").setAttribute("aria-expanded", "true");
+  }
+  function closeInventorySearchResults() {
+    $("inventorySearchResults").hidden = true;
+    $("inventorySearch").setAttribute("aria-expanded", "false");
+  }
+  function selectInventorySearchProduct(productId) {
+    const product = state.products.find((item) => item.id === productId);
+    if (!product) return;
+    $("inventorySearch").value = product.baseSku;
+    closeInventorySearchResults();
+    renderInventory();
   }
 
   function bundleComponentLabel(product) {
@@ -1061,18 +1088,21 @@
 
   function renderSkuVariantRows(product = null) {
     const cozProduct = Boolean(product && isCozProduct(product));
-    const sizes = cozProduct ? orderedSizes(product) : [...new Set([...sizeOrder, ...Object.keys(product?.sizes || {})])];
-    $("variantStockHeading").textContent = cozProduct ? "CoZ 库存" : "初始库存";
+    const sizes = [...new Set([...sizeOrder, ...Object.keys(product?.sizes || {}), ...Object.keys(product?.localSizes || {})])];
+    $("variantStockHeading").textContent = cozProduct ? "库存" : "初始库存";
     $("variantSourceNote").hidden = !cozProduct;
     $("skuVariantRows").innerHTML = sizes.map((size) => {
-      const checked = product ? product.sizes?.[size] != null : ["S", "M", "L"].includes(size);
-      const stock = Number(product?.sizes?.[size] || 0);
+      const sourceSynced = Boolean(cozProduct && product?.sourceSkuBySize?.[size]);
+      const localSize = Boolean(cozProduct && product?.localSizes?.[size] != null && !sourceSynced);
+      const checked = product ? sourceSynced || localSize || (!cozProduct && product.sizes?.[size] != null) : ["S", "M", "L"].includes(size);
+      const stock = Number(localSize ? product.localSizes?.[size] : product?.sizes?.[size] || 0);
       const existingSku = product?.skuBySize?.[size];
       const colorCode = String($("skuColorCode").value || "").trim().toUpperCase();
       const sku = existingSku || (cozProduct && !colorCode ? "" : `${spuCodeFromForm()}-${colorCode || "COLOR"}-${size}`);
-      const isGeneratedSku = existingSku && product?.colorCode && existingSku === `${product.baseSku}-${product.colorCode}-${size}`;
-      const sourceSku = product?.sourceSkuBySize?.[size] || (cozProduct ? "未同步" : "--");
-      return `<div class="sku-variant-row" data-variant-size="${escapeHtml(size)}" ${cozProduct ? 'data-coz-product="true"' : ""}><input class="variant-enabled" type="checkbox" aria-label="启用 ${escapeHtml(size)} 码 SKU" ${checked ? "checked" : ""} ${cozProduct ? "disabled" : ""}><span class="variant-size">${escapeHtml(size)}</span><input class="variant-stock" type="number" min="0" value="${stock}" aria-label="${escapeHtml(size)} 码库存" ${cozProduct ? "disabled" : ""}><input class="variant-source-sku" value="${escapeHtml(sourceSku)}" aria-label="${escapeHtml(size)} 码 CoZ 原始 SKU" disabled><input class="variant-sku" value="${escapeHtml(sku)}" ${existingSku && !isGeneratedSku ? 'data-manual="true"' : ""} aria-label="${escapeHtml(size)} 码品牌 SKU"></div>`;
+      const generatedCodes = [product?.colorCode, colorMappings[product?.color]].filter(Boolean).map((value) => String(value).trim().toUpperCase());
+      const isGeneratedSku = existingSku && generatedCodes.some((code) => existingSku === `${product.baseSku}-${code}-${size}`);
+      const sourceSku = product?.sourceSkuBySize?.[size] || (cozProduct ? "本地新增" : "--");
+      return `<div class="sku-variant-row" data-variant-size="${escapeHtml(size)}" ${cozProduct ? 'data-coz-product="true"' : ""} ${sourceSynced ? 'data-source-synced="true"' : ""}><input class="variant-enabled" type="checkbox" aria-label="启用 ${escapeHtml(size)} 码 SKU" ${checked ? "checked" : ""} ${sourceSynced ? "disabled" : ""}><span class="variant-size">${escapeHtml(size)}</span><input class="variant-stock" type="number" min="0" value="${stock}" aria-label="${escapeHtml(size)} 码库存" ${sourceSynced ? "disabled" : ""}><input class="variant-source-sku" value="${escapeHtml(sourceSku)}" aria-label="${escapeHtml(size)} 码 CoZ 原始 SKU" disabled><input class="variant-sku" value="${escapeHtml(sku)}" ${existingSku && !isGeneratedSku ? 'data-manual="true"' : ""} aria-label="${escapeHtml(size)} 码品牌 SKU"></div>`;
     }).join("");
   }
 
@@ -1088,6 +1118,7 @@
   }
 
   function inferColorCode(product) {
+    if (colorMappings[product.color]) return String(colorMappings[product.color]).trim().toUpperCase();
     if (product.colorCode) return String(product.colorCode).trim().toUpperCase();
     const baseSku = String(product.baseSku || "");
     for (const size of orderedSizes(product)) {
@@ -1566,6 +1597,7 @@
     const variants = [...document.querySelectorAll("#skuVariantRows .sku-variant-row")].filter((row) => row.querySelector(".variant-enabled").checked).map((row) => ({
       size: row.dataset.variantSize,
       stock: Math.max(0, Number(row.querySelector(".variant-stock").value || 0)),
+      sourceSynced: row.dataset.sourceSynced === "true",
       sku: matchingManualProduct && row.querySelector(".variant-sku").dataset.manual !== "true"
         ? `${matchingManualProduct.baseSku}-${colorCode}-${row.dataset.variantSize}`
         : row.querySelector(".variant-sku").value.trim().toUpperCase()
@@ -1641,15 +1673,19 @@
         });
       });
       if (cozProduct) {
+        const localSizes = Object.fromEntries(variants.filter((variant) => !variant.sourceSynced).map((variant) => [variant.size, variant.stock]));
+        const sourceSizes = Object.fromEntries(Object.entries(editingProduct.sizes || {}).filter(([size]) => editingProduct.sourceSkuBySize?.[size]));
+        const combinedSizes = { ...sourceSizes, ...localSizes };
         Object.assign(editingProduct, commonProductData, {
           id: editingProduct.id,
           sourceOrigin: "coz",
           sourceBaseSku,
           sourceSkuBySize: { ...(editingProduct.sourceSkuBySize || {}) },
-          sizes: { ...editingProduct.sizes },
+          sizes: combinedSizes,
+          localSizes,
           reservedBySize: editingProduct.reservedBySize ? { ...editingProduct.reservedBySize } : undefined,
           skuBySize,
-          warehouse: editingProduct.warehouse,
+          warehouse: Object.values(combinedSizes).reduce((sum, qty) => sum + Number(qty || 0), 0),
           store: editingProduct.store,
           reserved: editingProduct.reserved,
           reservedReported: editingProduct.reservedReported
@@ -1766,6 +1802,7 @@
       .map(([key, product]) => {
         const mapping = mappingBySource.get(key);
         if (!mapping) return product;
+        const localSizes = { ...(mapping.localSizes || {}) };
         return {
           ...product,
           id: mapping.id,
@@ -1774,13 +1811,16 @@
           originalStyle: mapping.originalStyle || mapping.style || product.style,
           baseSku: mapping.baseSku || product.baseSku,
           spuMeta: mapping.spuMeta ? clone(mapping.spuMeta) : undefined,
-          colorCode: mapping.colorCode || "",
+          colorCode: colorMappings[product.color] || mapping.colorCode || "",
           colorHex: mapping.colorHex || product.colorHex,
           colorAccent: mapping.colorAccent || product.colorAccent,
           colorPattern: mapping.colorPattern || product.colorPattern,
           safety: Number(mapping.safety || 0),
           image: mapping.image || product.image,
           skuBySize: { ...(mapping.skuBySize || {}) },
+          localSizes,
+          sizes: { ...product.sizes, ...localSizes },
+          warehouse: product.warehouse + Object.values(localSizes).reduce((sum, qty) => sum + Number(qty || 0), 0),
           sourceOrigin: "coz",
           sourceBaseSku: product.sourceBaseSku
         };
@@ -1854,10 +1894,13 @@
       if (deleteBundleButton) deleteBundle(deleteBundleButton.dataset.deleteBundle);
       const componentResult = event.target.closest("[data-component-id]");
       if (componentResult) selectBundleComponent(Number(componentResult.dataset.componentIndex), componentResult.dataset.componentId);
+      const inventorySearchResult = event.target.closest("[data-inventory-search-id]");
+      if (inventorySearchResult) selectInventorySearchProduct(inventorySearchResult.dataset.inventorySearchId);
       const clearComponentButton = event.target.closest("[data-clear-component]");
       if (clearComponentButton) clearBundleComponent(Number(clearComponentButton.dataset.clearComponent));
       const componentPicker = event.target.closest("[data-component-picker]");
       if (!componentPicker) [1, 2, 3].forEach(closeBundleComponentResults);
+      if (!event.target.closest(".inventory-search-combobox")) closeInventorySearchResults();
       const colorResult = event.target.closest("[data-color-name]");
       if (colorResult) selectMappedColor(colorResult.dataset.colorName, colorResult.dataset.colorCode);
       if (!event.target.closest(".color-combobox")) closeColorResults();
@@ -1926,7 +1969,23 @@
     $("skuForm").addEventListener("submit", submitSku);
     $("bundleForm").addEventListener("submit", submitBundle);
     $("exportBtn").addEventListener("click", exportInventory);
-    $("inventorySearch").addEventListener("input", () => { renderInventory(); refreshIcons(); applyLanguage(); });
+    $("inventorySearch").addEventListener("focus", () => renderInventorySearchResults($("inventorySearch").value));
+    $("inventorySearch").addEventListener("input", () => { renderInventory(); renderInventorySearchResults($("inventorySearch").value); refreshIcons(); applyLanguage(); });
+    $("inventorySearch").addEventListener("keydown", (event) => {
+      const options = [...$("inventorySearchResults").querySelectorAll(".inventory-search-result")];
+      const current = options.findIndex((option) => option.classList.contains("active"));
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if ($("inventorySearchResults").hidden) renderInventorySearchResults($("inventorySearch").value);
+        const next = event.key === "ArrowDown" ? Math.min(options.length - 1, current + 1) : Math.max(0, current - 1);
+        options.forEach((option, index) => option.classList.toggle("active", index === next));
+        options[next]?.scrollIntoView({ block: "nearest" });
+      } else if (event.key === "Enter" && !$("inventorySearchResults").hidden && options.length) {
+        event.preventDefault();
+        const option = options[Math.max(0, current)];
+        selectInventorySearchProduct(option.dataset.inventorySearchId);
+      } else if (event.key === "Escape") closeInventorySearchResults();
+    });
     $("categoryFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
     $("statusFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
     $("movementSearch").addEventListener("input", renderMovements);

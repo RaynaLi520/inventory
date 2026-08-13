@@ -235,6 +235,13 @@ tbody tr:hover { background: #fafcfb; }
 .search-box input { width: 100%; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 11px; }
 .search-box input::placeholder { color: #9aa29f; }
 .search-box.narrow { min-width: 220px; }
+.inventory-search-combobox { position: relative; }
+.inventory-search-results { position: absolute; z-index: 42; top: calc(100% + 5px); left: 0; width: min(430px, calc(100vw - 36px)); max-height: 300px; overflow-y: auto; border: 1px solid var(--line-strong); border-radius: 5px; background: var(--surface); box-shadow: 0 13px 30px rgba(20, 34, 29, .18); }
+.inventory-search-result { width: 100%; display: grid; gap: 3px; padding: 10px 11px; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
+.inventory-search-result:last-child { border-bottom: 0; }
+.inventory-search-result:hover, .inventory-search-result.active { background: var(--green-soft); }
+.inventory-search-result strong { font-size: 13px; }
+.inventory-search-result span { color: var(--muted); font-size: 12px; }
 select, input[type="number"], input[type="text"] { height: 38px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); background: #fff; font-size: 11px; }
 .toolbar select { min-width: 118px; padding: 0 31px 0 11px; }
 .toolbar .button { margin-left: auto; }
@@ -250,8 +257,7 @@ select, input[type="number"], input[type="text"] { height: 38px; border: 1px sol
 .bundle-components label > span { color: var(--muted); font-size: 12px; }
 .component-combobox { position: relative; min-width: 0; }
 .component-search-control { position: relative; display: flex; align-items: center; }
-.component-search-control > svg { position: absolute; left: 11px; z-index: 1; width: 16px; color: var(--muted); pointer-events: none; }
-.component-search-control input { padding: 0 38px 0 36px; text-overflow: ellipsis; }
+.component-search-control input { padding: 0 38px 0 11px; text-overflow: ellipsis; }
 .component-clear { position: absolute; right: 4px; width: 34px; height: 34px; display: none; place-items: center; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
 .component-combobox.has-value .component-clear { display: grid; }
 .component-clear svg { width: 15px; }
