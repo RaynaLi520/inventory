@@ -163,6 +163,7 @@
           <select id="bundleTypeFilter" aria-label="按套装类型筛选"></select>
           <select id="bundleSizeFilter" aria-label="按套装尺码筛选"></select>
           <select id="bundleStatusFilter" aria-label="按套装状态筛选"></select>
+          <button class="button secondary trash-button" id="openBundleTrashBtn" type="button"><i data-lucide="trash-2"></i>回收站 <span id="bundleTrashCount">0</span></button>
           <button class="button secondary" id="addBundleBtn" type="button"><i data-lucide="plus"></i>新建套装</button>
         </div>
         <section class="panel inventory-panel">
@@ -370,11 +371,16 @@
   <div class="modal" id="trashModal" hidden>
     <div class="modal-backdrop" data-close-trash></div>
     <section class="modal-panel wide trash-panel" role="dialog" aria-modal="true" aria-labelledby="trashModalTitle">
-      <header class="modal-head"><div><span class="section-kicker">RECYCLE BIN</span><h2 id="trashModalTitle">款式回收站</h2></div><button class="icon-button" data-close-trash type="button" aria-label="关闭回收站"><i data-lucide="x"></i></button></header>
+      <header class="modal-head"><div><span class="section-kicker">RECYCLE BIN</span><h2 id="trashModalTitle">库存回收站</h2></div><button class="icon-button" data-close-trash type="button" aria-label="关闭回收站"><i data-lucide="x"></i></button></header>
       <div class="trash-body">
         <p class="trash-help">删除的款式不会在下一次 CoZ 同步时重新出现。恢复后会重新参与库存和套装计算。</p>
         <div class="table-wrap"><table class="stock-table trash-table"><thead><tr><th>款式 / SKU</th><th>颜色</th><th>删除时间</th><th></th></tr></thead><tbody id="trashRows"></tbody></table></div>
         <div class="empty-state" id="trashEmpty"><i data-lucide="archive-restore"></i><strong>回收站为空</strong><p>删除的款式会保留在这里。</p></div>
+        <div class="trash-section" id="bundleTrashSection">
+          <div class="trash-section-head"><h3>套装回收站</h3><span id="bundleTrashHelp">删除的套装会保留在这里。</span></div>
+          <div class="table-wrap"><table class="stock-table trash-table bundle-trash-table"><thead><tr><th>套装 / SKU</th><th>颜色 / 尺码</th><th>删除时间</th><th></th></tr></thead><tbody id="bundleTrashRows"></tbody></table></div>
+          <div class="empty-state compact-empty" id="bundleTrashEmpty"><i data-lucide="archive-restore"></i><strong>套装回收站为空</strong><p>删除的套装会保留在这里。</p></div>
+        </div>
       </div>
     </section>
   </div>

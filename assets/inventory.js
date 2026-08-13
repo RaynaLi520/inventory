@@ -56,7 +56,7 @@
     ["个 SKU · 实时可售", "SKUs · sellable now"], ["件", "pcs"], ["件可售库存", "sellable pcs"], ["重点款库存", "Priority stock"], ["全部 SKU", "All SKUs"], ["渠道库存", "Channel stock"], ["最近动态", "Recent activity"], ["库存总览", "Stock overview"], ["库存正常", "Healthy"], ["低库存", "Low stock"], ["LIVE STOCK", "LIVE STOCK"], ["ALLOCATION", "ALLOCATION"],
     ["品牌小程序", "Brand mini-program"], ["天猫旗舰店", "Tmall flagship"], ["静安门店", "Jing'an store"], ["机动库存", "Buffer stock"], ["渠道可售", "Channel sellable"], ["今日订单", "Orders today"], ["同步正常", "Sync healthy"], ["微信自营商城", "WeChat direct store"], ["平台电商", "Marketplace"], ["线下直营", "Offline retail"], ["2 分钟前同步", "Synced 2 min ago"],
     ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SPU", "New SPU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
-    ["回收站", "Recycle bin"], ["款式回收站", "Style recycle bin"], ["删除款式", "Delete style"], ["恢复", "Restore"], ["彻底删除", "Delete permanently"], ["删除时间", "Deleted at"], ["回收站为空", "Recycle bin is empty"], ["删除的款式会保留在这里。", "Deleted styles remain here."], ["删除的款式不会在下一次 CoZ 同步时重新出现。恢复后会重新参与库存和套装计算。", "Deleted styles stay excluded from future CoZ syncs. Restored styles rejoin inventory and bundle calculations."],
+    ["回收站", "Recycle bin"], ["库存回收站", "Inventory recycle bin"], ["款式回收站", "Style recycle bin"], ["套装回收站", "Bundle recycle bin"], ["套装回收站为空", "Bundle recycle bin is empty"], ["删除款式", "Delete style"], ["恢复", "Restore"], ["彻底删除", "Delete permanently"], ["删除时间", "Deleted at"], ["回收站为空", "Recycle bin is empty"], ["删除的款式会保留在这里。", "Deleted styles remain here."], ["删除的套装会保留在这里。", "Deleted bundles remain here."], ["删除的款式不会在下一次 CoZ 同步时重新出现。恢复后会重新参与库存和套装计算。", "Deleted styles stay excluded from future CoZ syncs. Restored styles rejoin inventory and bundle calculations."],
     ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["备注", "Note"],
     ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
     ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款式名称", "Style name"], ["商品类型", "Item type"], ["添加类型", "Add type"], ["类型名称", "Type name"], ["类型缩写", "Type code"], ["商品图片", "Product image"], ["创建日期", "Creation date"], ["年份", "Year"], ["添加年份", "Add year"], ["新年份", "New year"], ["季节", "Season"], ["面料类型", "Fabric type"], ["添加面料类型", "Add fabric type"], ["面料类型名称", "Fabric type name"], ["面料类型代码", "Fabric type code"], ["SS · 春夏", "SS · Spring/Summer"], ["AW · 秋冬", "AW · Autumn/Winter"], ["三位序号", "3-digit sequence"], ["原始款号", "Original style no."], ["图片链接（可选）", "Image URL (optional)"], ["SKU 变体", "SKU variants"], ["一个 SPU 可同时生成多个尺码 SKU。", "Create multiple size SKUs under one SPU."], ["颜色代码", "Color code"], ["生成", "Create"], ["启用", "Enabled"], ["尺码", "Size"], ["初始库存", "Opening stock"], ["CoZ 库存", "CoZ stock"], ["CoZ 原始 SKU", "Original CoZ SKU"], ["品牌 SKU", "Brand SKU"], ["库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。", "Stock and original SKUs are synced from CoZ. Brand SKUs can be edited."], ["未同步", "Not synced"], ["SKU 编码", "SKU code"], ["安全库存", "Safety stock"], ["新增成衣 SPU", "New garment SPU"], ["编辑 SPU 和 SKU", "Edit SPU and SKU"], ["SPU 编码预览", "SPU code preview"], ["COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号", "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence"], ["创建 SPU 和 SKU", "Create SPU and SKUs"], ["保存修改", "Save changes"]
@@ -226,6 +226,8 @@
   function upgradeCozState(saved) {
     if (!saved || !Array.isArray(saved.products)) return saved;
     saved.trashProducts = Array.isArray(saved.trashProducts) ? saved.trashProducts : [];
+    saved.trashBundles = Array.isArray(saved.trashBundles) ? saved.trashBundles : [];
+    saved.deletedBundleIds = Array.isArray(saved.deletedBundleIds) ? [...new Set(saved.deletedBundleIds)] : [];
     saved.deletedProductKeys = Array.isArray(saved.deletedProductKeys) ? [...new Set(saved.deletedProductKeys)] : [];
     applyImageCatalog(saved);
     if (saved?.source?.type !== "coz") return saved;
@@ -336,18 +338,22 @@
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (saved?.products?.length && Array.isArray(saved.movements)) return { ...upgradeCozState(saved), bundles: mergeBundleSeed(saved.bundles) };
+      if (saved?.products?.length && Array.isArray(saved.movements)) {
+        const upgraded = upgradeCozState(saved);
+        return { ...upgraded, bundles: mergeBundleSeed(upgraded.bundles, upgraded.deletedBundleIds) };
+      }
     } catch (_) { /* Use the packaged inventory sample if local data is invalid. */ }
-    return { ...clone(seedState), trashProducts: [], deletedProductKeys: [] };
+    return { ...clone(seedState), trashProducts: [], trashBundles: [], deletedProductKeys: [], deletedBundleIds: [] };
   }
-  function mergeBundleSeed(existingBundles) {
+  function mergeBundleSeed(existingBundles, deletedBundleIds = []) {
     const imported = Array.isArray(window.BUNDLE_SEED) ? window.BUNDLE_SEED : [];
     const existing = Array.isArray(existingBundles) ? existingBundles : [];
+    const deleted = new Set((Array.isArray(deletedBundleIds) ? deletedBundleIds : []).map(String));
     const custom = existing.filter((bundle) => !String(bundle.id || "").startsWith("IMPORT-"));
     const editedImports = new Map(existing
       .filter((bundle) => String(bundle.id || "").startsWith("IMPORT-") && bundle.updatedAt)
       .map((bundle) => [bundle.id, bundle]));
-    return [...custom, ...imported.map((bundle) => clone(editedImports.get(bundle.id) || bundle))];
+    return [...custom, ...imported.filter((bundle) => !deleted.has(String(bundle.id))).map((bundle) => clone(editedImports.get(bundle.id) || bundle))];
   }
   function saveState() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -499,7 +505,7 @@
     Object.assign(fabricTypeCodes, { Woven: "W", Knit: "K" }, document.fabricTypeCodes || {});
     Object.keys(colorMappings).forEach((key) => delete colorMappings[key]);
     Object.assign(colorMappings, document.colorMappings || {}, defaultColorMappings);
-    state.bundles = mergeBundleSeed(state.bundles);
+    state.bundles = mergeBundleSeed(state.bundles, state.deletedBundleIds);
     bundleSeasons.splice(0, bundleSeasons.length, ...[...new Set(["SS26", "AW26", ...(document.bundleSeasons || []), ...(state.bundles || []).map((bundle) => bundle.season)].map((value) => String(value || "").trim().toUpperCase()).filter(Boolean))]);
     bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
     stockHistory = normalizeStockHistory(document.stockHistory);
@@ -669,7 +675,7 @@
     const image = product.image
       ? `<button class="product-image-button" type="button" data-image-preview data-image-src="${escapeHtml(product.image)}" data-image-name="${escapeHtml(product.name)}" data-image-sku="${escapeHtml(product.baseSku)}" title="双击查看大图" aria-label="查看 ${escapeHtml(product.name)} 大图"><img class="product-thumb" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} 商品图片"></button>`
       : `<span class="product-image-placeholder" title="${missingImageTitle}"><i data-lucide="image-off"></i></span>`;
-    return `<div class="product-cell">${image}<div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(product.baseSku)}</code>${product.imageName ? `<small class="image-name">${escapeHtml(product.imageName)}</small>` : ""}</div></div>`;
+    return `<div class="product-cell">${image}<div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(product.baseSku)}</code></div></div>`;
   }
 
   function statusBadge(product) {
@@ -1218,7 +1224,9 @@
 
   function renderTrash() {
     const products = state.trashProducts || [];
+    const bundles = state.trashBundles || [];
     $("trashCount").textContent = products.length;
+    $("bundleTrashCount").textContent = bundles.length;
     $("trashRows").innerHTML = products.map((product) => `<tr>
       <td>${productCell(product)}</td>
       <td class="color-cell">${colorSwatch(product)}${escapeHtml(product.color)}</td>
@@ -1227,6 +1235,14 @@
     </tr>`).join("");
     $("trashEmpty").hidden = products.length > 0;
     $("trashRows").closest(".table-wrap").hidden = products.length === 0;
+    $("bundleTrashRows").innerHTML = bundles.map((bundle) => `<tr>
+      <td><strong>${escapeHtml(bundle.name)}</strong><code class="bundle-code">${escapeHtml(bundleSku(bundle))}</code></td>
+      <td>${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}</td>
+      <td>${escapeHtml(bundle.deletedAt ? new Date(bundle.deletedAt).toLocaleString("zh-CN", { hour12: false }) : "--")}</td>
+      <td><div class="trash-actions"><button class="button secondary" type="button" data-restore-bundle="${escapeHtml(bundle.id)}"><i data-lucide="archive-restore"></i>恢复</button><button class="button danger" type="button" data-purge-bundle="${escapeHtml(bundle.id)}"><i data-lucide="trash-2"></i>彻底删除</button></div></td>
+    </tr>`).join("");
+    $("bundleTrashEmpty").hidden = bundles.length > 0;
+    $("bundleTrashRows").closest(".table-wrap").hidden = bundles.length === 0;
   }
 
   function trashProduct(id) {
@@ -1274,6 +1290,10 @@
     renderTrash();
     $("trashModal").hidden = false;
     document.body.style.overflow = "hidden";
+  }
+  function openBundleTrashModal() {
+    openTrashModal();
+    setTimeout(() => $("bundleTrashSection").scrollIntoView({ block: "start", behavior: "smooth" }), 20);
   }
   function closeTrashModal() {
     $("trashModal").hidden = true;
@@ -1581,13 +1601,42 @@
     const bundle = (state.bundles || []).find((item) => item.id === id);
     if (!bundle) return;
     const confirmation = currentLang === "zh"
-      ? `确认删除套装 ${bundleSku(bundle)}？`
-      : `Delete bundle ${bundleSku(bundle)}?`;
+      ? `确认删除套装 ${bundleSku(bundle)}？\n删除后可在回收站恢复。`
+      : `Delete bundle ${bundleSku(bundle)}? You can restore it from the recycle bin.`;
     if (!window.confirm(confirmation)) return;
     state.bundles = state.bundles.filter((item) => item.id !== id);
+    state.trashBundles = [{ ...clone(bundle), deletedAt: new Date().toISOString() }, ...(state.trashBundles || []).filter((item) => item.id !== id)];
+    state.deletedBundleIds = [...new Set([...(state.deletedBundleIds || []), id])];
     saveState();
     renderAll();
-    showToast(`套装 ${bundleSku(bundle)} 已删除`);
+    showToast(`套装 ${bundleSku(bundle)} 已移入回收站`);
+  }
+
+  function restoreBundle(id) {
+    const bundle = (state.trashBundles || []).find((item) => item.id === id);
+    if (!bundle) return;
+    if ((state.bundles || []).some((item) => item.id === id || bundleSku(item) === bundleSku(bundle))) {
+      showToast("现有套装中已存在相同 SKU，无法直接恢复");
+      return;
+    }
+    const restored = clone(bundle);
+    delete restored.deletedAt;
+    state.bundles = [restored, ...(state.bundles || [])];
+    state.trashBundles = state.trashBundles.filter((item) => item.id !== id);
+    state.deletedBundleIds = (state.deletedBundleIds || []).filter((bundleId) => bundleId !== id);
+    saveState();
+    renderAll();
+    showToast(`套装 ${bundleSku(restored)} 已恢复`);
+  }
+
+  function purgeBundle(id) {
+    const bundle = (state.trashBundles || []).find((item) => item.id === id);
+    if (!bundle || !window.confirm(`彻底删除套装 ${bundleSku(bundle)}？此操作无法恢复。`)) return;
+    state.trashBundles = state.trashBundles.filter((item) => item.id !== id);
+    state.deletedBundleIds = [...new Set([...(state.deletedBundleIds || []), id])];
+    saveState();
+    renderAll();
+    showToast(`套装 ${bundleSku(bundle)} 已彻底删除`);
   }
 
   function closeSkuModal() {
@@ -2171,7 +2220,9 @@
       trashProducts,
       deletedProductKeys: [...deletedSourceKeys],
       movements: [],
-      bundles: mergeBundleSeed(state?.bundles),
+      bundles: mergeBundleSeed(state?.bundles, state?.deletedBundleIds),
+      trashBundles: state?.trashBundles || [],
+      deletedBundleIds: state?.deletedBundleIds || [],
       source: {
         type: "coz",
         brand: "CoZ",
@@ -2236,6 +2287,10 @@
       if (restoreButton) restoreProduct(restoreButton.dataset.restoreProduct);
       const purgeButton = event.target.closest("[data-purge-product]");
       if (purgeButton) purgeProduct(purgeButton.dataset.purgeProduct);
+      const restoreBundleButton = event.target.closest("[data-restore-bundle]");
+      if (restoreBundleButton) restoreBundle(restoreBundleButton.dataset.restoreBundle);
+      const purgeBundleButton = event.target.closest("[data-purge-bundle]");
+      if (purgeBundleButton) purgeBundle(purgeBundleButton.dataset.purgeBundle);
       const editBundleButton = event.target.closest("[data-edit-bundle]");
       if (editBundleButton) openBundleModal(editBundleButton.dataset.editBundle);
       const deleteBundleButton = event.target.closest("[data-delete-bundle]");
@@ -2284,6 +2339,7 @@
     $("scanBtn").addEventListener("click", () => { openMovementModal(); showToast("请选择或扫描 SKU 后调整库存"); });
     $("addSkuBtn").addEventListener("click", () => openSkuModal());
     $("openTrashBtn").addEventListener("click", openTrashModal);
+    $("openBundleTrashBtn").addEventListener("click", openBundleTrashModal);
     document.querySelectorAll("[data-close-trash]").forEach((node) => node.addEventListener("click", closeTrashModal));
     $("addBundleBtn").addEventListener("click", () => openBundleModal());
     $("addCategoryBtn").addEventListener("click", openCategoryCreator);
