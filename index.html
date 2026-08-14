@@ -141,7 +141,7 @@
         <div class="toolbar">
           <div class="inventory-search-combobox"><label class="search-box"><i data-lucide="search"></i><input id="inventorySearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inventorySearchResults" autocomplete="off" placeholder="搜索款式、SKU、颜色"></label><div class="inventory-search-results" id="inventorySearchResults" role="listbox" hidden></div></div>
           <select id="categoryFilter" aria-label="按品类筛选"><option value="">全部品类</option></select>
-          <select id="statusFilter" aria-label="按库存状态筛选"><option value="">全部状态</option><option value="low">低库存</option><option value="healthy">库存正常</option></select>
+          <select id="statusFilter" aria-label="按库存状态筛选"><option value="">全部状态</option><option value="healthy">库存正常</option><option value="low">低库存（≤5）</option><option value="unavailable">不可售</option></select>
           <button class="button secondary trash-button" id="openTrashBtn" type="button"><i data-lucide="trash-2"></i>回收站 <span id="trashCount">0</span></button>
           <button class="button secondary" id="addSkuBtn" type="button"><i data-lucide="plus"></i>新增 SPU</button>
         </div>
@@ -165,7 +165,7 @@
 
       <section class="view" id="bundlesView">
         <div class="toolbar bundle-toolbar">
-          <label class="search-box"><i data-lucide="search"></i><input id="bundleSearch" type="search" placeholder="搜索套装、SKU、组件或颜色"></label>
+          <div class="bundle-search-combobox"><label class="search-box"><i data-lucide="search"></i><input id="bundleSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="bundleSearchResults" autocomplete="off" placeholder="搜索套装、SKU、组件或颜色"></label><div class="inventory-search-results" id="bundleSearchResults" role="listbox" hidden></div></div>
           <select id="bundleTypeFilter" aria-label="按套装类型筛选"></select>
           <select id="bundleSizeFilter" aria-label="按套装尺码筛选"></select>
           <select id="bundleStatusFilter" aria-label="按套装状态筛选"></select>
@@ -236,7 +236,7 @@
 
   <div class="modal" id="movementModal" hidden>
     <div class="modal-backdrop" data-close-modal></div>
-    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="movementModalTitle">
+    <section class="modal-panel movement-panel" role="dialog" aria-modal="true" aria-labelledby="movementModalTitle">
       <header class="modal-head"><div><span class="section-kicker">STOCK MOVEMENT</span><h2 id="movementModalTitle">快速出入库</h2></div><button class="icon-button" data-close-modal type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
       <form id="movementForm">
         <div class="segmented" role="group" aria-label="出入库类型">
@@ -244,10 +244,21 @@
           <button data-type="outbound" type="button"><i data-lucide="package-minus"></i>出库</button>
         </div>
         <input id="movementType" type="hidden" value="inbound">
-        <label><span>SKU</span><select id="movementSku" required></select></label>
+        <div class="form-field movement-sku-field">
+          <div class="field-title"><label for="movementSkuSearch">SKU</label></div>
+          <div class="movement-sku-combobox"><input id="movementSkuSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="movementSkuResults" autocomplete="off" placeholder="输入 SKU、款号或商品名称" required><input id="movementSku" type="hidden"><div class="inventory-search-results movement-sku-results" id="movementSkuResults" role="listbox" hidden></div></div>
+        </div>
         <div class="form-row">
-          <label><span>库位</span><select id="movementLocation"><option value="warehouse">上海总仓</option><option value="store">静安门店</option></select></label>
+          <div class="form-field movement-location-field">
+            <div class="field-title"><label for="movementLocation">库位</label><div class="field-inline-actions"><button class="inline-add" id="addLocationBtn" type="button"><i data-lucide="plus"></i>添加库位</button><button class="inline-add" id="editLocationBtn" type="button"><i data-lucide="pencil"></i>修改现有库位</button></div></div>
+            <select id="movementLocation"></select>
+          </div>
           <label><span>数量</span><input id="movementQty" type="number" min="1" value="1" required></label>
+        </div>
+        <div class="location-editor" id="locationEditor" hidden>
+          <div class="field-title"><strong id="locationEditorTitle">添加库位</strong></div>
+          <div class="location-editor-fields"><input id="locationEditorId" type="hidden"><input id="newLocationName" type="text" maxlength="30" placeholder="库位名称"><select id="newLocationType" aria-label="库位类型"><option value="warehouse">仓库</option><option value="store">门店</option></select></div>
+          <div class="location-editor-actions"><button class="button secondary" id="cancelLocationBtn" type="button">取消</button><button class="button primary" id="saveLocationBtn" type="button">保存库位</button></div>
         </div>
         <label><span>备注</span><input id="movementNote" type="text" placeholder="例如：采购单 PO-20260809"></label>
         <div class="form-actions"><button class="button secondary" data-close-modal type="button">取消</button><button class="button primary" type="submit">确认入库</button></div>
