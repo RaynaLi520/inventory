@@ -59,6 +59,7 @@
     channels: ["全渠道 / 配额", "销售渠道"]
   };
   const translationPairs = [
+    ["操作", "Actions"], ["编辑库存流水", "Edit stock movement"], ["库存管理员", "Inventory manager"], ["只读库存", "Read-only inventory"], ["库存（只读）", "Inventory (read-only)"], ["库存已锁定，请在“出入库流水”中由授权人员调整。", "Inventory is locked. Authorized staff must adjust it in Stock movements."],
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
     ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装", "Virtual bundle"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["添加季节", "Add season"], ["新季节", "New season"], ["添加颜色", "Add color"], ["新颜色", "New color"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["输入款号、名称或颜色检索", "Search style, name, or color"], ["搜索套装、SKU、组件或颜色", "Search bundle, SKU, component, or color"], ["清除组件", "Clear component"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["不可售", "Unavailable"], ["删除套装", "Delete bundle"],
     ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["安装应用", "Install app"], ["安装", "Install"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
@@ -143,6 +144,11 @@
   let pendingSkuImage = "";
   let pendingSkuImageName = "";
   let skuImageRemoved = false;
+  let currentSession = {
+    username: "",
+    displayName: "库存用户",
+    permissions: { manageMovements: false }
+  };
 
   function localDateKey(date = new Date()) {
     const year = date.getFullYear();
@@ -649,7 +655,11 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ data: cloudDocument() })
         });
-        if (!response.ok) throw new Error(`Inventory API save failed (HTTP ${response.status})`);
+        if (!response.ok) {
+          const error = new Error(`Inventory API save failed (HTTP ${response.status})`);
+          error.status = response.status;
+          throw error;
+        }
         const result = await response.json();
         cloudUpdatedAt = result.updated_at || updatedAt;
       } else {
@@ -664,6 +674,21 @@
       resetCloudRetry();
       renderSyncState();
     } catch (error) {
+      if (localApiEnabled && error.status === 403) {
+        cloudDirty = false;
+        cloudStatus = "synced";
+        showToast("当前账号没有库存操作权限，未保存的库存变化已撤销");
+        try {
+          const response = await fetch(`${apiBase}/state`, { cache: "no-store" });
+          const remote = response.ok ? await response.json() : null;
+          if (remote?.data && applyCloudDocument(remote.data)) {
+            cloudUpdatedAt = remote.updated_at;
+            renderAll();
+          }
+        } catch (_) { /* The normal polling loop will reload authoritative state. */ }
+        renderSyncState();
+        return;
+      }
       cloudStatus = "error";
       console.error(`${localApiEnabled ? "Inventory API" : "Supabase"} inventory save failed`, error);
       scheduleCloudRetry("save", error);
@@ -849,6 +874,37 @@
   function totalAvailable() { return state.products.reduce((sum, product) => sum + availableStock(product), 0); }
   function formatNumber(value) { return new Intl.NumberFormat("zh-CN").format(value); }
   function refreshIcons() { if (window.lucide) window.lucide.createIcons({ attrs: { "stroke-width": 1.7 } }); }
+  function canManageMovements() { return Boolean(currentSession.permissions?.manageMovements); }
+
+  function renderSession() {
+    const displayName = currentSession.displayName || currentSession.username || "库存用户";
+    const initials = displayName.split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "--";
+    $("profileAvatar").textContent = initials;
+    $("profileName").textContent = displayName;
+    $("profileRole").textContent = canManageMovements() ? "库存管理员" : "只读库存";
+    document.body.classList.toggle("can-manage-movements", canManageMovements());
+    ["quickMoveBtn", "mobileMoveBtn", "scanBtn"].forEach((id) => { $(id).hidden = !canManageMovements(); });
+  }
+
+  async function initSession() {
+    if (!localApiEnabled) {
+      renderSession();
+      return;
+    }
+    try {
+      const response = await fetch(`${apiBase}/session`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Session request failed (HTTP ${response.status})`);
+      const session = await response.json();
+      currentSession = {
+        username: String(session.username || ""),
+        displayName: String(session.displayName || session.username || "库存用户"),
+        permissions: { manageMovements: Boolean(session.permissions?.manageMovements) }
+      };
+    } catch (error) {
+      console.error("Inventory session load failed", error);
+    }
+    renderSession();
+  }
 
   function applyLanguage() {
     const map = currentLang === "en" ? zhToEn : enToZh;
@@ -1018,7 +1074,7 @@
         <td class="num">${cozProduct && !product.reservedReported ? "--" : formatNumber(product.reserved)}</td>
         <td class="num"><span class="stock-number">${formatNumber(availableStock(product))}</span></td>
         <td>${statusBadge(product)}</td>
-        <td><div class="row-actions"><button class="row-action" data-edit-product="${product.id}" type="button" title="编辑 SPU 和 SKU"><i data-lucide="pencil"></i></button><button class="row-action" data-move-product="${product.id}" type="button" title="调整库存"><i data-lucide="arrow-left-right"></i></button><button class="row-action danger" data-trash-product="${product.id}" type="button" title="删除款式"><i data-lucide="trash-2"></i></button></div></td>
+        <td><div class="row-actions"><button class="row-action" data-edit-product="${product.id}" type="button" title="编辑 SPU 和 SKU" aria-label="编辑 SPU 和 SKU"><i data-lucide="pencil"></i></button>${canManageMovements() ? `<button class="row-action" data-move-product="${product.id}" type="button" title="调整库存" aria-label="调整库存"><i data-lucide="arrow-left-right"></i></button>` : ""}<button class="row-action danger" data-trash-product="${product.id}" type="button" title="删除款式" aria-label="删除款式"><i data-lucide="trash-2"></i></button></div></td>
       </tr>`;
     }).join("");
     $("inventoryEmpty").hidden = products.length > 0;
@@ -1287,6 +1343,7 @@
         <td class="num qty ${movement.type}">${movement.qty > 0 ? "+" : ""}${movement.qty}</td>
         <td>${escapeHtml(movement.operator)}</td>
         <td>${escapeHtml(movement.note || "-")}</td>
+        <td class="movement-admin-column"><div class="row-actions"><button class="row-action" type="button" data-edit-movement="${escapeHtml(movement.id)}" title="编辑流水" aria-label="编辑流水"><i data-lucide="pencil"></i></button><button class="row-action danger" type="button" data-delete-movement="${escapeHtml(movement.id)}" title="删除流水" aria-label="删除流水"><i data-lucide="trash-2"></i></button></div></td>
       </tr>`).join("");
     const todayRows = state.movements.filter((movement) => movement.time.startsWith(localDateKey()));
     $("todayInbound").textContent = todayRows.filter((movement) => movement.type === "inbound").reduce((sum, movement) => sum + Math.abs(movement.qty), 0);
@@ -1568,6 +1625,7 @@
     recalculateLocationTotals(record, fixedBundle);
   }
   function openLocationEditor(mode) {
+    if (!canManageMovements()) return;
     const editing = mode === "edit" ? locationById($("movementLocation").value) : null;
     $("locationEditorId").value = editing?.id || "";
     $("locationEditorTitle").textContent = editing ? "修改现有库位" : "添加库位";
@@ -1582,6 +1640,10 @@
     $("locationEditorId").value = "";
   }
   function saveLocation() {
+    if (!canManageMovements()) {
+      showToast("当前账号没有库存操作权限");
+      return;
+    }
     const id = $("locationEditorId").value;
     const name = $("newLocationName").value.trim();
     if (!name) {
@@ -1617,6 +1679,7 @@
   }
 
   function renderAll() {
+    renderSession();
     renderCategoryOptions();
     renderSkuCategoryOptions();
     renderBundleFilters();
@@ -1722,6 +1785,15 @@
   }
 
   function openMovementModal(productId, size) {
+    if (!canManageMovements()) {
+      showToast("当前账号只有库存查看权限");
+      return;
+    }
+    $("editingMovementId").value = "";
+    $("movementModalTitle").textContent = "快速出入库";
+    $("movementForm").querySelector('[type="submit"]').textContent = "确认入库";
+    $("movementForm").reset();
+    setMovementType("inbound");
     renderMovementLocationOptions();
     if (productId) {
       const product = state.products.find((item) => item.id === productId);
@@ -1741,6 +1813,7 @@
 
   function closeMovementModal() {
     $("movementModal").hidden = true;
+    $("editingMovementId").value = "";
     closeMovementSkuResults();
     closeLocationEditor();
     document.body.style.overflow = "";
@@ -1749,7 +1822,7 @@
   function renderSkuVariantRows(product = null) {
     const cozProduct = Boolean(product && isCozProduct(product));
     const sizes = [...new Set([...sizeOrder, ...Object.keys(product?.sizes || {}), ...Object.keys(product?.localSizes || {})])];
-    $("variantStockHeading").textContent = cozProduct ? "库存" : "初始库存";
+    $("variantStockHeading").textContent = "库存（只读）";
     $("variantSourceNote").hidden = !cozProduct;
     $("skuVariantRows").innerHTML = sizes.map((size) => {
       const sourceSynced = Boolean(cozProduct && product?.sourceSkuBySize?.[size]);
@@ -1764,7 +1837,7 @@
         ? existingSku
         : (cozProduct && !colorCode ? "" : `${spuCodeFromForm()}-${colorCode || "COLOR"}-${size}`);
       const sourceSku = product?.sourceSkuBySize?.[size] || (cozProduct ? "本地新增" : "--");
-      return `<div class="sku-variant-row" data-variant-size="${escapeHtml(size)}" ${cozProduct ? 'data-coz-product="true"' : ""} ${sourceSynced ? 'data-source-synced="true"' : ""}><input class="variant-enabled" type="checkbox" aria-label="启用 ${escapeHtml(size)} 码 SKU" ${checked ? "checked" : ""} ${sourceSynced ? "disabled" : ""}><span class="variant-size">${escapeHtml(size)}</span><input class="variant-stock" type="number" min="0" value="${stock}" aria-label="${escapeHtml(size)} 码库存" ${sourceSynced ? "disabled" : ""}><input class="variant-source-sku" value="${escapeHtml(sourceSku)}" aria-label="${escapeHtml(size)} 码 CoZ 原始 SKU" disabled><input class="variant-sku" value="${escapeHtml(sku)}" ${existingSku && !isGeneratedSku ? 'data-manual="true"' : ""} aria-label="${escapeHtml(size)} 码品牌 SKU"></div>`;
+      return `<div class="sku-variant-row" data-variant-size="${escapeHtml(size)}" ${cozProduct ? 'data-coz-product="true"' : ""} ${sourceSynced ? 'data-source-synced="true"' : ""}><input class="variant-enabled" type="checkbox" aria-label="启用 ${escapeHtml(size)} 码 SKU" ${checked ? "checked" : ""} ${sourceSynced ? "disabled" : ""}><span class="variant-size">${escapeHtml(size)}</span><input class="variant-stock" type="number" min="0" value="${stock}" aria-label="${escapeHtml(size)} 码库存（只读）" aria-readonly="true" disabled><input class="variant-source-sku" value="${escapeHtml(sourceSku)}" aria-label="${escapeHtml(size)} 码 CoZ 原始 SKU" disabled><input class="variant-sku" value="${escapeHtml(sku)}" ${existingSku && !isGeneratedSku ? 'data-manual="true"' : ""} aria-label="${escapeHtml(size)} 码品牌 SKU"></div>`;
     }).join("");
   }
 
@@ -2264,103 +2337,204 @@
     applyLanguage();
   }
 
+  function movementLocationId(movement) {
+    if (movement.locationId && stockLocations.some((location) => location.id === movement.locationId)) return movement.locationId;
+    return stockLocations.find((location) => location.name === movement.location)?.id || stockLocations[0]?.id || "warehouse";
+  }
+
+  function movementTargetFromValue(value) {
+    const [kind, targetId, size = ""] = String(value || "").split("|");
+    if (kind === "product") {
+      const record = state.products.find((product) => product.id === targetId);
+      return record ? { kind, targetId, size, record, sku: skuForSize(record, size), label: `${record.name} ${size} 码` } : null;
+    }
+    if (kind === "bundle") {
+      const record = (state.bundles || []).find((bundle) => bundle.id === targetId);
+      return record ? { kind, targetId, size: record.size || size || "F", record, sku: bundleSku(record), label: record.name } : null;
+    }
+    return null;
+  }
+
+  function resolveMovementTarget(movement) {
+    if (movement.targetKind && movement.targetId) {
+      const stored = movementTargetFromValue(`${movement.targetKind}|${movement.targetId}|${movement.targetSize || ""}`);
+      if (stored) return stored;
+    }
+    for (const product of state.products) {
+      for (const size of orderedSizes(product)) {
+        if ([skuForSize(product, size), product.skuBySize?.[size], product.sourceSkuBySize?.[size]].filter(Boolean).includes(movement.sku)) {
+          return movementTargetFromValue(`product|${product.id}|${size}`);
+        }
+      }
+    }
+    const bundle = (state.bundles || []).find((item) => bundleSku(item) === movement.sku || item.importedSku === movement.sku || item.fixedSku === movement.sku);
+    return bundle ? movementTargetFromValue(`bundle|${bundle.id}|${bundle.size || "F"}`) : null;
+  }
+
+  function applyMovementEffect(target, signedQuantity, locationId) {
+    const quantity = Number(signedQuantity || 0);
+    const location = locationById(locationId);
+    if (!target || !quantity || !location) return "流水关联的商品、数量或库位无效";
+    if (target.kind === "product") {
+      if (target.record.sizes?.[target.size] == null) return `商品已没有 ${target.size} 尺码`;
+      if (Number(target.record.sizes[target.size] || 0) + quantity < 0 || locationStockValue(target.record, locationId) + quantity < 0) {
+        return `${location.name}的 ${target.size} 码库存不足`;
+      }
+      target.record.sizes[target.size] = Number(target.record.sizes[target.size] || 0) + quantity;
+      adjustLocationStock(target.record, locationId, quantity);
+      return "";
+    }
+
+    const bundle = target.record;
+    if (bundle.type === "fixed") {
+      if (locationStockValue(bundle, locationId, true) + quantity < 0) return `${location.name}的 ${bundle.name} 库存不足`;
+      adjustLocationStock(bundle, locationId, quantity, true);
+      return "";
+    }
+    if (quantity > 0) {
+      bundlePartRecords(bundle).forEach(({ product, index }) => {
+        const targetSize = bundleComponentSize(product, bundle.size, bundle.componentSizes?.[index]);
+        if (!targetSize) return;
+        product.sizes[targetSize] = Number(product.sizes[targetSize] || 0) + quantity;
+        adjustLocationStock(product, locationId, quantity);
+      });
+      return "";
+    }
+    const parts = bundlePartRecords(bundle);
+    if (!parts.length || parts.length !== (bundle.components || []).length) return "套装组件不完整，无法调整库存";
+    for (const { product, index } of parts) {
+      const targetSize = bundleComponentSize(product, bundle.size, bundle.componentSizes?.[index]);
+      if (!targetSize || Number(product.sizes?.[targetSize] || 0) + quantity < 0 || locationStockValue(product, locationId) + quantity < 0) {
+        return `${location.name}的 ${product.name} 库存不足`;
+      }
+    }
+    parts.forEach(({ product, index }) => {
+      const targetSize = bundleComponentSize(product, bundle.size, bundle.componentSizes?.[index]);
+      product.sizes[targetSize] = Number(product.sizes[targetSize] || 0) + quantity;
+      adjustLocationStock(product, locationId, quantity);
+    });
+    return "";
+  }
+
+  function nextMovementId(type) {
+    const prefix = `${type === "inbound" ? "IN" : "OUT"}-${compactDateKey()}-`;
+    const highest = state.movements.reduce((max, movement) => {
+      const match = String(movement.id || "").match(new RegExp(`^${prefix}(\\d+)$`));
+      return match ? Math.max(max, Number(match[1])) : max;
+    }, 0);
+    return `${prefix}${String(highest + 1).padStart(3, "0")}`;
+  }
+
+  function openMovementEditor(movementId) {
+    if (!canManageMovements()) return;
+    const movement = state.movements.find((item) => item.id === movementId);
+    const target = movement && resolveMovementTarget(movement);
+    if (!movement || !target) {
+      showToast("这条历史流水无法关联到现有 SKU，暂不能编辑");
+      return;
+    }
+    $("movementForm").reset();
+    renderMovementLocationOptions();
+    $("editingMovementId").value = movement.id;
+    $("movementModalTitle").textContent = "编辑库存流水";
+    selectMovementSku(`${target.kind}|${target.targetId}|${target.size || ""}`);
+    $("movementLocation").value = movementLocationId(movement);
+    $("movementQty").value = Math.max(1, Math.abs(Number(movement.qty || 1)));
+    $("movementNote").value = movement.note || "";
+    setMovementType(movement.type === "outbound" ? "outbound" : "inbound");
+    $("movementForm").querySelector('[type="submit"]').textContent = "保存修改";
+    $("movementModal").hidden = false;
+    document.body.style.overflow = "hidden";
+    setTimeout(() => $("movementQty").focus(), 20);
+  }
+
+  function deleteMovement(movementId) {
+    if (!canManageMovements()) return;
+    const movement = state.movements.find((item) => item.id === movementId);
+    if (!movement || !window.confirm(`确认删除流水 ${movement.id}？系统会同时撤销这条流水造成的库存变化。`)) return;
+    const before = clone(state);
+    const target = resolveMovementTarget(movement);
+    const error = applyMovementEffect(target, -Number(movement.qty || 0), movementLocationId(movement));
+    if (error) {
+      state = before;
+      showToast(`${error}，无法撤销这条流水`);
+      return;
+    }
+    state.movements = state.movements.filter((item) => item.id !== movementId);
+    const now = new Date();
+    recordStockSnapshot(totalAvailable(), now);
+    saveState();
+    renderAll();
+    showToast(`流水 ${movement.id} 已删除，库存已同步回退`);
+  }
+
   function submitMovement(event) {
     event.preventDefault();
+    if (!canManageMovements()) {
+      showToast("当前账号没有库存操作权限");
+      return;
+    }
     if (!$("movementSku").value) {
       showToast("请从推荐结果中选择 SKU");
       renderMovementSkuResults($("movementSkuSearch").value);
       return;
     }
-    const [kind, productId, size] = $("movementSku").value.split("|");
-    if (kind === "bundle") {
-      submitBundleMovement(productId);
-      return;
-    }
-    const product = state.products.find((item) => item.id === productId);
+    const target = movementTargetFromValue($("movementSku").value);
     const type = $("movementType").value;
+    const quantity = Math.max(1, Number($("movementQty").value || 1));
+    const signedQuantity = type === "inbound" ? quantity : -quantity;
     const locationId = $("movementLocation").value;
     const location = locationById(locationId);
-    const qty = Math.max(1, Number($("movementQty").value || 1));
-    if (!product) return;
-    if (type === "outbound" && (Number(product.sizes[size]) < qty || locationStockValue(product, locationId) < qty)) {
-      showToast(`${location.name}的 ${size} 码库存不足，请调整数量`);
-      return;
-    }
-    const direction = type === "inbound" ? 1 : -1;
-    product.sizes[size] = Number(product.sizes[size]) + qty * direction;
-    adjustLocationStock(product, locationId, qty * direction);
-    const now = new Date();
-    const stamp = localTimestamp(now);
-    const sequence = String(state.movements.length + 1).padStart(3, "0");
-    state.movements.unshift({
-      id: `${type === "inbound" ? "IN" : "OUT"}-${compactDateKey()}-${sequence}`,
-      time: stamp,
-      type,
-      sku: skuForSize(product, size),
-      location: location.name,
-      qty: qty * direction,
-      operator: "Rayna Li",
-      note: $("movementNote").value.trim() || "快速库存调整"
-    });
-    recordStockSnapshot(totalAvailable(), now);
-    saveState();
-    closeMovementModal();
-    $("movementForm").reset();
-    setMovementType("inbound");
-    renderAll();
-    showToast(`${product.name} ${size} 码已${type === "inbound" ? "入库" : "出库"} ${qty} 件`);
-  }
-
-  function submitBundleMovement(bundleId) {
-    const bundle = (state.bundles || []).find((item) => item.id === bundleId);
-    const type = $("movementType").value;
-    const qty = Math.max(1, Number($("movementQty").value || 1));
-    if (!bundle) return;
-    if (type === "inbound" && bundle.type !== "fixed") {
+    if (!target || !location) return;
+    if (type === "inbound" && target.kind === "bundle" && target.record.type !== "fixed") {
       showToast("虚拟套装没有独立入库，请给组成单品入库");
       return;
     }
-    const locationId = $("movementLocation").value;
-    const location = locationById(locationId);
-    if (type === "outbound" && bundleAvailable(bundle) < qty) {
-      showToast(`${bundle.name} 可售不足 ${qty} 套`);
-      return;
-    }
-    if (type === "outbound" && bundle.type === "fixed" && locationStockValue(bundle, locationId, true) < qty) {
-      showToast(`${location.name}的 ${bundle.name} 库存不足，请调整数量`);
-      return;
-    }
-    if (type === "outbound" && bundle.type !== "fixed") {
-      const insufficient = bundleParts(bundle).find((product) => locationStockValue(product, locationId) < qty);
-      if (insufficient) {
-        showToast(`${location.name}的 ${insufficient.name} 库存不足，请调整数量`);
+
+    const editingId = $("editingMovementId").value;
+    const existing = state.movements.find((movement) => movement.id === editingId);
+    const before = clone(state);
+    if (existing) {
+      const oldTarget = resolveMovementTarget(existing);
+      const reverseError = applyMovementEffect(oldTarget, -Number(existing.qty || 0), movementLocationId(existing));
+      if (reverseError) {
+        state = before;
+        showToast(`${reverseError}，无法修改这条流水`);
         return;
       }
     }
-    const direction = type === "inbound" ? 1 : -1;
-    if (bundle.type === "fixed") {
-      adjustLocationStock(bundle, locationId, qty * direction, true);
-    } else {
-      bundleParts(bundle).forEach((product, index) => {
-        const targetSize = bundleComponentSize(product, bundle.size, bundle.componentSizes?.[index]);
-        if (!targetSize) return;
-        product.sizes[targetSize] = Number(product.sizes[targetSize] || 0) - qty;
-        adjustLocationStock(product, locationId, -qty);
-      });
+    const applyError = applyMovementEffect(target, signedQuantity, locationId);
+    if (applyError) {
+      state = before;
+      showToast(`${applyError}，请调整数量`);
+      return;
     }
+
     const now = new Date();
-    state.movements.unshift({
-      id: `${type === "inbound" ? "IN" : "OUT"}-${compactDateKey()}-${String(state.movements.length + 1).padStart(3, "0")}`,
-      time: localTimestamp(now), type, sku: bundleSku(bundle), location: location.name, qty: qty * direction,
-      operator: "Rayna Li", note: $("movementNote").value.trim() || `${bundleTypeLabel(bundle.type)}${type === "outbound" ? "销售" : "入库"}`
-    });
+    const movement = {
+      id: existing?.id || nextMovementId(type),
+      time: existing?.time || localTimestamp(now),
+      updatedAt: existing ? now.toISOString() : undefined,
+      type,
+      sku: target.sku,
+      location: location.name,
+      locationId,
+      qty: signedQuantity,
+      operator: currentSession.displayName || currentSession.username,
+      note: $("movementNote").value.trim() || (target.kind === "bundle" ? `${bundleTypeLabel(target.record.type)}${type === "outbound" ? "销售" : "入库"}` : "快速库存调整"),
+      targetKind: target.kind,
+      targetId: target.targetId,
+      targetSize: target.size || ""
+    };
+    if (existing) Object.assign(existing, movement);
+    else state.movements.unshift(movement);
     recordStockSnapshot(totalAvailable(), now);
     saveState();
     closeMovementModal();
     $("movementForm").reset();
     setMovementType("inbound");
     renderAll();
-    showToast(`${bundle.name} 已${type === "outbound" ? "出库" : "入库"} ${qty} 套`);
+    showToast(existing ? `流水 ${movement.id} 已修改` : `${target.label} 已${type === "inbound" ? "入库" : "出库"} ${quantity}${target.kind === "bundle" ? " 套" : " 件"}`);
   }
 
   function spuCodeFromForm() {
@@ -2803,6 +2977,10 @@
       if (bundleSearchResult) selectBundleSearchResult(bundleSearchResult.dataset.bundleSearchId);
       const movementSkuResult = event.target.closest("[data-movement-sku-value]");
       if (movementSkuResult) selectMovementSku(movementSkuResult.dataset.movementSkuValue);
+      const editMovementButton = event.target.closest("[data-edit-movement]");
+      if (editMovementButton) openMovementEditor(editMovementButton.dataset.editMovement);
+      const deleteMovementButton = event.target.closest("[data-delete-movement]");
+      if (deleteMovementButton) deleteMovement(deleteMovementButton.dataset.deleteMovement);
       const clearComponentButton = event.target.closest("[data-clear-component]");
       if (clearComponentButton) clearBundleComponent(Number(clearComponentButton.dataset.clearComponent));
       const componentPicker = event.target.closest("[data-component-picker]");
@@ -3055,6 +3233,7 @@
     initPwaInstallation();
     bindEvents();
     applyTheme();
+    await initSession();
     renderAll();
     switchView(activeView);
     await initCloudState();

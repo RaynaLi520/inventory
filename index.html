@@ -46,8 +46,8 @@
       <div class="sidebar-bottom">
         <div class="sync-state"><span></span> 数据已保存到本机</div>
         <button class="profile-button" type="button" title="账户设置">
-          <span class="avatar">RL</span>
-          <span><strong>Rayna Li</strong><small>品牌管理员</small></span>
+          <span class="avatar" id="profileAvatar">--</span>
+          <span><strong id="profileName">正在识别账号</strong><small id="profileRole">只读库存</small></span>
           <i data-lucide="chevrons-up-down"></i>
         </button>
       </div>
@@ -200,7 +200,7 @@
           </div>
           <div class="table-wrap">
             <table class="ledger-table">
-              <thead><tr><th>时间 / 单号</th><th>类型</th><th>SKU</th><th>库位</th><th class="num">数量</th><th>操作人</th><th>备注</th></tr></thead>
+              <thead><tr><th>时间 / 单号</th><th>类型</th><th>SKU</th><th>库位</th><th class="num">数量</th><th>操作人</th><th>备注</th><th class="movement-admin-column">操作</th></tr></thead>
               <tbody id="movementRows"></tbody>
             </table>
           </div>
@@ -244,6 +244,7 @@
           <button data-type="outbound" type="button"><i data-lucide="package-minus"></i>出库</button>
         </div>
         <input id="movementType" type="hidden" value="inbound">
+        <input id="editingMovementId" type="hidden">
         <div class="form-field movement-sku-field">
           <div class="field-title"><label for="movementSkuSearch">SKU</label></div>
           <div class="movement-sku-combobox"><input id="movementSkuSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="movementSkuResults" autocomplete="off" placeholder="输入 SKU、款号或商品名称" required><input id="movementSku" type="hidden"><div class="inventory-search-results movement-sku-results" id="movementSkuResults" role="listbox" hidden></div></div>
@@ -334,7 +335,8 @@
           <label><span>安全库存</span><input id="skuSafety" type="number" min="0" value="5"></label>
           </div>
           <p class="color-code-notice" id="colorCodeNotice" role="status" hidden></p>
-          <div class="sku-variant-list"><div class="sku-variant-head"><span>启用</span><span>尺码</span><span id="variantStockHeading">初始库存</span><span>CoZ 原始 SKU</span><span>品牌 SKU</span></div><div id="skuVariantRows"></div></div>
+          <div class="sku-variant-list"><div class="sku-variant-head"><span>启用</span><span>尺码</span><span id="variantStockHeading">库存（只读）</span><span>CoZ 原始 SKU</span><span>品牌 SKU</span></div><div id="skuVariantRows"></div></div>
+          <p class="variant-lock-note"><i data-lucide="lock-keyhole"></i>库存已锁定，请在“出入库流水”中由授权人员调整。</p>
           <p class="variant-source-note" id="variantSourceNote" hidden>库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。</p>
         </div>
         <div class="sku-preview"><span>SPU 编码预览</span><code id="skuPreview">COZSS26-WST001</code><small>COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号</small></div>
@@ -418,7 +420,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="circle-check"></i><span></span></div>
 
-  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="assets/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/supabase-config.js"></script>
   <script src="assets/image-catalog.js"></script>
