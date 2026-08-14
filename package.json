@@ -1,0 +1,14 @@
+{
+  "name": "henan-inventory",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "check": "node --check server/index.js && node --check server/import-backup.js && node --check assets/inventory.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
+  }
+}

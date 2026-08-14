@@ -13,12 +13,16 @@
   const hasSavedLocalState = localStorage.getItem(STORAGE_KEY) !== null;
   const CLOUD_TABLE = "inventory_platform_state";
   const CLOUD_RECORD_ID = "default";
+  const serverConfig = window.INVENTORY_SERVER_CONFIG || {};
+  const localApiEnabled = Boolean(serverConfig.enabled && serverConfig.apiBase);
+  const apiBase = String(serverConfig.apiBase || "/api").replace(/\/$/, "");
   const cloudConfig = window.SUPABASE_CONFIG || {};
-  const supabaseClient = window.supabase && cloudConfig.url && cloudConfig.anonKey
+  const supabaseClient = !localApiEnabled && window.supabase && cloudConfig.url && cloudConfig.anonKey
     ? window.supabase.createClient(cloudConfig.url, cloudConfig.anonKey, {
         auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
       })
     : null;
+  const cloudBackendAvailable = localApiEnabled || Boolean(supabaseClient);
   const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "F"];
   const defaultCategoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
   const categoryCodes = loadCategoryCodes();
@@ -117,7 +121,7 @@
   let activeView = "overview";
   let toastTimer = null;
   let currentLang = localStorage.getItem("ja-garment-language") || "zh";
-  let cloudStatus = supabaseClient ? "connecting" : "local";
+  let cloudStatus = cloudBackendAvailable ? "connecting" : "local";
   let cloudUpdatedAt = null;
   let cloudReady = false;
   let cloudDirty = false;
@@ -128,6 +132,7 @@
   let cloudPersisting = false;
   let cloudRevision = 0;
   let cloudChannel = null;
+  let cloudPollTimer = null;
   let pendingSkuImage = "";
   let pendingSkuImageName = "";
   let skuImageRemoved = false;
@@ -191,6 +196,7 @@
   function safeImageUrl(value) {
     const raw = String(value || "");
     if (/^data:image\/(?:jpeg|png|webp);base64,/i.test(raw)) return raw;
+    if (localApiEnabled && /^\/media\/[A-Za-z0-9%+_.-]+$/i.test(raw)) return raw;
     try {
       const url = new URL(raw);
       return url.protocol === "https:" ? url.href : "";
@@ -565,7 +571,7 @@
   function queueCloudSave() {
     cloudRevision += 1;
     cloudDirty = true;
-    if (!supabaseClient || !cloudReady) {
+    if (!cloudBackendAvailable || !cloudReady) {
       return;
     }
     clearTimeout(cloudSaveTimer);
@@ -597,25 +603,36 @@
   }
 
   async function persistCloudState() {
-    if (!supabaseClient || !cloudReady || cloudPersisting) return;
+    if (!cloudBackendAvailable || !cloudReady || cloudPersisting) return;
     cloudPersisting = true;
     const revision = cloudRevision;
     const updatedAt = new Date().toISOString();
     cloudStatus = "syncing";
     renderSyncState();
     try {
-      const { error } = await supabaseClient
-        .from(CLOUD_TABLE)
-        .upsert({ id: CLOUD_RECORD_ID, data: cloudDocument(), updated_at: updatedAt }, { onConflict: "id" });
-      if (error) throw error;
-      cloudUpdatedAt = updatedAt;
+      if (localApiEnabled) {
+        const response = await fetch(`${apiBase}/state`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: cloudDocument() })
+        });
+        if (!response.ok) throw new Error(`Inventory API save failed (HTTP ${response.status})`);
+        const result = await response.json();
+        cloudUpdatedAt = result.updated_at || updatedAt;
+      } else {
+        const { error } = await supabaseClient
+          .from(CLOUD_TABLE)
+          .upsert({ id: CLOUD_RECORD_ID, data: cloudDocument(), updated_at: updatedAt }, { onConflict: "id" });
+        if (error) throw error;
+        cloudUpdatedAt = updatedAt;
+      }
       cloudStatus = "synced";
       cloudDirty = false;
       resetCloudRetry();
       renderSyncState();
     } catch (error) {
       cloudStatus = "error";
-      console.error("Supabase inventory save failed", error);
+      console.error(`${localApiEnabled ? "Inventory API" : "Supabase"} inventory save failed`, error);
       scheduleCloudRetry("save", error);
       renderSyncState();
     } finally {
@@ -652,7 +669,7 @@
   }
 
   async function initCloudState() {
-    if (!supabaseClient) {
+    if (!cloudBackendAvailable) {
       cloudStatus = "local";
       renderSyncState();
       return;
@@ -661,16 +678,22 @@
     renderSyncState();
     let data;
     try {
-      const result = await supabaseClient
-        .from(CLOUD_TABLE)
-        .select("data,updated_at")
-        .eq("id", CLOUD_RECORD_ID)
-        .maybeSingle();
-      if (result.error) throw result.error;
-      data = result.data;
+      if (localApiEnabled) {
+        const response = await fetch(`${apiBase}/state`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Inventory API load failed (HTTP ${response.status})`);
+        data = await response.json();
+      } else {
+        const result = await supabaseClient
+          .from(CLOUD_TABLE)
+          .select("data,updated_at")
+          .eq("id", CLOUD_RECORD_ID)
+          .maybeSingle();
+        if (result.error) throw result.error;
+        data = result.data;
+      }
     } catch (error) {
       cloudStatus = "error";
-      console.error("Supabase inventory load failed", error);
+      console.error(`${localApiEnabled ? "Inventory API" : "Supabase"} inventory load failed`, error);
       scheduleCloudRetry("load", error);
       renderSyncState();
       return;
@@ -696,7 +719,38 @@
   }
 
   function subscribeToCloudState() {
-    if (!supabaseClient || !cloudReady || cloudChannel) return;
+    if (!cloudReady) return;
+    if (localApiEnabled) {
+      if (cloudPollTimer) return;
+      cloudPollTimer = setInterval(async () => {
+        if (cloudDirty || cloudPersisting || document.hidden) return;
+        try {
+          const response = await fetch(`${apiBase}/state`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`Inventory API poll failed (HTTP ${response.status})`);
+          const remote = await response.json();
+          if (!remote?.data) return;
+          if (sameCloudTimestamp(remote.updated_at, cloudUpdatedAt)) {
+            resetCloudRetry();
+            if (cloudStatus !== "synced") {
+              cloudStatus = "synced";
+              renderSyncState();
+            }
+            return;
+          }
+          if (!applyCloudDocument(remote.data)) return;
+          cloudUpdatedAt = remote.updated_at;
+          cloudStatus = "synced";
+          resetCloudRetry();
+          renderAll();
+        } catch (error) {
+          cloudStatus = "error";
+          cloudLastError = String(error?.message || error);
+          renderSyncState();
+        }
+      }, 3000);
+      return;
+    }
+    if (!supabaseClient || cloudChannel) return;
     cloudChannel = supabaseClient
       .channel("inventory-platform-state")
       .on("postgres_changes", {
@@ -1336,8 +1390,12 @@
     if (!node) return;
     node.dataset.status = cloudStatus;
     const labels = currentLang === "zh"
-      ? { connecting: "正在连接云端", syncing: "正在同步云端", synced: "云端已同步", ready: "云端已连接，等待库存", error: "云端同步暂时失败，正在重试", local: "数据已保存到本机" }
-      : { connecting: "Connecting to cloud", syncing: "Syncing to cloud", synced: "Cloud synced", ready: "Cloud connected, waiting for inventory", error: "Cloud sync temporarily failed; retrying", local: "Saved locally" };
+      ? localApiEnabled
+        ? { connecting: "正在连接服务器", syncing: "正在同步服务器", synced: "服务器已同步", ready: "服务器已连接，等待库存", error: "服务器同步暂时失败，正在重试", local: "数据已保存到本机" }
+        : { connecting: "正在连接云端", syncing: "正在同步云端", synced: "云端已同步", ready: "云端已连接，等待库存", error: "云端同步暂时失败，正在重试", local: "数据已保存到本机" }
+      : localApiEnabled
+        ? { connecting: "Connecting to server", syncing: "Syncing to server", synced: "Server synced", ready: "Server connected, waiting for inventory", error: "Server sync temporarily failed; retrying", local: "Saved locally" }
+        : { connecting: "Connecting to cloud", syncing: "Syncing to cloud", synced: "Cloud synced", ready: "Cloud connected, waiting for inventory", error: "Cloud sync temporarily failed; retrying", local: "Saved locally" };
     let detail = "";
     if (cloudStatus === "synced" && cloudUpdatedAt) {
       const time = new Date(cloudUpdatedAt).toLocaleTimeString(currentLang === "zh" ? "zh-CN" : "en", { hour: "2-digit", minute: "2-digit" });
@@ -1577,7 +1635,19 @@
       const product = state.products.find((item) => item.id === $("editingProductId").value);
       pendingSkuImageName = normalizedImageName(skuForImageName(product), extension);
       $("skuImageUrl").value = "";
-      setPendingSkuImage(dataUrl);
+      if (localApiEnabled) {
+        const response = await fetch(`${apiBase}/images`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataUrl, fileName: pendingSkuImageName })
+        });
+        if (!response.ok) throw new Error(`图片上传失败（HTTP ${response.status}）`);
+        const result = await response.json();
+        pendingSkuImageName = result.fileName || pendingSkuImageName;
+        setPendingSkuImage(result.url);
+      } else {
+        setPendingSkuImage(dataUrl);
+      }
       showToast(`图片已重命名为 ${pendingSkuImageName}`);
     } catch (error) {
       showToast(error.message || "图片添加失败");

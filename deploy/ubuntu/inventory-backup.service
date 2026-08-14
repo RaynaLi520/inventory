@@ -1,0 +1,12 @@
+[Unit]
+Description=Back up Henan Inventory PostgreSQL and media
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=inventory_app
+Group=inventory_app
+Environment=PGHOST=/var/run/postgresql
+Environment=PGDATABASE=henan_inventory
+Environment=PGUSER=inventory_app
+ExecStart=/usr/local/sbin/henan-inventory-backup
