@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f35">
+  <title>JA 库存手机安装</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <style>
+    * { box-sizing: border-box; }
+    :root { color-scheme: light; --green:#173f35; --accent:#bd7914; --ink:#17211e; --muted:#63716c; --line:#dce4e0; --soft:#f2f6f4; }
+    body { margin:0; color:var(--ink); background:#fff; font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif; letter-spacing:0; }
+    header { height:68px; display:flex; align-items:center; gap:12px; padding:0 24px; border-bottom:1px solid var(--line); }
+    header img { width:38px; height:38px; }
+    header strong { display:block; font-size:15px; }
+    header span { display:block; margin-top:2px; color:var(--muted); font-size:12px; }
+    main { width:min(980px,calc(100% - 32px)); margin:0 auto; padding:44px 0 56px; }
+    .intro { display:grid; grid-template-columns:minmax(0,1fr) 280px; gap:54px; align-items:center; padding-bottom:40px; border-bottom:1px solid var(--line); }
+    h1 { margin:0; font-size:36px; line-height:1.2; }
+    .lead { max-width:600px; margin:14px 0 22px; color:var(--muted); font-size:16px; line-height:1.8; }
+    .network { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; color:#155b49; background:#e8f3ef; border-radius:5px; font-size:13px; }
+    .network::before { content:""; width:8px; height:8px; border-radius:50%; background:#2a9a78; }
+    .qr { text-align:center; }
+    .qr img { display:block; width:220px; height:220px; margin:0 auto 10px; }
+    .qr span { color:var(--muted); font-size:12px; }
+    .actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:28px 0 10px; }
+    .button { min-height:48px; display:flex; align-items:center; justify-content:center; padding:12px 18px; border:1px solid var(--green); border-radius:6px; color:#fff; background:var(--green); font-size:15px; font-weight:700; text-decoration:none; }
+    .button.secondary { color:var(--green); background:#fff; }
+    .fingerprint { margin:0; color:var(--muted); font-size:11px; line-height:1.6; word-break:break-all; }
+    .steps { display:grid; grid-template-columns:1fr 1fr; gap:38px; padding-top:38px; }
+    .steps section { min-width:0; }
+    h2 { margin:0 0 18px; font-size:20px; }
+    ol { margin:0; padding-left:22px; }
+    li { margin:0 0 12px; padding-left:4px; color:#394641; font-size:14px; line-height:1.7; }
+    code { color:var(--green); background:var(--soft); padding:2px 5px; border-radius:3px; }
+    .privacy { margin-top:32px; padding:16px 18px; border-left:3px solid var(--accent); color:#4d5b56; background:#faf8f3; font-size:13px; line-height:1.7; }
+    @media (max-width:720px) {
+      header { padding:0 16px; }
+      main { padding-top:30px; }
+      .intro { display:block; }
+      h1 { font-size:28px; }
+      .qr { display:none; }
+      .actions, .steps { grid-template-columns:1fr; }
+      .steps { gap:28px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="assets/icon-192.png" alt="JA 库存">
+    <div><strong>JUSTIN ALLEN</strong><span>JA 库存手机安装</span></div>
+  </header>
+  <main>
+    <div class="intro">
+      <div>
+        <h1>JA 库存</h1>
+        <p class="lead">安装到手机主屏幕，使用方式与普通 App 相同。库存数据只从公司内网服务器实时读取，不会保存在此安装页面。</p>
+        <span class="network">需要公司 Wi-Fi 或公司 VPN</span>
+        <div class="actions">
+          <a class="button" href="assets/ja-inventory-ca.crt" download>1. 下载安全证书</a>
+          <a class="button secondary" href="https://172.16.100.198/">2. 打开库存应用</a>
+        </div>
+        <p class="fingerprint">证书文件 SHA-256：EDBE4C8A5CA853F4E378121218EEF23AD5F1058C3AF0E40391814E27BF4A3060</p>
+      </div>
+      <div class="qr">
+        <img src="assets/mobile-setup-qr.png" alt="手机安装入口二维码">
+        <span>用手机相机扫描此二维码</span>
+      </div>
+    </div>
+
+    <div class="steps">
+      <section>
+        <h2>iPhone / iPad</h2>
+        <ol>
+          <li>下载证书后，打开“设置”中的“已下载描述文件”并安装。</li>
+          <li>进入“设置 → 通用 → 关于本机 → 证书信任设置”，为 <code>JA Inventory Internal CA</code> 开启完全信任。</li>
+          <li>连接公司网络，用 Safari 打开库存应用并登录。</li>
+          <li>点击 Safari 分享按钮，选择“添加到主屏幕”。</li>
+        </ol>
+      </section>
+      <section>
+        <h2>Android</h2>
+        <ol>
+          <li>下载证书，在“设置 → 安全 → 加密与凭据”中选择“安装 CA 证书”。</li>
+          <li>连接公司网络，用 Chrome 打开库存应用并登录。</li>
+          <li>点击页面顶部的“安装”，或在 Chrome 菜单中选择“安装应用”。</li>
+          <li>确认后，JA 库存图标会出现在手机桌面。</li>
+        </ol>
+      </section>
+    </div>
+    <div class="privacy">安全证书只是公开信任凭据，不包含服务器私钥。请勿把网站账号密码转发给无关人员；手机遗失后应及时修改网站密码。</div>
+  </main>
+</body>
+</html>

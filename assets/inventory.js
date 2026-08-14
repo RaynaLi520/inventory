@@ -55,7 +55,7 @@
   const translationPairs = [
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
     ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装", "Virtual bundle"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["添加季节", "Add season"], ["新季节", "New season"], ["添加颜色", "Add color"], ["新颜色", "New color"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["输入款号、名称或颜色检索", "Search style, name, or color"], ["搜索套装、SKU、组件或颜色", "Search bundle, SKU, component, or color"], ["清除组件", "Clear component"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["不可售", "Unavailable"], ["删除套装", "Delete bundle"],
-    ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
+    ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["安装应用", "Install app"], ["安装", "Install"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
     ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
     ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], [" 个 SKU 需要处理", " SKUs need action"],
     ["可售库存", "Sellable stock"], ["今日售出", "Sold today"], ["低库存 SKU", "Low-stock SKUs"], ["在途库存", "In transit"], ["较上周", "vs last week"], ["需处理", "Needs action"], ["低于安全库存", "Below safety stock"], ["3 个采购单 · 最早 8/12 到货", "3 purchase orders · earliest arrival Aug 12"], ["线上 24 · 门店 12", "Online 24 · Store 12"], ["4.8%", "4.8%"],
@@ -133,6 +133,7 @@
   let cloudRevision = 0;
   let cloudChannel = null;
   let cloudPollTimer = null;
+  let deferredInstallPrompt = null;
   let pendingSkuImage = "";
   let pendingSkuImageName = "";
   let skuImageRemoved = false;
@@ -2494,6 +2495,52 @@
     setTimeout(() => window.opener?.postMessage({ type: "COZ_INVENTORY_READY", version: 1, bridgeToken }, "*"), 350);
   }
 
+  function isStandaloneApp() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  function isIosDevice() {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
+  function updateInstallButton() {
+    const button = $("installAppBtn");
+    if (!button) return;
+    button.hidden = isStandaloneApp() || (!deferredInstallPrompt && !isIosDevice());
+  }
+
+  async function installPwa() {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      updateInstallButton();
+      return;
+    }
+    showToast(currentLang === "zh"
+      ? "请在 Safari 的分享菜单中选择“添加到主屏幕”"
+      : "In Safari, choose Add to Home Screen from the Share menu");
+  }
+
+  function initPwaInstallation() {
+    $("installAppBtn")?.addEventListener("click", installPwa);
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      updateInstallButton();
+    });
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      updateInstallButton();
+    });
+    window.matchMedia("(display-mode: standalone)").addEventListener?.("change", updateInstallButton);
+    updateInstallButton();
+    if ("serviceWorker" in navigator && window.isSecureContext) {
+      navigator.serviceWorker.register("/service-worker.js", { scope: "/" })
+        .catch((error) => console.error("Service worker registration failed", error));
+    }
+  }
+
   function bindEvents() {
     document.addEventListener("click", (event) => {
       const viewButton = event.target.closest("[data-view]");
@@ -2717,6 +2764,7 @@
 
   async function initialize() {
     initDate();
+    initPwaInstallation();
     bindEvents();
     applyTheme();
     renderAll();

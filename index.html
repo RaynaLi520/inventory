@@ -4,10 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#173f35">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="JA 库存">
   <title>JA 成衣库存中台</title>
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="assets/inventory.css">
+  <script src="assets/server-config.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -56,6 +61,7 @@
           <h1 id="pageTitle">经营概览</h1>
         </div>
         <div class="top-actions">
+          <button class="control-button" id="installAppBtn" type="button" title="安装应用" hidden><i data-lucide="download"></i><span>安装</span></button>
           <button class="control-button" id="languageToggle" type="button" title="切换语言"><i data-lucide="languages"></i><span>English</span></button>
           <button class="control-button" id="themeToggle" type="button" title="切换主题"><i data-lucide="moon"></i><span>深色</span></button>
           <button class="icon-button" id="scanBtn" type="button" title="扫描 SKU"><i data-lucide="scan-line"></i></button>
@@ -402,7 +408,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="circle-check"></i><span></span></div>
 
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-  <script src="assets/server-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/supabase-config.js"></script>
   <script src="assets/image-catalog.js"></script>

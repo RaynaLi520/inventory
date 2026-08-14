@@ -1,4 +1,2 @@
-window.SUPABASE_CONFIG = {
-  url: "https://cnqjdgqjeufrnpkmdoyx.supabase.co",
-  anonKey: "sb_publishable_PYr1oSrlmUSD2umAQ3DwAA_KTFQfrBc"
-};
+// The VM-hosted PostgreSQL API is authoritative. Public deployments must not read or write inventory data.
+window.SUPABASE_CONFIG = {};

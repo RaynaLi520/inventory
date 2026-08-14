@@ -5,10 +5,14 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "check": "node --check server/index.js && node --check server/import-backup.js && node --check assets/inventory.js"
+    "check": "node --check server/index.js && node --check server/import-backup.js && node --check assets/inventory.js && node --check service-worker.js && node --check tools/generate-mobile-qr.js",
+    "generate:mobile-qr": "node tools/generate-mobile-qr.js"
   },
   "dependencies": {
     "express": "^5.1.0",
     "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "qrcode": "^1.5.4"
   }
 }

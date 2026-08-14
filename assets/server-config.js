@@ -1,5 +1,12 @@
+const inventoryHostname = window.location.hostname;
+const inventoryServerEnabled = ["172.16.100.198", "localhost", "127.0.0.1"].includes(inventoryHostname);
+
 window.INVENTORY_SERVER_CONFIG = {
-  enabled: ["172.16.100.198", "localhost", "127.0.0.1"].includes(window.location.hostname),
+  enabled: inventoryServerEnabled,
   apiBase: "/api",
   mediaBase: "/media"
 };
+
+if (!inventoryServerEnabled && inventoryHostname.endsWith(".vercel.app")) {
+  window.location.replace("/mobile-install.html");
+}

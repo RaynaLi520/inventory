@@ -6,4 +6,4 @@ __pycache__/
 coz-response*.json
 coz-inventory*.json
 coz-inventory*.csv
-*.png
+/*.png
