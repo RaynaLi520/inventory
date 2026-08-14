@@ -13,7 +13,7 @@ backup_root=/var/backups/henan-inventory
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y nginx postgresql postgresql-contrib nodejs npm rsync
+apt-get install -y nginx postgresql postgresql-contrib nodejs npm rsync openssl apache2-utils ufw
 
 if ! id inventory_app >/dev/null 2>&1; then
   useradd --system --home-dir "$data_root" --create-home --shell /usr/sbin/nologin inventory_app
@@ -40,6 +40,7 @@ chown -R inventory_app:www-data "$data_root"
 chown -R inventory_app:inventory_app "$backup_root"
 chmod 0750 "$data_root"
 chmod 2750 "$data_root/media"
+chmod 0700 "$backup_root"
 find "$app_root" -type d -exec chmod 0755 {} +
 find "$app_root" -type f -exec chmod 0644 {} +
 
@@ -48,14 +49,29 @@ sudo -u inventory_app psql --dbname=henan_inventory --file="$app_root/server/sch
 install -m 0644 "$app_root/deploy/ubuntu/inventory-api.service" /etc/systemd/system/inventory-api.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-backup.service" /etc/systemd/system/inventory-backup.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-backup.timer" /etc/systemd/system/inventory-backup.timer
+install -m 0644 "$app_root/deploy/ubuntu/inventory-cert-renew.service" /etc/systemd/system/inventory-cert-renew.service
+install -m 0644 "$app_root/deploy/ubuntu/inventory-cert-renew.timer" /etc/systemd/system/inventory-cert-renew.timer
 install -m 0755 "$app_root/deploy/ubuntu/backup.sh" /usr/local/sbin/henan-inventory-backup
+install -m 0755 "$app_root/deploy/ubuntu/renew-certificate.sh" /usr/local/sbin/henan-inventory-renew-certificate
+INVENTORY_SERVER_IP=${INVENTORY_SERVER_IP:-172.16.100.198} /usr/local/sbin/henan-inventory-renew-certificate
+if [[ ! -s /etc/nginx/henan-inventory.htpasswd ]]; then
+  echo "Missing /etc/nginx/henan-inventory.htpasswd; create the website account before enabling Nginx." >&2
+  exit 1
+fi
 install -m 0644 "$app_root/deploy/ubuntu/nginx.conf" /etc/nginx/sites-available/henan-inventory
 ln -sfn /etc/nginx/sites-available/henan-inventory /etc/nginx/sites-enabled/henan-inventory
 rm -f /etc/nginx/sites-enabled/default
 
 nginx -t
 systemctl daemon-reload
-systemctl enable --now postgresql inventory-api.service inventory-backup.timer nginx
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow from 172.16.0.0/16 to any port 22 proto tcp
+ufw allow from 172.16.0.0/16 to any port 80 proto tcp
+ufw allow from 172.16.0.0/16 to any port 443 proto tcp
+ufw --force enable
+
+systemctl enable --now postgresql inventory-api.service inventory-backup.timer inventory-cert-renew.timer nginx
 systemctl restart inventory-api.service nginx
 
 echo "Deployment complete. Import a Supabase backup when required:"

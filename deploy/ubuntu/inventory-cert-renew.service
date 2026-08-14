@@ -1,0 +1,8 @@
+[Unit]
+Description=Renew the JA Inventory internal TLS certificate
+After=network.target
+
+[Service]
+Type=oneshot
+Environment=INVENTORY_SERVER_IP=172.16.100.198
+ExecStart=/usr/local/sbin/henan-inventory-renew-certificate

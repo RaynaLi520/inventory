@@ -1,0 +1,10 @@
+[Unit]
+Description=Check the JA Inventory TLS certificate monthly
+
+[Timer]
+OnCalendar=monthly
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
