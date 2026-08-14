@@ -206,8 +206,30 @@
     const chinese = labels?.[0] || String(value || "");
     return `${english} · ${chinese} · ${itemTypeCodes[value] || "--"}`;
   }
+  function sourceColorKey(source, color) {
+    return JSON.stringify([
+      String(source || "").trim().toLowerCase(),
+      String(color || "").trim().toLowerCase()
+    ]);
+  }
+  function migrateProductSourceKey(value) {
+    const key = String(value || "");
+    if (!key) return "";
+    if (key.includes("\u0000")) {
+      const separator = key.indexOf("\u0000");
+      return sourceColorKey(key.slice(0, separator), key.slice(separator + 1));
+    }
+    try {
+      const parts = JSON.parse(key);
+      if (Array.isArray(parts) && parts.length === 2) return sourceColorKey(parts[0], parts[1]);
+    } catch (_) { /* Preserve unknown keys from older local versions. */ }
+    return key.toLowerCase();
+  }
   function productSourceKey(product) {
-    return `${String(product?.sourceBaseSku || product?.style || product?.originalStyle || product?.baseSku || "").trim().toLowerCase()}\u0000${String(product?.color || "").trim().toLowerCase()}`;
+    return sourceColorKey(
+      product?.sourceBaseSku || product?.style || product?.originalStyle || product?.baseSku,
+      product?.color
+    );
   }
   function stableProductToken(value) {
     const normalized = String(value || "").trim().toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -272,7 +294,7 @@
   }
   function applyImageCatalog(saved) {
     if (!imageCatalog.length || !Array.isArray(saved?.products)) return;
-    const byKey = new Map(imageCatalog.map((entry) => [`${String(entry.style || "").trim().toLowerCase()}\u0000${String(entry.color || "").trim().toLowerCase()}`, entry]));
+    const byKey = new Map(imageCatalog.map((entry) => [sourceColorKey(entry.style, entry.color), entry]));
     saved.products.forEach((product) => {
       const entry = byKey.get(productSourceKey(product));
       if (!entry) return;
@@ -284,10 +306,14 @@
   }
   function upgradeCozState(saved) {
     if (!saved || !Array.isArray(saved.products)) return saved;
-    saved.trashProducts = Array.isArray(saved.trashProducts) ? saved.trashProducts : [];
+    saved.trashProducts = Array.isArray(saved.trashProducts)
+      ? saved.trashProducts.map((product) => ({ ...product, deletedSourceKey: productSourceKey(product) }))
+      : [];
     saved.trashBundles = Array.isArray(saved.trashBundles) ? saved.trashBundles : [];
     saved.deletedBundleIds = Array.isArray(saved.deletedBundleIds) ? [...new Set(saved.deletedBundleIds)] : [];
-    saved.deletedProductKeys = Array.isArray(saved.deletedProductKeys) ? [...new Set(saved.deletedProductKeys)] : [];
+    saved.deletedProductKeys = Array.isArray(saved.deletedProductKeys)
+      ? [...new Set(saved.deletedProductKeys.map(migrateProductSourceKey).filter(Boolean))]
+      : [];
     applyImageCatalog(saved);
     if (saved?.source?.type !== "coz") return saved;
     saved.products.forEach((product) => {
@@ -2249,17 +2275,17 @@
   function stateFromCozSnapshot(snapshot) {
     const currentProducts = state.products || [];
     const trashProducts = state.trashProducts || [];
-    const deletedSourceKeys = new Set([...(state.deletedProductKeys || []), ...trashProducts.map((product) => product.deletedSourceKey || productSourceKey(product))].map((key) => String(key).toLowerCase()));
+    const deletedSourceKeys = new Set([...(state.deletedProductKeys || []), ...trashProducts.map((product) => product.deletedSourceKey || productSourceKey(product))].map(migrateProductSourceKey).filter(Boolean));
     const manualProducts = currentProducts.filter((product) => product.sourceOrigin === "manual" && !product.sourceBaseSku);
     const mappings = currentProducts.filter((product) => product.sourceBaseSku || isCozProduct(product));
-    const mappingBySource = new Map(mappings.map((product) => [`${product.sourceBaseSku || product.style || product.baseSku}\u0000${product.color}`, product]));
+    const mappingBySource = new Map(mappings.map((product) => [sourceColorKey(product.sourceBaseSku || product.style || product.baseSku, product.color), product]));
     const groups = new Map();
     snapshot.inventory.forEach((item) => {
       const style = String(item.styleNo || item.sku || "").trim();
       const color = String(item.color || "未设置颜色").trim();
       const size = normalizeSizeLabel(item.size);
       if (!style || !item.sku) return;
-      const key = `${style}\u0000${color}`;
+      const key = sourceColorKey(style, color);
       if (!groups.has(key)) {
         const appearance = resolveColorAppearance(color);
         groups.set(key, {
@@ -2307,7 +2333,7 @@
     });
 
     const syncedProducts = [...groups.entries()]
-      .filter(([key]) => !deletedSourceKeys.has(key.toLowerCase()))
+      .filter(([key]) => !deletedSourceKeys.has(key))
       .map(([key, product]) => {
         const mapping = mappingBySource.get(key);
         if (!mapping) return product;
