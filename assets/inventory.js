@@ -408,10 +408,15 @@
     const existing = Array.isArray(existingBundles) ? existingBundles : [];
     const deleted = new Set((Array.isArray(deletedBundleIds) ? deletedBundleIds : []).map(String));
     const custom = existing.filter((bundle) => !String(bundle.id || "").startsWith("IMPORT-"));
-    const editedImports = new Map(existing
-      .filter((bundle) => String(bundle.id || "").startsWith("IMPORT-") && bundle.updatedAt)
+    const savedImports = new Map(existing
+      .filter((bundle) => String(bundle.id || "").startsWith("IMPORT-"))
       .map((bundle) => [bundle.id, bundle]));
-    return [...custom, ...imported.filter((bundle) => !deleted.has(String(bundle.id))).map((bundle) => clone(editedImports.get(bundle.id) || bundle))];
+    return [...custom, ...imported.filter((bundle) => !deleted.has(String(bundle.id))).map((bundle) => {
+      const saved = savedImports.get(bundle.id);
+      if (!saved) return clone(bundle);
+      if (saved.updatedAt) return clone(saved);
+      return clone({ ...bundle, components: Array.isArray(saved.components) ? saved.components : bundle.components });
+    })];
   }
   function saveState() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -507,6 +512,13 @@
     };
   }
 
+  function sameCloudTimestamp(left, right) {
+    if (!left || !right) return false;
+    const leftTime = new Date(left).getTime();
+    const rightTime = new Date(right).getTime();
+    return Number.isFinite(leftTime) && Number.isFinite(rightTime) ? leftTime === rightTime : left === right;
+  }
+
   function persistLocalCache() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
     catch (_) { /* Large product images can exceed browser storage; Supabase remains authoritative. */ }
@@ -522,8 +534,8 @@
 
   function queueCloudSave() {
     cloudRevision += 1;
+    cloudDirty = true;
     if (!supabaseClient || !cloudReady) {
-      cloudDirty = true;
       return;
     }
     clearTimeout(cloudSaveTimer);
@@ -628,7 +640,7 @@
         filter: `id=eq.${CLOUD_RECORD_ID}`
       }, (payload) => {
         const remote = payload.new;
-        if (!remote?.data || remote.updated_at === cloudUpdatedAt || cloudStatus === "syncing") return;
+        if (!remote?.data || sameCloudTimestamp(remote.updated_at, cloudUpdatedAt) || cloudDirty || cloudStatus === "syncing") return;
         if (!applyCloudDocument(remote.data)) return;
         cloudUpdatedAt = remote.updated_at;
         cloudStatus = "synced";
@@ -2105,12 +2117,11 @@
           ? isCozProduct(product) && (product.sourceBaseSku || product.style || product.baseSku) === sourceBaseSku
           : product.baseSku === previousBaseSku
       ));
-      sharedProducts.forEach((product, index) => {
+      sharedProducts.forEach((product) => {
         product.name = commonProductData.name;
         product.category = commonProductData.category;
         product.style = commonProductData.style;
         product.originalStyle = commonProductData.originalStyle;
-        product.image = commonProductData.image;
         product.baseSku = baseSku;
         product.spuMeta = clone(commonProductData.spuMeta);
         product.sourceBaseSku ||= sourceBaseSku;
