@@ -61,7 +61,7 @@
     ["回收站", "Recycle bin"], ["库存回收站", "Inventory recycle bin"], ["款式回收站", "Style recycle bin"], ["套装回收站", "Bundle recycle bin"], ["套装回收站为空", "Bundle recycle bin is empty"], ["删除款式", "Delete style"], ["恢复", "Restore"], ["彻底删除", "Delete permanently"], ["删除时间", "Deleted at"], ["回收站为空", "Recycle bin is empty"], ["删除的款式会保留在这里。", "Deleted styles remain here."], ["删除的套装会保留在这里。", "Deleted bundles remain here."], ["删除的款式不会在下一次 CoZ 同步时重新出现。恢复后会重新参与库存和套装计算。", "Deleted styles stay excluded from future CoZ syncs. Restored styles rejoin inventory and bundle calculations."],
     ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["备注", "Note"],
     ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
-    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款式名称", "Style name"], ["商品类型", "Item type"], ["添加类型", "Add type"], ["类型名称", "Type name"], ["类型缩写", "Type code"], ["商品图片", "Product image"], ["创建日期", "Creation date"], ["年份", "Year"], ["添加年份", "Add year"], ["新年份", "New year"], ["季节", "Season"], ["面料类型", "Fabric type"], ["添加面料类型", "Add fabric type"], ["面料类型名称", "Fabric type name"], ["面料类型代码", "Fabric type code"], ["SS · 春夏", "SS · Spring/Summer"], ["AW · 秋冬", "AW · Autumn/Winter"], ["三位序号", "3-digit sequence"], ["原始款号", "Original style no."], ["图片链接（可选）", "Image URL (optional)"], ["SKU 变体", "SKU variants"], ["一个 SPU 可同时生成多个尺码 SKU。", "Create multiple size SKUs under one SPU."], ["颜色代码", "Color code"], ["生成", "Create"], ["启用", "Enabled"], ["尺码", "Size"], ["初始库存", "Opening stock"], ["CoZ 库存", "CoZ stock"], ["CoZ 原始 SKU", "Original CoZ SKU"], ["品牌 SKU", "Brand SKU"], ["库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。", "Stock and original SKUs are synced from CoZ. Brand SKUs can be edited."], ["未同步", "Not synced"], ["SKU 编码", "SKU code"], ["安全库存", "Safety stock"], ["新增成衣 SPU", "New garment SPU"], ["编辑 SPU 和 SKU", "Edit SPU and SKU"], ["SPU 编码预览", "SPU code preview"], ["COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号", "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence"], ["创建 SPU 和 SKU", "Create SPU and SKUs"], ["保存修改", "Save changes"]
+    ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款式名称", "Style name"], ["商品类型", "Item type"], ["添加类型", "Add type"], ["类型名称", "Type name"], ["类型缩写", "Type code"], ["商品图片", "Product image"], ["创建日期", "Creation date"], ["年份", "Year"], ["添加年份", "Add year"], ["新年份", "New year"], ["季节", "Season"], ["面料类型", "Fabric type"], ["添加面料类型", "Add fabric type"], ["面料类型名称", "Fabric type name"], ["面料类型代码", "Fabric type code"], ["SS · 春夏", "SS · Spring/Summer"], ["AW · 秋冬", "AW · Autumn/Winter"], ["三位序号", "3-digit sequence"], ["原始款号（选填）", "Original style no. (optional)"], ["图片链接（可选）", "Image URL (optional)"], ["SKU 变体", "SKU variants"], ["一个 SPU 可同时生成多个尺码 SKU。", "Create multiple size SKUs under one SPU."], ["颜色代码", "Color code"], ["生成", "Create"], ["启用", "Enabled"], ["尺码", "Size"], ["初始库存", "Opening stock"], ["CoZ 库存", "CoZ stock"], ["CoZ 原始 SKU", "Original CoZ SKU"], ["品牌 SKU", "Brand SKU"], ["库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。", "Stock and original SKUs are synced from CoZ. Brand SKUs can be edited."], ["未同步", "Not synced"], ["SKU 编码", "SKU code"], ["安全库存", "Safety stock"], ["新增成衣 SPU", "New garment SPU"], ["编辑 SPU 和 SKU", "Edit SPU and SKU"], ["SPU 编码预览", "SPU code preview"], ["COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号", "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence"], ["创建 SPU 和 SKU", "Create SPU and SKUs"], ["保存修改", "Save changes"]
   ];
   const zhToEn = new Map(translationPairs);
   const enToZh = new Map(translationPairs.map(([zh, en]) => [en, zh]));
@@ -122,6 +122,10 @@
   let cloudReady = false;
   let cloudDirty = false;
   let cloudSaveTimer = null;
+  let cloudRetryTimer = null;
+  let cloudRetryAttempt = 0;
+  let cloudLastError = "";
+  let cloudPersisting = false;
   let cloudRevision = 0;
   let cloudChannel = null;
   let pendingSkuImage = "";
@@ -542,26 +546,56 @@
     cloudSaveTimer = setTimeout(() => persistCloudState(), 450);
   }
 
+  function resetCloudRetry() {
+    clearTimeout(cloudRetryTimer);
+    cloudRetryTimer = null;
+    cloudRetryAttempt = 0;
+    cloudLastError = "";
+  }
+
+  function scheduleCloudRetry(mode, error) {
+    clearTimeout(cloudRetryTimer);
+    cloudRetryAttempt += 1;
+    cloudLastError = String(error?.message || error?.details || error?.code || "Network request failed");
+    const delay = Math.min(30000, 2000 * (2 ** Math.min(cloudRetryAttempt - 1, 4)));
+    cloudRetryTimer = setTimeout(async () => {
+      cloudRetryTimer = null;
+      if (!navigator.onLine) {
+        scheduleCloudRetry(mode, error);
+        return;
+      }
+      if (mode === "load" && !cloudReady) await initCloudState();
+      else await persistCloudState();
+      if (cloudReady) subscribeToCloudState();
+    }, delay);
+  }
+
   async function persistCloudState() {
-    if (!supabaseClient || !cloudReady) return;
+    if (!supabaseClient || !cloudReady || cloudPersisting) return;
+    cloudPersisting = true;
     const revision = cloudRevision;
     const updatedAt = new Date().toISOString();
     cloudStatus = "syncing";
     renderSyncState();
-    const { error } = await supabaseClient
-      .from(CLOUD_TABLE)
-      .upsert({ id: CLOUD_RECORD_ID, data: cloudDocument(), updated_at: updatedAt }, { onConflict: "id" });
-    if (error) {
-      cloudStatus = "error";
+    try {
+      const { error } = await supabaseClient
+        .from(CLOUD_TABLE)
+        .upsert({ id: CLOUD_RECORD_ID, data: cloudDocument(), updated_at: updatedAt }, { onConflict: "id" });
+      if (error) throw error;
+      cloudUpdatedAt = updatedAt;
+      cloudStatus = "synced";
+      cloudDirty = false;
+      resetCloudRetry();
       renderSyncState();
+    } catch (error) {
+      cloudStatus = "error";
       console.error("Supabase inventory save failed", error);
-      return;
+      scheduleCloudRetry("save", error);
+      renderSyncState();
+    } finally {
+      cloudPersisting = false;
     }
-    cloudUpdatedAt = updatedAt;
-    cloudStatus = "synced";
-    cloudDirty = false;
-    renderSyncState();
-    if (revision !== cloudRevision) queueCloudSave();
+    if (revision !== cloudRevision && cloudStatus === "synced") queueCloudSave();
   }
 
   function applyCloudDocument(document) {
@@ -599,17 +633,23 @@
     }
     cloudStatus = "connecting";
     renderSyncState();
-    const { data, error } = await supabaseClient
-      .from(CLOUD_TABLE)
-      .select("data,updated_at")
-      .eq("id", CLOUD_RECORD_ID)
-      .maybeSingle();
-    if (error) {
+    let data;
+    try {
+      const result = await supabaseClient
+        .from(CLOUD_TABLE)
+        .select("data,updated_at")
+        .eq("id", CLOUD_RECORD_ID)
+        .maybeSingle();
+      if (result.error) throw result.error;
+      data = result.data;
+    } catch (error) {
       cloudStatus = "error";
-      renderSyncState();
       console.error("Supabase inventory load failed", error);
+      scheduleCloudRetry("load", error);
+      renderSyncState();
       return;
     }
+    resetCloudRetry();
     cloudReady = true;
     if (cloudDirty || (!data && hasSavedLocalState)) {
       await persistCloudState();
@@ -1270,15 +1310,17 @@
     if (!node) return;
     node.dataset.status = cloudStatus;
     const labels = currentLang === "zh"
-      ? { connecting: "正在连接云端", syncing: "正在同步云端", synced: "云端已同步", ready: "云端已连接，等待库存", error: "云端失败，使用本地数据", local: "数据已保存到本机" }
-      : { connecting: "Connecting to cloud", syncing: "Syncing to cloud", synced: "Cloud synced", ready: "Cloud connected, waiting for inventory", error: "Cloud unavailable, using local data", local: "Saved locally" };
+      ? { connecting: "正在连接云端", syncing: "正在同步云端", synced: "云端已同步", ready: "云端已连接，等待库存", error: "云端同步暂时失败，正在重试", local: "数据已保存到本机" }
+      : { connecting: "Connecting to cloud", syncing: "Syncing to cloud", synced: "Cloud synced", ready: "Cloud connected, waiting for inventory", error: "Cloud sync temporarily failed; retrying", local: "Saved locally" };
     let detail = "";
     if (cloudStatus === "synced" && cloudUpdatedAt) {
       const time = new Date(cloudUpdatedAt).toLocaleTimeString(currentLang === "zh" ? "zh-CN" : "en", { hour: "2-digit", minute: "2-digit" });
       detail = ` · ${escapeHtml(time)}`;
     }
     node.innerHTML = `<span></span> ${labels[cloudStatus] || labels.local}${detail}`;
-    node.title = state.source?.type === "coz"
+    node.title = cloudStatus === "error" && cloudLastError
+      ? cloudLastError
+      : state.source?.type === "coz"
       ? `${currentLang === "zh" ? "CoZ 实时库存" : "CoZ live inventory"} · ${formatNumber(state.source.skuCount)} SKU`
       : labels[cloudStatus] || labels.local;
   }
@@ -2027,7 +2069,7 @@
     const itemType = $("skuCategory").value;
     const originalStyle = $("skuStyle").value.trim();
     const color = $("skuColor").value.trim();
-    const matchingManualProduct = !editingProduct ? state.products.find((product) =>
+    const matchingManualProduct = !editingProduct && originalStyle ? state.products.find((product) =>
       !isCozProduct(product)
       && String(product.originalStyle || product.style || "").trim().toLowerCase() === originalStyle.toLowerCase()
       && String(product.color || "").trim().toLowerCase() === color.toLowerCase()
