@@ -40,6 +40,7 @@
   const bundleSeasons = loadStringOptions(BUNDLE_SEASON_STORAGE_KEY, ["SS26", "AW26"]);
   const bundleColors = loadStringOptions(BUNDLE_COLOR_STORAGE_KEY, []);
   let imageCatalog = Array.isArray(window.COZ_IMAGE_CATALOG) ? [...window.COZ_IMAGE_CATALOG] : [];
+  const PRODUCT_ID_VERSION = 2;
   const viewMeta = {
     overview: ["库存中台 / 今日", "经营概览"],
     inventory: ["商品中心 / SKU", "成衣库存"],
@@ -204,6 +205,59 @@
   function productSourceKey(product) {
     return `${String(product?.sourceBaseSku || product?.style || product?.originalStyle || product?.baseSku || "").trim().toLowerCase()}\u0000${String(product?.color || "").trim().toLowerCase()}`;
   }
+  function stableProductToken(value) {
+    const normalized = String(value || "").trim().toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    if (normalized) return normalized;
+    let hash = 2166136261;
+    for (const char of String(value || "")) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    return `C${(hash >>> 0).toString(36).toUpperCase()}`;
+  }
+  function stableProductId(product) {
+    const style = product?.sourceBaseSku || product?.style || product?.originalStyle || product?.baseSku || product?.id || "PRODUCT";
+    const color = product?.colorCode || colorMappings[product?.color] || product?.color || "COLOR";
+    return `COZ-${stableProductToken(style)}-${stableProductToken(color)}`;
+  }
+  function productMatchesReference(product, source, color = "") {
+    const sourceKey = String(source || "").trim().toLowerCase();
+    if (!sourceKey) return false;
+    const sourceMatches = [product?.sourceBaseSku, product?.style, product?.originalStyle, product?.baseSku].some((value) => String(value || "").trim().toLowerCase() === sourceKey);
+    const colorKey = String(color || "").trim().toLowerCase();
+    return sourceMatches && (!colorKey || String(product?.color || "").trim().toLowerCase() === colorKey);
+  }
+  function normalizeProductReferences(target) {
+    if (!target || !Array.isArray(target.products)) return false;
+    const products = target.products;
+    const originalIds = new Map(products.map((product) => [product, String(product?.id || "").trim()]));
+    const usedIds = new Set();
+    let changed = Number(target.productIdVersion || 0) < PRODUCT_ID_VERSION;
+    products.forEach((product) => {
+      const originalId = originalIds.get(product);
+      if (originalId && !usedIds.has(originalId)) {
+        usedIds.add(originalId);
+        return;
+      }
+      let nextId = stableProductId(product);
+      let suffix = 2;
+      while (usedIds.has(nextId)) nextId = `${stableProductId(product)}-${suffix++}`;
+      product.id = nextId;
+      usedIds.add(nextId);
+      changed = true;
+    });
+    const bundles = Array.isArray(target.bundles) ? target.bundles : [];
+    bundles.forEach((bundle) => {
+      bundle.components = (bundle.components || []).map((originalId, index) => {
+        const source = bundle.componentSourceSkus?.[index] || bundle.componentSkus?.[index] || "";
+        const color = bundle.componentColors?.[index] || "";
+        const match = products.find((product) => productMatchesReference(product, source, color))
+          || products.find((product) => originalIds.get(product) === String(originalId || ""));
+        const nextId = match?.id || originalId;
+        if (nextId !== originalId) changed = true;
+        return nextId;
+      });
+    });
+    target.productIdVersion = PRODUCT_ID_VERSION;
+    return changed;
+  }
   function imageTimestamp(date = new Date()) {
     return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}${String(date.getSeconds()).padStart(2, "0")}`;
   }
@@ -270,6 +324,7 @@
         product.sourceSkuBySize.F ||= "72500774932618";
       }
     });
+    normalizeProductReferences(saved);
     return saved;
   }
   function loadCategoryCodes() {
@@ -341,7 +396,9 @@
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (saved?.products?.length && Array.isArray(saved.movements)) {
         const upgraded = upgradeCozState(saved);
-        return { ...upgraded, bundles: mergeBundleSeed(upgraded.bundles, upgraded.deletedBundleIds) };
+        const merged = { ...upgraded, bundles: mergeBundleSeed(upgraded.bundles, upgraded.deletedBundleIds) };
+        normalizeProductReferences(merged);
+        return merged;
       }
     } catch (_) { /* Use the packaged inventory sample if local data is invalid. */ }
     return { ...clone(seedState), trashProducts: [], trashBundles: [], deletedProductKeys: [], deletedBundleIds: [] };
@@ -497,6 +554,7 @@
 
   function applyCloudDocument(document) {
     if (!document?.state?.products?.length || !Array.isArray(document.state.movements)) return false;
+    const needsProductIdMigration = Number(document.state.productIdVersion || 0) < PRODUCT_ID_VERSION;
     if (Array.isArray(document.imageCatalog)) imageCatalog = clone(document.imageCatalog);
     state = upgradeCozState(clone(document.state));
     Object.keys(categoryCodes).forEach((key) => delete categoryCodes[key]);
@@ -509,9 +567,14 @@
     Object.keys(colorMappings).forEach((key) => delete colorMappings[key]);
     Object.assign(colorMappings, document.colorMappings || {}, defaultColorMappings);
     state.bundles = mergeBundleSeed(state.bundles, state.deletedBundleIds);
+    const productReferencesChanged = normalizeProductReferences(state);
     bundleSeasons.splice(0, bundleSeasons.length, ...[...new Set(["SS26", "AW26", ...(document.bundleSeasons || []), ...(state.bundles || []).map((bundle) => bundle.season)].map((value) => String(value || "").trim().toUpperCase()).filter(Boolean))]);
     bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
     stockHistory = normalizeStockHistory(document.stockHistory);
+    if ((needsProductIdMigration || productReferencesChanged) && cloudReady) {
+      cloudDirty = true;
+      queueCloudSave();
+    }
     persistLocalCache();
     return true;
   }
@@ -2264,6 +2327,7 @@
             ?.id || state.products.find((product) => product.baseSku === previousSku && (!previousColor || product.color === previousColor))?.id || id;
         })
       }));
+      normalizeProductReferences(state);
       recordStockSnapshot(totalAvailable(), snapshot.syncedAt || new Date());
       saveState();
       renderAll();
