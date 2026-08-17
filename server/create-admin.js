@@ -14,10 +14,10 @@ const pool = new Pool();
 try {
   const passwordHash = await hashPassword(password);
   const result = await pool.query(
-    `insert into app_users (username, email, display_name, password_hash, role, status, approved_at)
-     values ($1, $2, $3, $4, 'admin', 'active', now())
+    `insert into app_users (username, email, display_name, password_hash, role, status, must_change_password, approved_at)
+     values ($1, $2, $3, $4, 'admin', 'active', true, now())
      on conflict (username) do update set email = excluded.email, display_name = excluded.display_name,
-       password_hash = excluded.password_hash, role = 'admin', status = 'active', must_change_password = false,
+       password_hash = excluded.password_hash, role = 'admin', status = 'active', must_change_password = true,
        failed_login_attempts = 0, locked_until = null, approved_at = coalesce(app_users.approved_at, now()), updated_at = now()
      returning username`,
     [username, email, displayName, passwordHash]
