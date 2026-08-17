@@ -26,7 +26,7 @@
       <div class="auth-alert" id="authAlert" role="status" hidden></div>
 
       <form id="loginForm" class="auth-form">
-        <label><span data-zh="用户名或工作邮箱" data-en="Username or work email">用户名或工作邮箱</span><input id="loginIdentifier" name="identifier" autocomplete="username" required></label>
+        <label><span data-zh="用户名或工作邮箱" data-en="Username or work email">用户名或工作邮箱</span><input id="loginIdentifier" name="identifier" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="160" required></label>
         <label><span data-zh="密码" data-en="Password">密码</span><span class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button type="button" data-password-toggle="loginPassword" aria-label="显示密码"><i data-lucide="eye"></i></button></span></label>
         <div class="form-links"><button class="text-button" type="button" data-show-panel="forgot" data-zh="忘记密码？" data-en="Forgot password?">忘记密码？</button></div>
         <button class="submit-button" type="submit"><span data-zh="登录" data-en="Sign in">登录</span><i data-lucide="arrow-right"></i></button>
@@ -44,7 +44,7 @@
 
       <form id="forgotForm" class="auth-form" hidden>
         <p class="form-note" data-zh="提交后，管理员会为你生成一次性临时密码。" data-en="An administrator will issue a one-time temporary password.">提交后，管理员会为你生成一次性临时密码。</p>
-        <label><span data-zh="用户名或工作邮箱" data-en="Username or work email">用户名或工作邮箱</span><input name="identifier" autocomplete="username" required></label>
+        <label><span data-zh="用户名或工作邮箱" data-en="Username or work email">用户名或工作邮箱</span><input name="identifier" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="160" required></label>
         <button class="submit-button" type="submit" data-zh="申请重置密码" data-en="Request password reset">申请重置密码</button>
         <p class="auth-switch"><button class="text-button strong" type="button" data-show-panel="login" data-zh="返回登录" data-en="Back to sign in">返回登录</button></p>
       </form>

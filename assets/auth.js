@@ -14,6 +14,9 @@
   function renderIcons() { if (window.lucide) window.lucide.createIcons({ attrs: { "stroke-width": 1.8 } }); }
   function showAlert(message, success = false) { const alert = $("authAlert"); alert.textContent = message; alert.classList.toggle("success", success); alert.hidden = !message; }
   function setBusy(form, busy) { form.querySelectorAll("button,input").forEach((element) => { element.disabled = busy; }); }
+  function normalizeIdentifier(value) {
+    return String(value || "").normalize("NFKC").replace(/[\u200B-\u200D\u2060\uFEFF]/g, "").trim().toLowerCase();
+  }
   function nextUrl() { const value = new URLSearchParams(location.search).get("next") || "/"; return value.startsWith("/") && !value.startsWith("//") ? value : "/"; }
   function showPanel(name) {
     Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== name; });
@@ -62,7 +65,7 @@
   }
   $("loginForm").addEventListener("submit", (event) => { event.preventDefault(); submit(event.currentTarget, async (data) => {
     try {
-      const payload = await api("login", { identifier: data.get("identifier"), password: data.get("password") });
+      const payload = await api("login", { identifier: normalizeIdentifier(data.get("identifier")), password: data.get("password") });
       if (payload.user?.mustChangePassword) { $("currentPassword").value = String(data.get("password")); showPanel("change"); return; }
       location.replace(nextUrl());
     } catch (error) {
@@ -76,7 +79,7 @@
     showPanel("login"); showAlert(result.message, true);
   }); });
   $("forgotForm").addEventListener("submit", (event) => { event.preventDefault(); submit(event.currentTarget, async (data) => {
-    const result = await api("request-password-reset", { identifier: data.get("identifier") }); showAlert(result.message, true);
+    const result = await api("request-password-reset", { identifier: normalizeIdentifier(data.get("identifier")) }); showAlert(result.message, true);
   }); });
   $("changePasswordForm").addEventListener("submit", (event) => { event.preventDefault(); submit(event.currentTarget, async (data) => {
     if (data.get("newPassword") !== data.get("confirmPassword")) throw new Error(language === "zh" ? "两次输入的新密码不一致" : "Passwords do not match");

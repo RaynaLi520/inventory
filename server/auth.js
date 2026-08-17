@@ -31,11 +31,15 @@ function tokenHash(token) {
 }
 
 function normalizeUsername(value) {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+    .trim()
+    .toLowerCase();
 }
 
 function normalizeEmail(value) {
-  return String(value || "").trim().toLowerCase();
+  return normalizeUsername(value);
 }
 
 function validPassword(value) {
@@ -396,4 +400,4 @@ export function createAuthService(pool) {
   return { router, optionalAuth, requireAuth, requirePermission, loadAuthenticatedUser };
 }
 
-export { ROLE_LABELS, ROLE_PERMISSIONS, validPassword };
+export { ROLE_LABELS, ROLE_PERMISSIONS, normalizeUsername, validPassword };
