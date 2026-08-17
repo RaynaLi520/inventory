@@ -4,7 +4,8 @@ const inventoryServerEnabled = ["inventory.justinallen.com", "172.16.100.198", "
 window.INVENTORY_SERVER_CONFIG = {
   enabled: inventoryServerEnabled,
   apiBase: "/api",
-  mediaBase: "/media"
+  mediaBase: "/media",
+  authRequired: false
 };
 
 if (!inventoryServerEnabled && inventoryHostname.endsWith(".vercel.app")) {

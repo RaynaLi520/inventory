@@ -10,6 +10,18 @@ const port = Number(process.env.PORT || 3000);
 const mediaRoot = path.resolve(process.env.MEDIA_ROOT || "/var/lib/henan-inventory/media");
 const pool = new Pool();
 const auth = createAuthService(pool);
+const authRequired = process.env.AUTH_REQUIRED !== "false";
+const directAccessUser = Object.freeze({
+  id: "direct-access",
+  username: "direct-access",
+  email: "",
+  displayName: "内网用户",
+  role: "direct_access",
+  roleLabel: "直接访问",
+  status: "active",
+  mustChangePassword: false,
+  permissions: { manageUsers: false, manageMovements: true, manageCatalog: true }
+});
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "18mb" }));
@@ -112,6 +124,26 @@ function imageFileName(value, mimeType) {
   return `${stem}_${Date.now()}_${crypto.randomBytes(3).toString("hex")}.${extension}`;
 }
 
+function requireInventoryAccess(request, response, next) {
+  if (authRequired) {
+    auth.requireAuth(request, response, next);
+    return;
+  }
+  request.auth = directAccessUser;
+  next();
+}
+
+function requireInventoryPermission(permission) {
+  if (authRequired) return auth.requirePermission(permission);
+  return [requireInventoryAccess, (request, response, next) => {
+    if (!request.auth.permissions?.[permission]) {
+      response.status(403).json({ error: "当前访问模式没有此操作权限", code: "PERMISSION_DENIED" });
+      return;
+    }
+    next();
+  }];
+}
+
 app.get("/api/health", async (_request, response, next) => {
   try {
     const result = await pool.query("select now() as database_time");
@@ -121,14 +153,14 @@ app.get("/api/health", async (_request, response, next) => {
 
 app.use("/api/auth", auth.router);
 
-app.get("/api/state", auth.requireAuth, async (_request, response, next) => {
+app.get("/api/state", requireInventoryAccess, async (_request, response, next) => {
   try {
     const result = await pool.query("select data, updated_at from inventory_platform_state where id = 'default'");
     response.json(result.rows[0] || { data: null, updated_at: null });
   } catch (error) { next(error); }
 });
 
-app.put("/api/state", auth.requireAuth, async (request, response, next) => {
+app.put("/api/state", requireInventoryAccess, async (request, response, next) => {
   const document = request.body?.data;
   if (!validInventoryDocument(document)) {
     response.status(400).json({ error: "Invalid inventory document" });
@@ -182,7 +214,7 @@ app.put("/api/state", auth.requireAuth, async (request, response, next) => {
   }
 });
 
-app.post("/api/images", ...auth.requirePermission("manageCatalog"), async (request, response, next) => {
+app.post("/api/images", ...requireInventoryPermission("manageCatalog"), async (request, response, next) => {
   try {
     const match = String(request.body?.dataUrl || "").match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
     if (!match) {

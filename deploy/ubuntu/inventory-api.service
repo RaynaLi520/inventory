@@ -14,6 +14,7 @@ Environment=PGHOST=/var/run/postgresql
 Environment=PGDATABASE=henan_inventory
 Environment=PGUSER=inventory_app
 Environment=MEDIA_ROOT=/var/lib/henan-inventory/media
+Environment=AUTH_REQUIRED=false
 ExecStart=/usr/bin/node server/index.js
 Restart=on-failure
 RestartSec=3

@@ -16,6 +16,7 @@
   const CLOUD_RECORD_ID = "default";
   const serverConfig = window.INVENTORY_SERVER_CONFIG || {};
   const localApiEnabled = Boolean(serverConfig.enabled && serverConfig.apiBase);
+  const authRequired = serverConfig.authRequired !== false;
   const apiBase = String(serverConfig.apiBase || "/api").replace(/\/$/, "");
   const cloudConfig = window.SUPABASE_CONFIG || {};
   const supabaseClient = !localApiEnabled && window.supabase && cloudConfig.url && cloudConfig.anonKey
@@ -144,13 +145,20 @@
   let pendingSkuImage = "";
   let pendingSkuImageName = "";
   let skuImageRemoved = false;
-  let currentSession = {
+  let currentSession = authRequired ? {
     id: "",
     username: "",
     displayName: "库存用户",
     role: "viewer",
     roleLabel: "只读人员",
     permissions: { manageMovements: false, manageCatalog: false, manageUsers: false }
+  } : {
+    id: "direct-access",
+    username: "direct-access",
+    displayName: "内网用户",
+    role: "direct_access",
+    roleLabel: "直接访问",
+    permissions: { manageMovements: true, manageCatalog: true, manageUsers: false }
   };
 
   function localDateKey(date = new Date()) {
@@ -677,7 +685,7 @@
       resetCloudRetry();
       renderSyncState();
     } catch (error) {
-      if (localApiEnabled && error.status === 401) {
+      if (localApiEnabled && authRequired && error.status === 401) {
         location.replace(`/login.html?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
         return;
       }
@@ -891,6 +899,7 @@
     $("profileAvatar").textContent = initials;
     $("profileName").textContent = displayName;
     $("profileRole").textContent = currentSession.roleLabel || "只读人员";
+    $("profileButton").hidden = !authRequired;
     document.body.classList.toggle("can-manage-movements", canManageMovements());
     document.body.classList.toggle("can-manage-catalog", canManageCatalog());
     ["quickMoveBtn", "mobileMoveBtn", "scanBtn"].forEach((id) => { $(id).hidden = !canManageMovements(); });
@@ -898,7 +907,7 @@
   }
 
   async function initSession() {
-    if (!localApiEnabled) {
+    if (!localApiEnabled || !authRequired) {
       renderSession();
       return true;
     }
@@ -941,7 +950,7 @@
     });
     const payload = response.status === 204 ? {} : await response.json().catch(() => ({}));
     if (!response.ok) {
-      if (response.status === 401) location.replace(`/login.html?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
+      if (authRequired && response.status === 401) location.replace(`/login.html?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
       const error = new Error(payload.error || `HTTP ${response.status}`);
       error.code = payload.code;
       throw error;
