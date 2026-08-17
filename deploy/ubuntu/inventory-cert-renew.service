@@ -1,5 +1,5 @@
 [Unit]
-Description=Renew the JA Inventory internal TLS certificate
+Description=Check or renew the JA Inventory TLS certificate
 After=network.target
 
 [Service]

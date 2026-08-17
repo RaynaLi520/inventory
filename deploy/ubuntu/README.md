@@ -41,3 +41,11 @@ The Ubuntu server calls the CoZ Forguncy inventory API directly every 60 seconds
 Daily backups run around 02:30 and are retained for 14 days under `/var/backups/henan-inventory`.
 
 The current certificate generator includes both `inventory.justinallen.com` and the private IP, but it is signed by the internal CA. To avoid manual certificate installation on every colleague's device, configure internal DNS for `inventory.justinallen.com` and replace it with a publicly trusted certificate obtained using DNS-01 validation.
+
+Install a publicly trusted full-chain certificate without committing certificate files to the repository:
+
+```bash
+sudo /usr/local/sbin/henan-inventory-install-certificate /path/to/fullchain.crt /path/to/private.key
+```
+
+Once installed, users must open `https://inventory.justinallen.com`; a certificate issued only for the DNS name cannot validate direct access to `https://172.16.100.198`. The installer validates the hostname, expiry, chain, and matching private key, backs up the previous certificate, and marks the public certificate so future deployments cannot replace it with the internal CA certificate.

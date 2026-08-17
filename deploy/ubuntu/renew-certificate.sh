@@ -8,9 +8,20 @@ ca_key="$tls_root/ca.key"
 ca_cert="$tls_root/ca.crt"
 server_key="$tls_root/server.key"
 server_cert="$tls_root/server.crt"
+public_marker="$tls_root/public-certificate-managed"
 
 umask 077
 install -d -m 0750 -o root -g www-data "$tls_root"
+
+if [[ -e "$public_marker" ]]; then
+  if [[ -s "$server_cert" && -s "$server_key" ]] \
+    && openssl x509 -checkend 86400 -noout -in "$server_cert" \
+    && openssl x509 -noout -ext subjectAltName -in "$server_cert" | grep -Fq "DNS:${server_name}"; then
+    exit 0
+  fi
+  echo "The managed public certificate is missing, invalid, or expires within 24 hours. Install its renewed certificate instead of generating an internal certificate." >&2
+  exit 1
+fi
 
 if [[ ! -s "$ca_key" || ! -s "$ca_cert" ]]; then
   openssl genrsa -out "$ca_key" 4096

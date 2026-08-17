@@ -55,6 +55,7 @@ install -m 0644 "$app_root/deploy/ubuntu/inventory-cert-renew.service" /etc/syst
 install -m 0644 "$app_root/deploy/ubuntu/inventory-cert-renew.timer" /etc/systemd/system/inventory-cert-renew.timer
 install -m 0755 "$app_root/deploy/ubuntu/backup.sh" /usr/local/sbin/henan-inventory-backup
 install -m 0755 "$app_root/deploy/ubuntu/renew-certificate.sh" /usr/local/sbin/henan-inventory-renew-certificate
+install -m 0755 "$app_root/deploy/ubuntu/install-public-certificate.sh" /usr/local/sbin/henan-inventory-install-certificate
 INVENTORY_SERVER_IP=${INVENTORY_SERVER_IP:-172.16.100.198} INVENTORY_SERVER_NAME=${INVENTORY_SERVER_NAME:-inventory.justinallen.com} /usr/local/sbin/henan-inventory-renew-certificate
 install -m 0644 "$app_root/deploy/ubuntu/nginx.conf" /etc/nginx/sites-available/henan-inventory
 ln -sfn /etc/nginx/sites-available/henan-inventory /etc/nginx/sites-enabled/henan-inventory
