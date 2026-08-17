@@ -1,0 +1,60 @@
+{
+  "bindingInfos": [
+    "ab691941-4e74-402c-884c-60e396eeab41",
+    "3f90d5ab-de62-477f-80aa-59296cec7743",
+    "f836d893-b3e0-4b76-9bca-b67aa62b73b1",
+    "ef91c458-52f8-4f17-aef4-7bc46f61cb22",
+    "0427161e-1511-4740-a83c-5bb836d430ce",
+    "f41a3c26-6ade-40f9-a3b0-3257170dc0bb",
+    "9e6b4a5b-59cd-4c01-8284-06dae1a8f10d",
+    "694b0b7e-27de-436e-b820-6b88f2cabcde",
+    "21f6740e-b127-42a0-9efd-cac2b2b6a445",
+    "73601d87-c7c5-4813-8c56-7faa6d681dfa",
+    "6cc3dcc2-c84b-42c8-ac82-3cfa3f3f3852",
+    "09330c99-90b9-4445-8aca-0d7b4b19d4a3",
+    "0bd883c3-d172-408d-89d8-5fb0296e2dd5",
+    "3f5188ec-0be3-4ad2-a350-7eb3877e1a7c",
+    "5e52e85c-1558-4d82-81cd-56d8f629ccac",
+    "b5575836-9911-4ebe-bac4-018e77388975",
+    "ff47daa9-e386-49ed-8889-d0c0a66385e9",
+    "81a45f62-685e-4551-b085-e6020b3f5f93",
+    "a7388dd2-6d68-4f8f-9c73-a776a3740c4f",
+    "2b7d4821-3df4-478a-9544-41571904ab13",
+    "cac9b4a2-d87f-4b65-9208-a5e01d0d52d1",
+    "c8d91e00-d72e-47ea-9e41-42eaefd2033d",
+    "401402f5-e301-4be9-8ecf-486a6fceaed1",
+    "2d37ac90-ddba-49af-a6d1-551483ebb72e",
+    "5e186837-d8e8-4f3b-914c-03fd4820a779",
+    "37bed482-9bf7-409e-9f98-a2ba9d7d055e",
+    "d2331586-2510-47d4-a286-a07692cba47d",
+    "e56630e7-2c0d-49bd-bcda-05480ca526e0",
+    "a0b2ca7f-648a-4fdb-8f20-530a06aec82a",
+    "21cc2a6c-db6a-467c-998b-3c2b9c3ce10e"
+  ],
+  "currentRowInfo": {
+    "currentTable": "SKU库存展示",
+    "viewname": "库存查询页面表格1",
+    "listviewLocation": "库存查询页面|表格1",
+    "viewConditionFormulaValues": {
+      "=L2": 1,
+      "=Y2": null,
+      "=AP2": null,
+      "=AH2": null
+    }
+  },
+  "demandRowCount": 0,
+  "currentDataLength": 0,
+  "needRowVersion": true,
+  "editorDataInfos": null,
+  "sortCommandID": null,
+  "orderByInfo": null,
+  "offsetConditionInfo": {
+    "targetPage": 1,
+    "pageLimitRowCount": 0
+  },
+  "columnFilterQueries": null,
+  "totalRowBindingInfos": [
+    "54688e62-97a9-4e3d-ae4f-d1936dca60db"
+  ],
+  "pageName": "库存查询页面"
+}

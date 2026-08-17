@@ -47,6 +47,8 @@ find "$app_root" -type f -exec chmod 0644 {} +
 sudo -u inventory_app psql --dbname=henan_inventory --file="$app_root/server/schema.sql"
 
 install -m 0644 "$app_root/deploy/ubuntu/inventory-api.service" /etc/systemd/system/inventory-api.service
+install -m 0644 "$app_root/deploy/ubuntu/inventory-coz-sync.service" /etc/systemd/system/inventory-coz-sync.service
+install -m 0644 "$app_root/deploy/ubuntu/inventory-coz-sync.timer" /etc/systemd/system/inventory-coz-sync.timer
 install -m 0644 "$app_root/deploy/ubuntu/inventory-backup.service" /etc/systemd/system/inventory-backup.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-backup.timer" /etc/systemd/system/inventory-backup.timer
 install -m 0644 "$app_root/deploy/ubuntu/inventory-cert-renew.service" /etc/systemd/system/inventory-cert-renew.service
@@ -67,8 +69,9 @@ ufw allow from 172.16.0.0/16 to any port 80 proto tcp
 ufw allow from 172.16.0.0/16 to any port 443 proto tcp
 ufw --force enable
 
-systemctl enable --now postgresql inventory-api.service inventory-backup.timer inventory-cert-renew.timer nginx
+systemctl enable --now postgresql inventory-api.service inventory-coz-sync.timer inventory-backup.timer inventory-cert-renew.timer nginx
 systemctl restart inventory-api.service nginx
+systemctl start inventory-coz-sync.service
 
 echo "Deployment complete. Import a Supabase backup when required:"
 echo "sudo -u inventory_app env PGHOST=/var/run/postgresql PGDATABASE=henan_inventory PGUSER=inventory_app MEDIA_ROOT=$data_root/media node $app_root/server/import-backup.js /path/to/backup.json"

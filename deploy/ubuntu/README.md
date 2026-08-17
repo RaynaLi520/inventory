@@ -32,7 +32,11 @@ Useful checks:
 curl http://127.0.0.1:3000/api/health
 systemctl status inventory-api nginx postgresql --no-pager
 journalctl -u inventory-api -n 100 --no-pager
+systemctl status inventory-coz-sync.timer --no-pager
+journalctl -u inventory-coz-sync -n 100 --no-pager
 ```
+
+The Ubuntu server calls the CoZ Forguncy inventory API directly every 60 seconds. The synchronization does not require a browser extension or an always-on employee computer. Each response must be complete before PostgreSQL is updated; failed or partial responses leave the previous inventory unchanged.
 
 Daily backups run around 02:30 and are retained for 14 days under `/var/backups/henan-inventory`.
 
