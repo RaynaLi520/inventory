@@ -26,6 +26,7 @@
     : null;
   const cloudBackendAvailable = localApiEnabled || Boolean(supabaseClient);
   const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "F"];
+  const LOW_STOCK_SKU_THRESHOLD = 5;
   const defaultCategoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
   const categoryCodes = loadCategoryCodes();
   const defaultItemTypeCodes = {
@@ -66,7 +67,7 @@
     ["数据已保存到本机", "Saved locally"], ["CoZ 实时库存", "CoZ live inventory"], ["CoZ 暂未提供", "Not provided by CoZ"], ["接口未提供出入库流水", "Movement data is not provided"], ["品牌管理员", "Brand admin"], ["库存提醒", "Stock alerts"], ["导出库存", "Export stock"], ["快速出入库", "Quick movement"], ["扫描 SKU", "Scan SKU"], ["安装应用", "Install app"], ["安装", "Install"], ["切换语言", "Switch language"], ["切换主题", "Switch theme"], ["深色", "Dark mode"], ["浅色", "Light mode"],
     ["星期一", "Monday"], ["星期二", "Tuesday"], ["星期三", "Wednesday"], ["星期四", "Thursday"], ["星期五", "Friday"], ["星期六", "Saturday"], ["星期日", "Sunday"],
     ["2026年8月", "August 2026"], ["线上与门店共用一套 SKU 库存，低库存款式请优先补货或调整渠道配额。", "Online and store channels share one SKU pool; prioritize replenishment or reallocate stock for low-stock styles."], [" 个 SKU 需要处理", " SKUs need action"],
-    ["可售库存", "Sellable stock"], ["今日售出", "Sold today"], ["低库存 SKU", "Low-stock SKUs"], ["在途库存", "In transit"], ["较上周", "vs last week"], ["需处理", "Needs action"], ["低于安全库存", "Below safety stock"], ["3 个采购单 · 最早 8/12 到货", "3 purchase orders · earliest arrival Aug 12"], ["线上 24 · 门店 12", "Online 24 · Store 12"], ["4.8%", "4.8%"],
+    ["可售库存", "Sellable stock"], ["今日售出", "Sold today"], ["低库存 SKU", "Low-stock SKUs"], ["在途库存", "In transit"], ["较上周", "vs last week"], ["需处理", "Needs action"], ["库存小于等于 5", "Stock at or below 5"], ["3 个采购单 · 最早 8/12 到货", "3 purchase orders · earliest arrival Aug 12"], ["线上 24 · 门店 12", "Online 24 · Store 12"], ["4.8%", "4.8%"],
     ["个 SKU · 实时可售", "SKUs · sellable now"], ["件", "pcs"], ["件可售库存", "sellable pcs"], ["重点款库存", "Priority stock"], ["全部 SKU", "All SKUs"], ["渠道库存", "Channel stock"], ["最近动态", "Recent activity"], ["库存总览", "Stock overview"], ["库存正常", "Healthy"], ["低库存", "Low stock"], ["低库存（≤5）", "Low stock (≤5)"], ["LIVE STOCK", "LIVE STOCK"], ["ALLOCATION", "ALLOCATION"],
     ["品牌小程序", "Brand mini-program"], ["天猫旗舰店", "Tmall flagship"], ["静安门店", "Jing'an store"], ["机动库存", "Buffer stock"], ["渠道可售", "Channel sellable"], ["今日订单", "Orders today"], ["同步正常", "Sync healthy"], ["微信自营商城", "WeChat direct store"], ["平台电商", "Marketplace"], ["线下直营", "Offline retail"], ["2 分钟前同步", "Synced 2 min ago"],
     ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SPU", "New SPU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
@@ -877,7 +878,8 @@
   }
   function totalStock(product) { return Object.values(product.sizes).reduce((sum, qty) => sum + Number(qty || 0), 0); }
   function availableStock(product) { return Math.max(0, totalStock(product) - Number(product.reserved || 0)); }
-  function isLow(product) { return Object.values(product.sizes).some((qty) => Number(qty) <= Number(product.safety)); }
+  function isLowSkuQuantity(quantity) { return Number(quantity) <= LOW_STOCK_SKU_THRESHOLD; }
+  function isLow(product) { return Object.values(product.sizes).some(isLowSkuQuantity); }
   function stockStatus(available) {
     const quantity = Number(available || 0);
     if (quantity <= 0) return { label: "不可售", className: "unavailable" };
@@ -885,7 +887,7 @@
     return { label: "库存正常", className: "healthy" };
   }
   function productStockStatus(product) { return stockStatus(availableStock(product)); }
-  function lowSkuCount() { return state.products.reduce((sum, product) => sum + Object.values(product.sizes).filter((qty) => Number(qty) <= Number(product.safety)).length, 0); }
+  function lowSkuCount() { return state.products.reduce((sum, product) => sum + Object.values(product.sizes).filter(isLowSkuQuantity).length, 0); }
   function totalAvailable() { return state.products.reduce((sum, product) => sum + availableStock(product), 0); }
   function formatNumber(value) { return new Intl.NumberFormat("zh-CN").format(value); }
   function refreshIcons() { if (window.lucide) window.lucide.createIcons({ attrs: { "stroke-width": 1.7 } }); }
@@ -1071,7 +1073,7 @@
   function renderSizeBand(product) {
     return `<div class="size-band">${orderedSizes(product).map((size) => {
       const qty = Number(product.sizes[size] || 0);
-      const cls = qty === 0 ? "empty" : qty <= product.safety ? "low" : "";
+      const cls = qty === 0 ? "empty" : isLowSkuQuantity(qty) ? "low" : "";
       return `<div class="size-stock ${cls}" title="${size} 码：${qty} 件"><div><span>${size}</span><strong>${qty}</strong></div></div>`;
     }).join("")}</div>`;
   }
@@ -1106,12 +1108,12 @@
   function lowStockDescription() {
     const affected = state.products.filter(isLow);
     const names = [...new Set(affected.map((product) => String(product.name || product.style || product.baseSku).trim()).filter(Boolean))];
-    if (!names.length) return currentLang === "zh" ? "当前所有 SKU 均高于安全库存。" : "All SKUs are above safety stock.";
+    if (!names.length) return currentLang === "zh" ? "当前所有 SKU 库存均高于 5 件。" : "All SKUs have more than 5 units in stock.";
     const listed = names.slice(0, 2).join(currentLang === "zh" ? "、" : ", ");
     const more = names.length > 2 ? (currentLang === "zh" ? "等款式" : " and other styles") : "";
     return currentLang === "zh"
-      ? `${listed}${more}的部分尺码已达到或低于安全库存。`
-      : `${listed}${more}: some sizes are at or below safety stock.`;
+      ? `${listed}${more}的部分尺码库存小于等于 5 件。`
+      : `${listed}${more}: some size SKUs have 5 units or fewer.`;
   }
 
   function renderOverview() {
@@ -2838,7 +2840,7 @@
   function exportInventory() {
     const headers = ["品牌 SKU", "CoZ 原始 SKU", "品牌 SPU", "CoZ 原始款号", "款式", "品类", "颜色", "尺码", "库存", "安全库存", "状态"];
     const rows = state.products.flatMap((product) => Object.entries(product.sizes).map(([size, qty]) => [
-      product.skuBySize?.[size] || "", product.sourceSkuBySize?.[size] || "", product.baseSku, product.sourceBaseSku || "", product.name, itemTypeLabels[product.category]?.[0] || product.category, product.color, size, qty, product.safety, qty <= product.safety ? "低库存" : "正常"
+      product.skuBySize?.[size] || "", product.sourceSkuBySize?.[size] || "", product.baseSku, product.sourceBaseSku || "", product.name, itemTypeLabels[product.category]?.[0] || product.category, product.color, size, qty, product.safety, isLowSkuQuantity(qty) ? "低库存" : "正常"
     ]));
     const csv = "\ufeff" + [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
