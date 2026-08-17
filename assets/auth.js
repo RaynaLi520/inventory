@@ -9,6 +9,7 @@
     change: ["设置新密码", "首次登录需要完成此步骤", "Set a new password", "Required before your first access"]
   };
   let language = localStorage.getItem("ja-garment-language") || "zh";
+  let theme = localStorage.getItem("ja-garment-theme") || "light";
 
   function renderIcons() { if (window.lucide) window.lucide.createIcons({ attrs: { "stroke-width": 1.8 } }); }
   function showAlert(message, success = false) { const alert = $("authAlert"); alert.textContent = message; alert.classList.toggle("success", success); alert.hidden = !message; }
@@ -30,6 +31,13 @@
     const values = copy[active];
     $("authTitle").textContent = language === "zh" ? values[0] : values[2];
     $("authSubtitle").textContent = language === "zh" ? values[1] : values[3];
+  }
+  function applyTheme() {
+    document.documentElement.dataset.theme = theme;
+    const button = $("authTheme");
+    button.innerHTML = `<i data-lucide="${theme === "dark" ? "sun" : "moon"}"></i><span>${language === "zh" ? (theme === "dark" ? "浅色" : "深色") : (theme === "dark" ? "Light" : "Dark")}</span>`;
+    button.title = language === "zh" ? "切换深浅色" : "Toggle light/dark mode";
+    renderIcons();
   }
   async function api(path, body) {
     const response = await fetch(`/api/auth/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -77,7 +85,8 @@
   document.querySelectorAll("[data-show-panel]").forEach((button) => button.addEventListener("click", () => showPanel(button.dataset.showPanel)));
   document.querySelectorAll("[data-password-toggle]").forEach((button) => button.addEventListener("click", () => { const input = $(button.dataset.passwordToggle); input.type = input.type === "password" ? "text" : "password"; button.innerHTML = `<i data-lucide="${input.type === "password" ? "eye" : "eye-off"}"></i>`; renderIcons(); }));
   $("authLanguage").addEventListener("click", () => { language = language === "zh" ? "en" : "zh"; localStorage.setItem("ja-garment-language", language); applyLanguage(); });
+  $("authTheme").addEventListener("click", () => { theme = theme === "dark" ? "light" : "dark"; localStorage.setItem("ja-garment-theme", theme); applyTheme(); });
   const initial = location.hash === "#change-password" ? "change" : location.hash === "#register" ? "register" : location.hash === "#forgot" ? "forgot" : "login";
-  showPanel(initial); applyLanguage(); renderIcons();
+  showPanel(initial); applyLanguage(); applyTheme(); renderIcons();
   resumeSession();
 })();

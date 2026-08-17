@@ -12,7 +12,7 @@
 <body>
   <header class="auth-topbar">
     <a class="auth-brand" href="/login.html" aria-label="JA 成衣库存"><span>JA</span><strong>JUSTIN ALLEN</strong></a>
-    <button class="language-button" id="authLanguage" type="button"><i data-lucide="languages"></i><span>English</span></button>
+    <div class="auth-topbar-actions"><button class="appearance-button" id="authTheme" type="button" title="切换深浅色"><i data-lucide="moon"></i><span>深色</span></button><button class="language-button" id="authLanguage" type="button"><i data-lucide="languages"></i><span>English</span></button></div>
   </header>
   <main class="auth-main">
     <section class="auth-card" aria-labelledby="authTitle">
@@ -34,7 +34,7 @@
       </form>
 
       <form id="registerForm" class="auth-form" hidden>
-        <div class="two-fields"><label><span data-zh="用户名" data-en="Username">用户名</span><input name="username" autocomplete="username" pattern="[A-Za-z0-9._-]{3,32}" required></label><label><span data-zh="姓名" data-en="Name">姓名</span><input name="displayName" autocomplete="name" required></label></div>
+        <div class="two-fields"><label><span data-zh="登录用户名" data-en="Login username">登录用户名</span><input name="username" autocomplete="username" pattern="[A-Za-z0-9._-]{3,32}" required></label><label><span data-zh="显示姓名" data-en="Display name">显示姓名</span><input name="displayName" autocomplete="name" required></label></div>
         <label><span data-zh="工作邮箱" data-en="Work email">工作邮箱</span><input name="email" type="email" autocomplete="email" required></label>
         <label><span data-zh="密码（至少 10 位，含字母和数字）" data-en="Password (10+ characters with letters and numbers)">密码（至少 10 位，含字母和数字）</span><span class="password-field"><input id="registerPassword" name="password" type="password" minlength="10" autocomplete="new-password" required><button type="button" data-password-toggle="registerPassword" aria-label="显示密码"><i data-lucide="eye"></i></button></span></label>
         <label><span data-zh="确认密码" data-en="Confirm password">确认密码</span><span class="password-field"><input id="registerConfirm" name="confirmPassword" type="password" autocomplete="new-password" required><button type="button" data-password-toggle="registerConfirm" aria-label="显示密码"><i data-lucide="eye"></i></button></span></label>
