@@ -141,7 +141,7 @@
         <div class="toolbar">
           <div class="inventory-search-combobox"><label class="search-box"><i data-lucide="search"></i><input id="inventorySearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inventorySearchResults" autocomplete="off" placeholder="搜索款式、SKU、颜色"></label><div class="inventory-search-results" id="inventorySearchResults" role="listbox" hidden></div></div>
           <select id="categoryFilter" aria-label="按品类筛选"><option value="">全部品类</option></select>
-          <select id="statusFilter" aria-label="按库存状态筛选"><option value="">全部状态</option><option value="healthy">库存正常</option><option value="low">低库存（≤5）</option><option value="unavailable">不可售</option></select>
+          <select id="statusFilter" aria-label="按库存状态筛选"><option value="">全部状态</option><option value="healthy">库存正常</option><option value="broken">断码</option><option value="partial-low">部分低库存</option><option value="all-low">全部低库存</option><option value="unavailable">不可售</option></select>
           <button class="button secondary trash-button" id="openTrashBtn" type="button"><i data-lucide="trash-2"></i>回收站 <span id="trashCount">0</span></button>
           <button class="button secondary" id="addSkuBtn" type="button"><i data-lucide="plus"></i>新增 SPU</button>
         </div>
@@ -339,7 +339,7 @@
           <p class="variant-lock-note"><i data-lucide="lock-keyhole"></i>库存已锁定，请在“出入库流水”中由授权人员调整。</p>
           <p class="variant-source-note" id="variantSourceNote" hidden>库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。</p>
         </div>
-        <div class="sku-preview"><span>SPU 编码预览</span><code id="skuPreview">COZSS26-WST001</code><small>COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号</small></div>
+        <div class="sku-preview"><span>SPU 编码预览</span><code id="skuPreview">COZSS26-WST001</code><small id="skuPreviewHint">COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号</small></div>
         <input id="editingProductId" type="hidden">
         <div class="form-actions"><button class="button secondary" data-close-sku type="button">取消</button><button class="button primary" id="skuSubmitButton" type="submit">创建 SPU 和 SKU</button></div>
       </form>

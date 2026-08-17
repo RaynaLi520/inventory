@@ -236,6 +236,72 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function isFixedSetStyle(product) {
+  const style = clean(product?.sourceBaseSku || product?.style || product?.originalStyle || product?.baseSku);
+  return /SET\d*(?:-|$)/i.test(style);
+}
+
+function fixedSetStock(product) {
+  const total = Object.values(product?.sizes || {}).reduce((sum, quantity) => sum + numeric(quantity), 0);
+  return compactNumber(Math.max(0, total - numeric(product?.reserved)));
+}
+
+// CoZ SET styles are already sold as complete bundles. Mirror each style/color
+// into a fixed bundle while retaining the original product for auditability.
+export function migrateFixedSetBundles(document) {
+  const state = document?.state;
+  if (!state || !Array.isArray(state.products)) return false;
+  if (!Array.isArray(state.bundles)) state.bundles = [];
+  let changed = false;
+  state.products.filter(isFixedSetStyle).forEach((product) => {
+    const sourceStyle = clean(product.sourceBaseSku || product.style || product.originalStyle || product.baseSku);
+    const color = clean(product.color);
+    const sourceSetKey = sourceColorKey(sourceStyle, color);
+    const bundleId = `COZ-SET-${stableToken(sourceStyle)}-${stableToken(color || "COLOR")}`;
+    let bundle = state.bundles.find((item) => item.sourceSetKey === sourceSetKey)
+      || state.bundles.find((item) => item.id === bundleId);
+    const now = new Date().toISOString();
+    const next = {
+      ...(bundle || {}),
+      id: bundle?.id || bundleId,
+      name: product.name || sourceStyle,
+      type: "fixed",
+      season: (sourceStyle.match(/^COZ(SS|AW)\d{2}/i)?.[1] || "").toUpperCase(),
+      color,
+      colorCode: clean(product.colorCode).toUpperCase(),
+      size: "",
+      fixedSku: sourceStyle,
+      fixedStock: fixedSetStock(product),
+      fixedStockBySize: { ...(product.sizes || {}) },
+      fixedWarehouse: numeric(product.warehouse),
+      fixedStore: numeric(product.store),
+      fixedReserved: numeric(product.reserved),
+      sourceOrigin: "coz",
+      sourceSetKey,
+      sourceProductId: product.id,
+      sourceUpdatedAt: product.sourceUpdatedAt || now,
+      components: [],
+      componentSkus: [],
+      componentSourceSkus: [],
+      componentColors: [],
+      componentSizes: [],
+      componentCodes: [],
+      createdAt: bundle?.createdAt || now,
+      updatedAt: now
+    };
+    if (!bundle) {
+      state.bundles.push(next);
+      changed = true;
+      return;
+    }
+    if (JSON.stringify(bundle) !== JSON.stringify(next)) {
+      Object.assign(bundle, next);
+      changed = true;
+    }
+  });
+  return changed;
+}
+
 export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISOString()) {
   assertCompleteCozSnapshot(snapshot);
   if (!document?.state || !Array.isArray(document.state.products)) throw new Error("Inventory platform document is invalid");
@@ -316,6 +382,7 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
   previousState.bundles = Array.isArray(previousState.bundles) ? previousState.bundles : [];
   previousState.trashBundles = Array.isArray(previousState.trashBundles) ? previousState.trashBundles : [];
   previousState.deletedBundleIds = Array.isArray(previousState.deletedBundleIds) ? previousState.deletedBundleIds : [];
+  migrateFixedSetBundles(nextDocument);
   previousState.productIdVersion = Math.max(Number(previousState.productIdVersion || 0), PRODUCT_ID_VERSION);
   previousState.source = {
     ...(previousState.source || {}),

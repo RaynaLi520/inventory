@@ -96,3 +96,21 @@ test("keeps deleted products excluded and gives new products deterministic IDs",
   const secondNew = second.state.products.find((product) => product.sourceBaseSku === "COZAW26-WPT149");
   assert.equal(firstNew.id, secondNew.id);
 });
+
+test("mirrors CoZ SET styles into fixed bundles without removing products", () => {
+  const snapshot = normalizeCozResponse(response([
+    row({ C3: "COZSS26-WSET068", C4: "粉红条纹", C5: "L", C15: 8, C16: 0, C24: "8001", Query: '{"SKU":"8001"}' })
+  ]));
+  const merged = mergeCozSnapshot(document(), snapshot, "2026-08-17T00:00:00.000Z");
+  const product = merged.state.products.find((item) => item.sourceBaseSku === "COZSS26-WSET068");
+  const bundle = merged.state.bundles.find((item) => item.sourceSetKey === JSON.stringify(["cozss26-wset068", "粉红条纹"]));
+  assert.ok(product);
+  assert.ok(bundle);
+  assert.equal(bundle.type, "fixed");
+  assert.equal(bundle.fixedSku, "COZSS26-WSET068");
+  assert.equal(bundle.fixedStock, 8);
+  assert.deepEqual(bundle.fixedStockBySize, { L: 8 });
+  assert.equal(merged.state.products.some((item) => item.sourceBaseSku === "COZSS26-WSET068"), true);
+  const repeated = mergeCozSnapshot(merged, snapshot, "2026-08-17T00:01:00.000Z");
+  assert.equal(repeated.state.bundles.filter((item) => item.sourceSetKey === bundle.sourceSetKey).length, 1);
+});
