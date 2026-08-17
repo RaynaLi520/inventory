@@ -13,7 +13,7 @@ backup_root=/var/backups/henan-inventory
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y nginx postgresql postgresql-contrib nodejs npm rsync openssl apache2-utils ufw
+apt-get install -y nginx postgresql postgresql-contrib nodejs npm rsync openssl ufw
 
 if ! id inventory_app >/dev/null 2>&1; then
   useradd --system --home-dir "$data_root" --create-home --shell /usr/sbin/nologin inventory_app
@@ -53,11 +53,7 @@ install -m 0644 "$app_root/deploy/ubuntu/inventory-cert-renew.service" /etc/syst
 install -m 0644 "$app_root/deploy/ubuntu/inventory-cert-renew.timer" /etc/systemd/system/inventory-cert-renew.timer
 install -m 0755 "$app_root/deploy/ubuntu/backup.sh" /usr/local/sbin/henan-inventory-backup
 install -m 0755 "$app_root/deploy/ubuntu/renew-certificate.sh" /usr/local/sbin/henan-inventory-renew-certificate
-INVENTORY_SERVER_IP=${INVENTORY_SERVER_IP:-172.16.100.198} /usr/local/sbin/henan-inventory-renew-certificate
-if [[ ! -s /etc/nginx/henan-inventory.htpasswd ]]; then
-  echo "Missing /etc/nginx/henan-inventory.htpasswd; create the website account before enabling Nginx." >&2
-  exit 1
-fi
+INVENTORY_SERVER_IP=${INVENTORY_SERVER_IP:-172.16.100.198} INVENTORY_SERVER_NAME=${INVENTORY_SERVER_NAME:-inventory.justinallen.com} /usr/local/sbin/henan-inventory-renew-certificate
 install -m 0644 "$app_root/deploy/ubuntu/nginx.conf" /etc/nginx/sites-available/henan-inventory
 ln -sfn /etc/nginx/sites-available/henan-inventory /etc/nginx/sites-enabled/henan-inventory
 rm -f /etc/nginx/sites-enabled/default

@@ -25,3 +25,57 @@ create table if not exists inventory_sync_runs (
   started_at timestamptz not null default now(),
   finished_at timestamptz
 );
+
+create table if not exists app_users (
+  id bigserial primary key,
+  username text not null unique check (username = lower(username) and username ~ '^[a-z0-9._-]{3,32}$'),
+  email text not null unique check (email = lower(email)),
+  display_name text not null,
+  password_hash text not null,
+  role text not null default 'viewer' check (role in ('admin', 'inventory_manager', 'product_editor', 'viewer')),
+  status text not null default 'pending' check (status in ('pending', 'active', 'disabled')),
+  must_change_password boolean not null default false,
+  failed_login_attempts integer not null default 0,
+  locked_until timestamptz,
+  approved_by bigint references app_users(id),
+  approved_at timestamptz,
+  last_login_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists app_sessions (
+  token_hash char(64) primary key,
+  user_id bigint not null references app_users(id) on delete cascade,
+  expires_at timestamptz not null,
+  ip_address text,
+  user_agent text,
+  created_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+
+create index if not exists app_sessions_user_idx on app_sessions (user_id);
+create index if not exists app_sessions_expiry_idx on app_sessions (expires_at);
+
+create table if not exists password_reset_requests (
+  id bigserial primary key,
+  user_id bigint not null references app_users(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'completed', 'dismissed')),
+  requested_at timestamptz not null default now(),
+  resolved_by bigint references app_users(id),
+  resolved_at timestamptz
+);
+
+create index if not exists password_reset_pending_idx on password_reset_requests (user_id, status);
+
+create table if not exists auth_audit_log (
+  id bigserial primary key,
+  actor_user_id bigint references app_users(id),
+  target_user_id bigint references app_users(id),
+  action text not null,
+  details jsonb not null default '{}'::jsonb,
+  ip_address text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists auth_audit_created_idx on auth_audit_log (created_at desc);

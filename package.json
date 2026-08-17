@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "check": "node --check server/index.js && node --check server/import-backup.js && node --check assets/inventory.js && node --check service-worker.js && node --check tools/generate-mobile-qr.js",
+    "check": "node --check server/index.js && node --check server/auth.js && node --check server/create-admin.js && node --check server/import-backup.js && node --check assets/auth.js && node --check assets/inventory.js && node --check service-worker.js && node --check tools/generate-mobile-qr.js",
+    "create:admin": "node server/create-admin.js",
     "generate:mobile-qr": "node tools/generate-mobile-qr.js"
   },
   "dependencies": {

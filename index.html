@@ -45,7 +45,7 @@
 
       <div class="sidebar-bottom">
         <div class="sync-state"><span></span> 数据已保存到本机</div>
-        <button class="profile-button" type="button" title="账户设置">
+        <button class="profile-button" id="profileButton" type="button" title="账户设置">
           <span class="avatar" id="profileAvatar">--</span>
           <span><strong id="profileName">正在识别账号</strong><small id="profileRole">只读库存</small></span>
           <i data-lucide="chevrons-up-down"></i>
@@ -415,6 +415,30 @@
         <div class="image-stage"><img id="imageModalPreview" alt=""></div>
         <figcaption><strong id="imageModalName"></strong><code id="imageModalSku"></code></figcaption>
       </figure>
+    </section>
+  </div>
+
+  <div class="modal" id="accountModal" hidden>
+    <div class="modal-backdrop" data-close-account></div>
+    <section class="modal-panel account-panel" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+      <header class="modal-head"><div><span class="section-kicker">ACCOUNT</span><h2 id="accountModalTitle">账号与权限</h2></div><button class="icon-button" data-close-account type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <div class="account-body">
+        <div class="account-summary"><span class="avatar large" id="accountAvatar">--</span><div><strong id="accountName">库存用户</strong><span id="accountIdentity"></span><small id="accountRole"></small></div><button class="button secondary" id="logoutBtn" type="button"><i data-lucide="log-out"></i>退出登录</button></div>
+        <details class="account-password"><summary>修改我的密码</summary><form id="ownPasswordForm"><label><span>当前密码</span><input name="currentPassword" type="password" autocomplete="current-password" required></label><label><span>新密码</span><input name="newPassword" type="password" minlength="10" autocomplete="new-password" required></label><label><span>确认新密码</span><input name="confirmPassword" type="password" minlength="10" autocomplete="new-password" required></label><button class="button primary" type="submit">保存新密码</button></form></details>
+        <section class="user-admin" id="userAdminSection" hidden>
+          <div class="user-admin-head"><div><span class="section-kicker">USER MANAGEMENT</span><h3>使用人员管理</h3></div><button class="icon-button" id="refreshUsersBtn" type="button" title="刷新账号"><i data-lucide="refresh-cw"></i></button></div>
+          <p class="user-admin-help">新注册账号需要批准后才能进入。重置密码会生成只显示一次的临时密码。</p>
+          <div class="user-list" id="userList"></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal" id="temporaryPasswordModal" hidden>
+    <div class="modal-backdrop" data-close-temporary-password></div>
+    <section class="modal-panel compact-dialog" role="dialog" aria-modal="true" aria-labelledby="temporaryPasswordTitle">
+      <header class="modal-head"><div><span class="section-kicker">ONE-TIME PASSWORD</span><h2 id="temporaryPasswordTitle">一次性临时密码</h2></div><button class="icon-button" data-close-temporary-password type="button" aria-label="关闭"><i data-lucide="x"></i></button></header>
+      <div class="temporary-password-body"><p>请安全地交给该使用者。关闭后系统不会再次显示。</p><code id="temporaryPasswordValue"></code><button class="button primary" id="copyTemporaryPasswordBtn" type="button"><i data-lucide="copy"></i>复制临时密码</button></div>
     </section>
   </div>
 

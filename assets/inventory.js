@@ -145,9 +145,12 @@
   let pendingSkuImageName = "";
   let skuImageRemoved = false;
   let currentSession = {
+    id: "",
     username: "",
     displayName: "库存用户",
-    permissions: { manageMovements: false }
+    role: "viewer",
+    roleLabel: "只读人员",
+    permissions: { manageMovements: false, manageCatalog: false, manageUsers: false }
   };
 
   function localDateKey(date = new Date()) {
@@ -674,6 +677,10 @@
       resetCloudRetry();
       renderSyncState();
     } catch (error) {
+      if (localApiEnabled && error.status === 401) {
+        location.replace(`/login.html?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
+        return;
+      }
       if (localApiEnabled && error.status === 403) {
         cloudDirty = false;
         cloudStatus = "synced";
@@ -875,35 +882,129 @@
   function formatNumber(value) { return new Intl.NumberFormat("zh-CN").format(value); }
   function refreshIcons() { if (window.lucide) window.lucide.createIcons({ attrs: { "stroke-width": 1.7 } }); }
   function canManageMovements() { return Boolean(currentSession.permissions?.manageMovements); }
+  function canManageCatalog() { return Boolean(currentSession.permissions?.manageCatalog); }
+  function canManageUsers() { return Boolean(currentSession.permissions?.manageUsers); }
 
   function renderSession() {
     const displayName = currentSession.displayName || currentSession.username || "库存用户";
     const initials = displayName.split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "--";
     $("profileAvatar").textContent = initials;
     $("profileName").textContent = displayName;
-    $("profileRole").textContent = canManageMovements() ? "库存管理员" : "只读库存";
+    $("profileRole").textContent = currentSession.roleLabel || "只读人员";
     document.body.classList.toggle("can-manage-movements", canManageMovements());
+    document.body.classList.toggle("can-manage-catalog", canManageCatalog());
     ["quickMoveBtn", "mobileMoveBtn", "scanBtn"].forEach((id) => { $(id).hidden = !canManageMovements(); });
+    ["addSkuBtn", "openTrashBtn", "addBundleBtn", "openBundleTrashBtn"].forEach((id) => { $(id).hidden = !canManageCatalog(); });
   }
 
   async function initSession() {
     if (!localApiEnabled) {
       renderSession();
-      return;
+      return true;
     }
     try {
-      const response = await fetch(`${apiBase}/session`, { cache: "no-store" });
-      if (!response.ok) throw new Error(`Session request failed (HTTP ${response.status})`);
-      const session = await response.json();
+      const response = await fetch(`${apiBase}/auth/session`, { cache: "no-store" });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        if (payload.code === "PASSWORD_CHANGE_REQUIRED") location.replace("/login.html#change-password");
+        else location.replace(`/login.html?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
+        return false;
+      }
+      const session = (await response.json()).user;
       currentSession = {
+        id: String(session.id || ""),
         username: String(session.username || ""),
+        email: String(session.email || ""),
         displayName: String(session.displayName || session.username || "库存用户"),
-        permissions: { manageMovements: Boolean(session.permissions?.manageMovements) }
+        role: String(session.role || "viewer"),
+        roleLabel: String(session.roleLabel || "只读人员"),
+        permissions: {
+          manageMovements: Boolean(session.permissions?.manageMovements),
+          manageCatalog: Boolean(session.permissions?.manageCatalog),
+          manageUsers: Boolean(session.permissions?.manageUsers)
+        }
       };
     } catch (error) {
       console.error("Inventory session load failed", error);
+      location.replace(`/login.html?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
+      return false;
     }
     renderSession();
+    return true;
+  }
+
+  async function authApi(path, options = {}) {
+    const response = await fetch(`${apiBase}/auth/${path}`, {
+      cache: "no-store",
+      ...options,
+      headers: { ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) }
+    });
+    const payload = response.status === 204 ? {} : await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 401) location.replace(`/login.html?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
+      const error = new Error(payload.error || `HTTP ${response.status}`);
+      error.code = payload.code;
+      throw error;
+    }
+    return payload;
+  }
+
+  function openAccountModal() {
+    const displayName = currentSession.displayName || currentSession.username;
+    $("accountAvatar").textContent = $("profileAvatar").textContent;
+    $("accountName").textContent = displayName;
+    $("accountIdentity").textContent = [currentSession.username, currentSession.email].filter(Boolean).join(" · ");
+    $("accountRole").textContent = currentSession.roleLabel;
+    $("userAdminSection").hidden = !canManageUsers();
+    $("accountModal").hidden = false;
+    if (canManageUsers()) loadUsers();
+    refreshIcons();
+  }
+
+  function closeAccountModal() { $("accountModal").hidden = true; }
+
+  async function loadUsers() {
+    const list = $("userList");
+    list.innerHTML = `<div class="user-list-loading">正在读取账号...</div>`;
+    try {
+      const { users } = await authApi("admin/users");
+      list.innerHTML = users.map((user) => {
+        const self = user.id === currentSession.id;
+        const statusLabel = user.status === "active" ? "已启用" : user.status === "pending" ? "待批准" : "已停用";
+        return `<article class="user-row" data-user-id="${escapeHtml(user.id)}">
+          <div class="user-identity"><strong>${escapeHtml(user.displayName)}</strong><span>${escapeHtml(user.username)} · ${escapeHtml(user.email)}</span><small><i class="user-status ${escapeHtml(user.status)}"></i>${statusLabel}${user.resetRequests ? ` · <b>${user.resetRequests} 个重置申请</b>` : ""}${self ? " · 当前账号" : ""}</small></div>
+          <label><span>角色</span><select data-user-role ${self ? "disabled" : ""}><option value="viewer" ${user.role === "viewer" ? "selected" : ""}>只读人员</option><option value="inventory_manager" ${user.role === "inventory_manager" ? "selected" : ""}>库存管理员</option><option value="product_editor" ${user.role === "product_editor" ? "selected" : ""}>商品编辑</option><option value="admin" ${user.role === "admin" ? "selected" : ""}>管理员</option></select></label>
+          <label><span>状态</span><select data-user-status ${self ? "disabled" : ""}><option value="pending" ${user.status === "pending" ? "selected" : ""}>待批准</option><option value="active" ${user.status === "active" ? "selected" : ""}>已启用</option><option value="disabled" ${user.status === "disabled" ? "selected" : ""}>已停用</option></select></label>
+          <div class="user-actions"><button class="button secondary" data-save-user type="button" ${self ? "disabled" : ""}>保存</button><button class="button secondary" data-reset-user type="button">重置密码</button></div>
+        </article>`;
+      }).join("") || `<div class="user-list-loading">暂无账号</div>`;
+    } catch (error) {
+      list.innerHTML = `<div class="user-list-loading error">${escapeHtml(error.message)}</div>`;
+    }
+  }
+
+  async function saveUserAccess(row) {
+    const button = row.querySelector("[data-save-user]");
+    button.disabled = true;
+    try {
+      await authApi(`admin/users/${encodeURIComponent(row.dataset.userId)}`, { method: "PATCH", body: JSON.stringify({ role: row.querySelector("[data-user-role]").value, status: row.querySelector("[data-user-status]").value }) });
+      showToast("账号权限已更新");
+      await loadUsers();
+    } catch (error) { showToast(error.message); }
+    finally { button.disabled = false; }
+  }
+
+  async function resetUserPassword(row) {
+    const button = row.querySelector("[data-reset-user]");
+    button.disabled = true;
+    try {
+      const result = await authApi(`admin/users/${encodeURIComponent(row.dataset.userId)}/reset-password`, { method: "POST", body: "{}" });
+      $("temporaryPasswordValue").textContent = result.temporaryPassword;
+      $("temporaryPasswordModal").hidden = false;
+      await loadUsers();
+      refreshIcons();
+    } catch (error) { showToast(error.message); }
+    finally { button.disabled = false; }
   }
 
   function applyLanguage() {
@@ -1074,7 +1175,7 @@
         <td class="num">${cozProduct && !product.reservedReported ? "--" : formatNumber(product.reserved)}</td>
         <td class="num"><span class="stock-number">${formatNumber(availableStock(product))}</span></td>
         <td>${statusBadge(product)}</td>
-        <td><div class="row-actions"><button class="row-action" data-edit-product="${product.id}" type="button" title="编辑 SPU 和 SKU" aria-label="编辑 SPU 和 SKU"><i data-lucide="pencil"></i></button>${canManageMovements() ? `<button class="row-action" data-move-product="${product.id}" type="button" title="调整库存" aria-label="调整库存"><i data-lucide="arrow-left-right"></i></button>` : ""}<button class="row-action danger" data-trash-product="${product.id}" type="button" title="删除款式" aria-label="删除款式"><i data-lucide="trash-2"></i></button></div></td>
+        <td><div class="row-actions">${canManageCatalog() ? `<button class="row-action" data-edit-product="${product.id}" type="button" title="编辑 SPU 和 SKU" aria-label="编辑 SPU 和 SKU"><i data-lucide="pencil"></i></button>` : ""}${canManageMovements() ? `<button class="row-action" data-move-product="${product.id}" type="button" title="调整库存" aria-label="调整库存"><i data-lucide="arrow-left-right"></i></button>` : ""}${canManageCatalog() ? `<button class="row-action danger" data-trash-product="${product.id}" type="button" title="删除款式" aria-label="删除款式"><i data-lucide="trash-2"></i></button>` : ""}</div></td>
       </tr>`;
     }).join("");
     $("inventoryEmpty").hidden = products.length > 0;
@@ -1296,7 +1397,7 @@
         <td>${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}</td>
         <td class="num"><span class="stock-number">${formatNumber(available)}</span></td>
         <td><span class="status ${inventoryStatus.className}">${inventoryStatus.label}</span></td>
-        <td><div class="row-actions"><button class="row-action" type="button" data-edit-bundle="${escapeHtml(bundle.id)}" title="编辑套装" aria-label="编辑套装"><i data-lucide="pencil"></i></button><button class="row-action danger" type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装" aria-label="删除套装"><i data-lucide="trash-2"></i></button></div></td>
+        <td><div class="row-actions">${canManageCatalog() ? `<button class="row-action" type="button" data-edit-bundle="${escapeHtml(bundle.id)}" title="编辑套装" aria-label="编辑套装"><i data-lucide="pencil"></i></button><button class="row-action danger" type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装" aria-label="删除套装"><i data-lucide="trash-2"></i></button>` : ""}</div></td>
       </tr>`;
     }).join("");
     $("bundleEmpty").hidden = bundles.length > 0;
@@ -3019,6 +3120,38 @@
       }
     });
     $("quickMoveBtn").addEventListener("click", () => openMovementModal());
+    $("profileButton").addEventListener("click", openAccountModal);
+    document.querySelectorAll("[data-close-account]").forEach((node) => node.addEventListener("click", closeAccountModal));
+    document.querySelectorAll("[data-close-temporary-password]").forEach((node) => node.addEventListener("click", () => { $("temporaryPasswordModal").hidden = true; $("temporaryPasswordValue").textContent = ""; }));
+    $("refreshUsersBtn").addEventListener("click", loadUsers);
+    $("userList").addEventListener("click", (event) => {
+      const row = event.target.closest("[data-user-id]");
+      if (!row) return;
+      if (event.target.closest("[data-save-user]")) saveUserAccess(row);
+      if (event.target.closest("[data-reset-user]")) resetUserPassword(row);
+    });
+    $("logoutBtn").addEventListener("click", async () => {
+      try { await authApi("logout", { method: "POST", body: "{}" }); } catch (_) { /* Redirect even if the session already expired. */ }
+      location.replace("/login.html");
+    });
+    $("ownPasswordForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = new FormData(form);
+      if (data.get("newPassword") !== data.get("confirmPassword")) { showToast("两次输入的新密码不一致"); return; }
+      const button = form.querySelector("button[type=submit]");
+      button.disabled = true;
+      try {
+        await authApi("change-password", { method: "POST", body: JSON.stringify({ currentPassword: data.get("currentPassword"), newPassword: data.get("newPassword") }) });
+        form.reset();
+        showToast("密码已修改");
+      } catch (error) { showToast(error.message); }
+      finally { button.disabled = false; }
+    });
+    $("copyTemporaryPasswordBtn").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText($("temporaryPasswordValue").textContent); showToast("临时密码已复制"); }
+      catch (_) { showToast("无法自动复制，请手动选择临时密码"); }
+    });
     $("mobileMoveBtn").addEventListener("click", () => openMovementModal());
     $("scanBtn").addEventListener("click", () => { openMovementModal(); showToast("请选择或扫描 SKU 后调整库存"); });
     $("addSkuBtn").addEventListener("click", () => openSkuModal());
@@ -3233,7 +3366,7 @@
     initPwaInstallation();
     bindEvents();
     applyTheme();
-    await initSession();
+    if (!await initSession()) return;
     renderAll();
     switchView(activeView);
     await initCloudState();

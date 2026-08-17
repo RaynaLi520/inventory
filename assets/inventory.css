@@ -615,6 +615,42 @@ td { font-size: 13px; }
 .sku-preview small { font-size: 12px; }
 .toast { font-size: 13px; }
 
+.account-panel { width: min(860px, calc(100vw - 36px)); }
+.account-body { padding: 22px; overflow: auto; }
+.account-summary { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 13px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.account-summary .avatar.large { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 5px; color: #fff; background: var(--green-dark); font-size: 13px; font-weight: 800; }
+.account-summary > div { display: grid; gap: 3px; min-width: 0; }
+.account-summary strong { font-size: 15px; }
+.account-summary span, .account-summary small { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.account-password { padding: 17px 0; border-bottom: 1px solid var(--line); }
+.account-password summary { color: var(--green); font-size: 13px; font-weight: 750; cursor: pointer; }
+.account-password form { margin-top: 15px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)) auto; align-items: end; gap: 10px; }
+.account-password label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; }
+.account-password input { min-width: 0; height: 40px; border: 1px solid var(--line-strong); border-radius: 5px; padding: 0 10px; }
+.user-admin { padding-top: 20px; }
+.user-admin-head { display: flex; align-items: center; justify-content: space-between; }
+.user-admin-head h3 { margin: 2px 0 0; font-size: 16px; }
+.user-admin-help { margin: 8px 0 14px; color: var(--muted); font-size: 12px; }
+.user-list { display: grid; gap: 8px; }
+.user-list-loading { padding: 24px; text-align: center; color: var(--muted); font-size: 13px; }
+.user-list-loading.error { color: var(--red); }
+.user-row { display: grid; grid-template-columns: minmax(190px,1fr) 130px 120px auto; align-items: end; gap: 10px; padding: 13px; border: 1px solid var(--line); border-radius: 6px; }
+.user-identity { display: grid; gap: 3px; min-width: 0; align-self: center; }
+.user-identity strong { font-size: 13px; }
+.user-identity span, .user-identity small { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+.user-identity b { color: #a06b12; }
+.user-status { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #9aa5a0; }
+.user-status.active { background: #1e8b69; }.user-status.pending { background: #d89120; }.user-status.disabled { background: #b44249; }
+.user-row label { display: grid; gap: 5px; color: var(--muted); font-size: 11px; }
+.user-row select { width: 100%; min-width: 0; height: 37px; }
+.user-actions { display: flex; gap: 6px; }
+.user-actions .button { min-height: 37px; padding: 7px 9px; white-space: nowrap; font-size: 12px; }
+.compact-dialog { width: min(440px, calc(100vw - 36px)); }
+.temporary-password-body { display: grid; gap: 15px; padding: 22px; }
+.temporary-password-body p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.temporary-password-body code { display: block; padding: 15px; border: 1px dashed var(--green); border-radius: 5px; color: var(--green-dark); background: var(--green-soft); text-align: center; font-size: 17px; font-weight: 750; user-select: all; }
+body.dark-theme .account-password input, body.dark-theme .user-row select { color: var(--ink); background: var(--surface); }
+
 body.dark-theme {
   --ink: #edf4f0;
   --muted: #a6b6af;
@@ -676,4 +712,11 @@ body.dark-theme .color-code-notice.conflict { color: #f3d19a; background: #3b2c1
   .location-editor-fields { grid-template-columns: 1fr; }
   .image-input-layout { grid-template-columns: 1fr; }
   .image-dropzone { width: 100%; height: 190px; }
+  .account-body { padding: 16px; }
+  .account-summary { grid-template-columns: auto minmax(0,1fr); }
+  .account-summary .button { grid-column: 1 / -1; width: 100%; }
+  .account-password form { grid-template-columns: 1fr; }
+  .user-row { grid-template-columns: 1fr 1fr; }
+  .user-identity, .user-actions { grid-column: 1 / -1; }
+  .user-actions .button { flex: 1; }
 }

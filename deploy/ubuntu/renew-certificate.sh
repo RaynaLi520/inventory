@@ -3,6 +3,7 @@ set -euo pipefail
 
 tls_root=/etc/ssl/henan-inventory
 server_ip=${INVENTORY_SERVER_IP:-172.16.100.198}
+server_name=${INVENTORY_SERVER_NAME:-inventory.justinallen.com}
 ca_key="$tls_root/ca.key"
 ca_cert="$tls_root/ca.crt"
 server_key="$tls_root/server.key"
@@ -21,7 +22,8 @@ if [[ ! -s "$ca_key" || ! -s "$ca_cert" ]]; then
     -addext "subjectKeyIdentifier=hash"
 fi
 
-if [[ -s "$server_cert" ]] && openssl x509 -checkend 2592000 -noout -in "$server_cert"; then
+if [[ -s "$server_cert" ]] && openssl x509 -checkend 2592000 -noout -in "$server_cert" \
+  && openssl x509 -noout -ext subjectAltName -in "$server_cert" | grep -Fq "DNS:${server_name}"; then
   exit 0
 fi
 
@@ -35,14 +37,14 @@ cat >"$config_file" <<EOF
 basicConstraints=critical,CA:FALSE
 keyUsage=critical,digitalSignature,keyEncipherment
 extendedKeyUsage=serverAuth
-subjectAltName=IP:${server_ip}
+subjectAltName=DNS:${server_name},IP:${server_ip}
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid,issuer
 EOF
 
 openssl genrsa -out "$key_file" 3072
 openssl req -new -sha256 -key "$key_file" -out "$csr_file" \
-  -subj "/C=CN/O=Justin Allen/OU=Inventory/CN=${server_ip}"
+  -subj "/C=CN/O=Justin Allen/OU=Inventory/CN=${server_name}"
 openssl x509 -req -sha256 -days 397 -in "$csr_file" \
   -CA "$ca_cert" -CAkey "$ca_key" -CAcreateserial \
   -extfile "$config_file" -out "$cert_file"

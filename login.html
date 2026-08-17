@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f35">
+  <title>登录 · JA 成衣库存</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+  <link rel="stylesheet" href="assets/auth.css">
+</head>
+<body>
+  <header class="auth-topbar">
+    <a class="auth-brand" href="/login.html" aria-label="JA 成衣库存"><span>JA</span><strong>JUSTIN ALLEN</strong></a>
+    <button class="language-button" id="authLanguage" type="button"><i data-lucide="languages"></i><span>English</span></button>
+  </header>
+  <main class="auth-main">
+    <section class="auth-card" aria-labelledby="authTitle">
+      <div class="auth-card-head">
+        <span class="auth-mark"><i data-lucide="shirt"></i></span>
+        <p>GARMENT INVENTORY</p>
+        <h1 id="authTitle">登录库存平台</h1>
+        <span id="authSubtitle">使用公司账号继续</span>
+      </div>
+
+      <div class="auth-alert" id="authAlert" role="status" hidden></div>
+
+      <form id="loginForm" class="auth-form">
+        <label><span data-zh="用户名或工作邮箱" data-en="Username or work email">用户名或工作邮箱</span><input id="loginIdentifier" name="identifier" autocomplete="username" required></label>
+        <label><span data-zh="密码" data-en="Password">密码</span><span class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button type="button" data-password-toggle="loginPassword" aria-label="显示密码"><i data-lucide="eye"></i></button></span></label>
+        <div class="form-links"><button class="text-button" type="button" data-show-panel="forgot" data-zh="忘记密码？" data-en="Forgot password?">忘记密码？</button></div>
+        <button class="submit-button" type="submit"><span data-zh="登录" data-en="Sign in">登录</span><i data-lucide="arrow-right"></i></button>
+        <p class="auth-switch"><span data-zh="初次使用？" data-en="New to the platform?">初次使用？</span><button class="text-button strong" type="button" data-show-panel="register" data-zh="注册账号" data-en="Create account">注册账号</button></p>
+      </form>
+
+      <form id="registerForm" class="auth-form" hidden>
+        <div class="two-fields"><label><span data-zh="用户名" data-en="Username">用户名</span><input name="username" autocomplete="username" pattern="[A-Za-z0-9._-]{3,32}" required></label><label><span data-zh="姓名" data-en="Name">姓名</span><input name="displayName" autocomplete="name" required></label></div>
+        <label><span data-zh="工作邮箱" data-en="Work email">工作邮箱</span><input name="email" type="email" autocomplete="email" required></label>
+        <label><span data-zh="密码（至少 10 位，含字母和数字）" data-en="Password (10+ characters with letters and numbers)">密码（至少 10 位，含字母和数字）</span><span class="password-field"><input id="registerPassword" name="password" type="password" minlength="10" autocomplete="new-password" required><button type="button" data-password-toggle="registerPassword" aria-label="显示密码"><i data-lucide="eye"></i></button></span></label>
+        <label><span data-zh="确认密码" data-en="Confirm password">确认密码</span><span class="password-field"><input id="registerConfirm" name="confirmPassword" type="password" autocomplete="new-password" required><button type="button" data-password-toggle="registerConfirm" aria-label="显示密码"><i data-lucide="eye"></i></button></span></label>
+        <button class="submit-button" type="submit" data-zh="提交注册申请" data-en="Submit registration">提交注册申请</button>
+        <p class="auth-switch"><button class="text-button strong" type="button" data-show-panel="login" data-zh="返回登录" data-en="Back to sign in">返回登录</button></p>
+      </form>
+
+      <form id="forgotForm" class="auth-form" hidden>
+        <p class="form-note" data-zh="提交后，管理员会为你生成一次性临时密码。" data-en="An administrator will issue a one-time temporary password.">提交后，管理员会为你生成一次性临时密码。</p>
+        <label><span data-zh="用户名或工作邮箱" data-en="Username or work email">用户名或工作邮箱</span><input name="identifier" autocomplete="username" required></label>
+        <button class="submit-button" type="submit" data-zh="申请重置密码" data-en="Request password reset">申请重置密码</button>
+        <p class="auth-switch"><button class="text-button strong" type="button" data-show-panel="login" data-zh="返回登录" data-en="Back to sign in">返回登录</button></p>
+      </form>
+
+      <form id="changePasswordForm" class="auth-form" hidden>
+        <p class="form-note" data-zh="这是临时密码。设置新密码后才能进入库存平台。" data-en="Set a new password before entering the platform.">这是临时密码。设置新密码后才能进入库存平台。</p>
+        <label><span data-zh="当前临时密码" data-en="Current temporary password">当前临时密码</span><span class="password-field"><input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required><button type="button" data-password-toggle="currentPassword" aria-label="显示密码"><i data-lucide="eye"></i></button></span></label>
+        <label><span data-zh="新密码" data-en="New password">新密码</span><span class="password-field"><input id="newPassword" name="newPassword" type="password" minlength="10" autocomplete="new-password" required><button type="button" data-password-toggle="newPassword" aria-label="显示密码"><i data-lucide="eye"></i></button></span></label>
+        <label><span data-zh="确认新密码" data-en="Confirm new password">确认新密码</span><input name="confirmPassword" type="password" autocomplete="new-password" required></label>
+        <button class="submit-button" type="submit" data-zh="保存新密码" data-en="Save new password">保存新密码</button>
+      </form>
+    </section>
+  </main>
+  <footer>JUSTIN ALLEN · INTERNAL INVENTORY</footer>
+  <script src="assets/lucide.min.js"></script>
+  <script src="assets/auth.js"></script>
+</body>
+</html>

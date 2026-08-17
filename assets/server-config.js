@@ -1,5 +1,5 @@
 const inventoryHostname = window.location.hostname;
-const inventoryServerEnabled = ["172.16.100.198", "localhost", "127.0.0.1"].includes(inventoryHostname);
+const inventoryServerEnabled = ["inventory.justinallen.com", "172.16.100.198", "localhost", "127.0.0.1"].includes(inventoryHostname);
 
 window.INVENTORY_SERVER_CONFIG = {
   enabled: inventoryServerEnabled,
