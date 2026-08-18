@@ -619,9 +619,16 @@
     const raw = String(value || "COLOR").trim();
     return /^[a-z0-9]+$/i.test(raw) ? raw.toUpperCase() : raw;
   }
-  function bundleSku(bundle) {
+  function bundleSku(bundle, fixedSize = "") {
     if (bundle.importedSku && !bundle.updatedAt) return bundle.importedSku;
-    if (bundle.type === "fixed" && bundle.fixedSku) return bundle.fixedSku;
+    if (bundle.type === "fixed" && bundle.fixedSku) {
+      if (!fixedSize) return bundle.fixedSku;
+      const source = fixedBundleSourceProduct(bundle);
+      const existing = String(source?.skuBySize?.[fixedSize] || "").trim();
+      if (existing && existing !== bundle.fixedSku && !/^\d+$/.test(existing)) return existing;
+      const inferredCode = String(bundle.colorCode || source?.colorCode || colorMappings[bundle.color] || inferColorCode(source) || "COLOR").trim().toUpperCase();
+      return `${bundle.fixedSku}-${bundleColorCode(inferredCode)}-${fixedSize}`;
+    }
     const tails = (bundle.components || []).map((_, index) => {
       const part = bundlePartRecords(bundle).find((record) => record.index === index)?.product;
       return String(bundle.componentCodes?.[index] || bundleTail(part?.baseSku)).trim().toUpperCase();
@@ -661,8 +668,13 @@
     }
     return availableStock(product);
   }
-  function bundleAvailable(bundle) {
-    if (bundle.type === "fixed") return Math.max(0, Number(bundle.fixedStock || 0));
+  function bundleAvailable(bundle, fixedSize = "") {
+    if (bundle.type === "fixed") {
+      if (fixedSize && Object.prototype.hasOwnProperty.call(bundle.fixedStockBySize || {}, fixedSize)) {
+        return Math.max(0, Number(bundle.fixedStockBySize[fixedSize] || 0));
+      }
+      return Math.max(0, Number(bundle.fixedStock || 0));
+    }
     const parts = bundleParts(bundle);
     if (!parts.length || parts.length !== (bundle.components || []).length) return 0;
     return Math.max(0, Math.min(...parts.map((product, index) => componentAvailable(product, bundle.size, bundle.componentSizes?.[index]))));
@@ -681,19 +693,24 @@
       .filter((size) => Object.prototype.hasOwnProperty.call(sizes || {}, size));
     return keys.map((size) => [size, Number(sizes[size] || 0)]);
   }
-  function renderFixedBundleSizeBand(bundle) {
-    const entries = fixedBundleSizeEntries(bundle);
-    if (!entries.length) return "";
-    return `<div class="size-band fixed-size-band">${entries.map(([size, quantity]) => {
-      const cls = quantity <= 0 ? "empty" : isLowSkuQuantity(quantity) ? "low" : "";
-      return `<div class="size-stock ${cls}" title="${escapeHtml(size)} 码：${quantity} 件"><div><span>${escapeHtml(size)}</span><strong>${quantity}</strong></div></div>`;
-    }).join("")}</div>`;
-  }
-  function bundleColorSizeCell(bundle) {
-    if (bundle.type === "fixed") {
-      return `<div class="bundle-color-size"><span>${escapeHtml(bundle.color || "-")}</span>${renderFixedBundleSizeBand(bundle) || "<span>-</span>"}</div>`;
+  function bundleDisplayRows(bundle) {
+    if (bundle.type !== "fixed") {
+      return [{ bundle, size: bundle.size || "F", available: bundleAvailable(bundle), sku: bundleSku(bundle) }];
     }
-    return `${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}`;
+    const entries = fixedBundleSizeEntries(bundle);
+    if (!entries.length) {
+      const size = bundle.size || "F";
+      return [{ bundle, size, available: bundleAvailable(bundle), sku: bundleSku(bundle, size) }];
+    }
+    return entries.map(([size]) => ({
+      bundle,
+      size,
+      available: bundleAvailable(bundle, size),
+      sku: bundleSku(bundle, size)
+    }));
+  }
+  function bundleColorSizeCell(bundle, size = bundle.size || "F") {
+    return `${escapeHtml(bundle.color || "-")} / ${escapeHtml(size)}`;
   }
   function bundleTypeLabel(type) {
     return type === "fixed" ? "固定 SET 套装" : type === "promo" ? "销售组合促销" : "虚拟套装";
@@ -1489,26 +1506,30 @@
     renderBundleSkuPreview();
   }
 
-  function bundleSearchText(bundle) {
+  function bundleSearchText(bundle, fixedSize = "") {
     const records = bundlePartRecords(bundle);
-    return [bundle.name, bundleSku(bundle), bundle.color, bundle.size, bundle.season,
+    const fixedSkus = bundle.type === "fixed" && !fixedSize
+      ? fixedBundleSizeEntries(bundle).map(([size]) => bundleSku(bundle, size))
+      : [];
+    return [bundle.name, bundleSku(bundle, fixedSize), ...fixedSkus, bundle.color, fixedSize || bundle.size, bundle.season,
       ...(bundle.componentCodes || []), ...(bundle.componentSkus || []), ...(bundle.componentSourceSkus || []),
       ...records.flatMap(({ product }) => [product.name, product.baseSku, product.sourceBaseSku])].join(" ").toLowerCase();
   }
-  function matchesBundleSearch(bundle, query = "") {
+  function matchesBundleSearch(bundle, query = "", fixedSize = "") {
     const terms = String(query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
     if (!terms.length) return true;
-    const searchable = bundleSearchText(bundle);
+    const searchable = bundleSearchText(bundle, fixedSize);
     return terms.every((term) => searchable.includes(term));
   }
   function bundleSearchMatches(query = "") {
-    return (state.bundles || []).filter((bundle) => matchesBundleSearch(bundle, query)).slice(0, 30);
+    return (state.bundles || []).flatMap(bundleDisplayRows)
+      .filter((row) => matchesBundleSearch(row.bundle, query, row.size)).slice(0, 30);
   }
   function renderBundleSearchResults(query = "") {
     const results = $("bundleSearchResults");
     const matches = bundleSearchMatches(query);
     results.innerHTML = matches.length
-      ? matches.map((bundle, index) => `<button class="inventory-search-result${index === 0 ? " active" : ""}" type="button" role="option" data-bundle-search-id="${escapeHtml(bundle.id)}"><strong>${escapeHtml(bundleSku(bundle))}</strong><span>${escapeHtml(bundle.name)} · ${escapeHtml(bundle.color || "-")} / ${escapeHtml(bundle.size || "-")}</span></button>`).join("")
+      ? matches.map((row, index) => `<button class="inventory-search-result${index === 0 ? " active" : ""}" type="button" role="option" data-bundle-search-id="${escapeHtml(row.bundle.id)}" data-bundle-search-size="${escapeHtml(row.size)}"><strong>${escapeHtml(row.sku)}</strong><span>${escapeHtml(row.bundle.name)} · ${escapeHtml(row.bundle.color || "-")} / ${escapeHtml(row.size)}</span></button>`).join("")
       : `<div class="component-result-empty">${currentLang === "zh" ? "没有匹配的套装" : "No matching bundles"}</div>`;
     results.hidden = false;
     $("bundleSearch").setAttribute("aria-expanded", "true");
@@ -1517,10 +1538,10 @@
     $("bundleSearchResults").hidden = true;
     $("bundleSearch").setAttribute("aria-expanded", "false");
   }
-  function selectBundleSearchResult(bundleId) {
+  function selectBundleSearchResult(bundleId, size = "") {
     const bundle = (state.bundles || []).find((item) => item.id === bundleId);
     if (!bundle) return;
-    $("bundleSearch").value = bundleSku(bundle);
+    $("bundleSearch").value = bundleSku(bundle, bundle.type === "fixed" ? size : "");
     closeBundleSearchResults();
     renderBundleRows();
   }
@@ -1531,36 +1552,34 @@
     const type = $("bundleTypeFilter").value;
     const size = $("bundleSizeFilter").value;
     const status = $("bundleStatusFilter").value;
-    const bundles = allBundles.filter((bundle) => {
-      const available = bundleAvailable(bundle);
-      return matchesBundleSearch(bundle, term)
+    const rows = allBundles.flatMap(bundleDisplayRows).filter((row) => {
+      const { bundle, available } = row;
+      return matchesBundleSearch(bundle, term, row.size)
         && (!type || bundle.type === type)
-        && (!size || bundle.size === size)
+        && (!size || row.size === size)
         && (!status
           || (status === "healthy" && available > 5)
           || (status === "low" && available > 0 && available <= 5)
           || (status === "unavailable" && available <= 0));
     });
-    $("bundleCount").textContent = bundles.length;
-    $("bundleAvailable").textContent = formatNumber(bundles.reduce((sum, bundle) => sum + bundleAvailable(bundle), 0));
-    $("bundleRows").innerHTML = bundles.map((bundle) => {
+    $("bundleCount").textContent = rows.length;
+    $("bundleAvailable").textContent = formatNumber(rows.reduce((sum, row) => sum + row.available, 0));
+    $("bundleRows").innerHTML = rows.map((row) => {
+      const { bundle, size: rowSize, available, sku } = row;
       const partRecords = bundlePartRecords(bundle);
-      const parts = partRecords.map(({ product }) => product);
-      const available = bundleAvailable(bundle);
-      const sku = bundleSku(bundle);
       const inventoryStatus = stockStatus(available);
       return `<tr>
         <td><strong>${escapeHtml(bundle.name)}</strong><code class="bundle-code">${escapeHtml(sku)}</code></td>
         <td><span class="bundle-type ${escapeHtml(bundle.type)}">${escapeHtml(bundleTypeLabel(bundle.type))}</span></td>
         <td><div class="bundle-parts">${partRecords.map(({ product, index }) => `<span class="bundle-part">${escapeHtml(product.name)}<code>${escapeHtml(bundle.componentCodes?.[index] || bundleTail(product.baseSku))}</code></span>`).join("") || "<span>-</span>"}</div></td>
-        <td>${bundleColorSizeCell(bundle)}</td>
+        <td>${bundleColorSizeCell(bundle, rowSize)}</td>
         <td class="num"><span class="stock-number">${formatNumber(available)}</span></td>
         <td><span class="status ${inventoryStatus.className}">${inventoryStatus.label}</span></td>
         <td><div class="row-actions">${canManageCatalog() ? `<button class="row-action" type="button" data-edit-bundle="${escapeHtml(bundle.id)}" title="编辑套装" aria-label="编辑套装"><i data-lucide="pencil"></i></button><button class="row-action danger" type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装" aria-label="删除套装"><i data-lucide="trash-2"></i></button>` : ""}</div></td>
       </tr>`;
     }).join("");
-    $("bundleEmpty").hidden = bundles.length > 0;
-    if (!bundles.length) {
+    $("bundleEmpty").hidden = rows.length > 0;
+    if (!rows.length) {
       const filtered = Boolean(term || type || size || status);
       $("bundleEmpty").querySelector("strong").textContent = filtered ? "没有匹配的套装" : "还没有套装";
       $("bundleEmpty").querySelector("p").textContent = filtered ? "请调整搜索词或筛选条件。" : "新建虚拟套装后，系统会按组件库存实时计算可售套数。";
@@ -1573,7 +1592,7 @@
       size: $("bundleSizeFilter").value,
       status: $("bundleStatusFilter").value
     };
-    const sizes = [...new Set((state.bundles || []).map((bundle) => bundle.size).filter(Boolean))]
+    const sizes = [...new Set((state.bundles || []).flatMap((bundle) => bundleDisplayRows(bundle).map((row) => row.size)).filter(Boolean))]
       .sort((a, b) => sizeOrder.indexOf(a) - sizeOrder.indexOf(b));
     $("bundleTypeFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部类型" : "All types"}</option>`
       + ["virtual", "promo", "fixed"].map((type) => `<option value="${type}">${escapeHtml(bundleTypeLabel(type))}</option>`).join("");
@@ -1815,13 +1834,13 @@
         sourceSku: String(sourceSku).toLowerCase()
       };
     }));
-    const bundles = (state.bundles || []).map((bundle) => ({
-      value: `bundle|${bundle.id}|${bundle.size || "F"}`,
-      label: bundleSku(bundle),
-      meta: `[套装] ${bundle.name} · ${bundle.color || "-"} / ${bundle.size || "-"}`,
-      searchable: bundleSearchText(bundle),
+    const bundles = (state.bundles || []).flatMap((bundle) => bundleDisplayRows(bundle).map((row) => ({
+      value: `bundle|${bundle.id}|${row.size}`,
+      label: row.sku,
+      meta: `[套装] ${bundle.name} · ${bundle.color || "-"} / ${row.size}`,
+      searchable: bundleSearchText(bundle, row.size),
       sourceSku: ""
-    }));
+    })));
     return [...products, ...bundles];
   }
   function matchingMovementSkus(query = "") {
@@ -2651,7 +2670,8 @@
     }
     if (kind === "bundle") {
       const record = (state.bundles || []).find((bundle) => bundle.id === targetId);
-      return record ? { kind, targetId, size: record.size || size || "F", record, sku: bundleSku(record), label: record.name } : null;
+      const targetSize = size || record?.size || "F";
+      return record ? { kind, targetId, size: targetSize, record, sku: bundleSku(record, record.type === "fixed" ? targetSize : ""), label: `${record.name} ${targetSize} 码` } : null;
     }
     return null;
   }
@@ -2668,8 +2688,14 @@
         }
       }
     }
-    const bundle = (state.bundles || []).find((item) => bundleSku(item) === movement.sku || item.importedSku === movement.sku || item.fixedSku === movement.sku);
-    return bundle ? movementTargetFromValue(`bundle|${bundle.id}|${bundle.size || "F"}`) : null;
+    for (const bundle of state.bundles || []) {
+      const row = bundleDisplayRows(bundle).find((entry) => entry.sku === movement.sku);
+      if (row) return movementTargetFromValue(`bundle|${bundle.id}|${row.size}`);
+      if (bundle.importedSku === movement.sku || bundle.fixedSku === movement.sku) {
+        return movementTargetFromValue(`bundle|${bundle.id}|${bundle.size || "F"}`);
+      }
+    }
+    return null;
   }
 
   function applyMovementEffect(target, signedQuantity, locationId) {
@@ -2688,7 +2714,14 @@
 
     const bundle = target.record;
     if (bundle.type === "fixed") {
-      if (locationStockValue(bundle, locationId, true) + quantity < 0) return `${location.name}的 ${bundle.name} 库存不足`;
+      const currentSizeStock = bundleAvailable(bundle, target.size);
+      if (currentSizeStock + quantity < 0 || locationStockValue(bundle, locationId, true) + quantity < 0) return `${location.name}的 ${bundle.name} ${target.size} 码库存不足`;
+      if (bundle.fixedStockBySize && Object.prototype.hasOwnProperty.call(bundle.fixedStockBySize, target.size)) {
+        bundle.fixedStockBySize[target.size] = currentSizeStock + quantity;
+        bundle.fixedStock = Object.values(bundle.fixedStockBySize).reduce((sum, value) => sum + Number(value || 0), 0);
+      } else {
+        bundle.fixedStock = Number(bundle.fixedStock || 0) + quantity;
+      }
       adjustLocationStock(bundle, locationId, quantity, true);
       return "";
     }
@@ -3295,7 +3328,7 @@
       const inventorySearchResult = event.target.closest("[data-inventory-search-id]");
       if (inventorySearchResult) selectInventorySearchProduct(inventorySearchResult.dataset.inventorySearchId);
       const bundleSearchResult = event.target.closest("[data-bundle-search-id]");
-      if (bundleSearchResult) selectBundleSearchResult(bundleSearchResult.dataset.bundleSearchId);
+      if (bundleSearchResult) selectBundleSearchResult(bundleSearchResult.dataset.bundleSearchId, bundleSearchResult.dataset.bundleSearchSize);
       const movementSkuResult = event.target.closest("[data-movement-sku-value]");
       if (movementSkuResult) selectMovementSku(movementSkuResult.dataset.movementSkuValue);
       const editMovementButton = event.target.closest("[data-edit-movement]");
@@ -3484,7 +3517,8 @@
         options[next]?.scrollIntoView({ block: "nearest" });
       } else if (event.key === "Enter" && !$("bundleSearchResults").hidden && options.length) {
         event.preventDefault();
-        selectBundleSearchResult(options[Math.max(0, current)].dataset.bundleSearchId);
+        const option = options[Math.max(0, current)];
+        selectBundleSearchResult(option.dataset.bundleSearchId, option.dataset.bundleSearchSize);
       } else if (event.key === "Escape") closeBundleSearchResults();
     });
     ["bundleTypeFilter", "bundleSizeFilter", "bundleStatusFilter"].forEach((id) => $(id).addEventListener("change", () => { renderBundleRows(); refreshIcons(); applyLanguage(); }));
