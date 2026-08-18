@@ -27,7 +27,8 @@ function document() {
         {
           id: "COZ-EXISTING", sourceOrigin: "coz", sourceBaseSku: "COZAW26-WPT147", style: "COZAW26-WPT147",
           originalStyle: "OLD-STYLE", baseSku: "BRAND-SPU", name: "Edited name", category: "Pant", color: "Light Blue/浅蓝色",
-          colorCode: "LB2", safety: 5, image: "/media/test.jpg", imageName: "test.jpg", skuBySize: { F: "BRAND-SKU-F" },
+          colorCode: "LB2", safety: 5, image: "/media/test.jpg", imageName: "test.jpg",
+          skuBySize: { F: "BRAND-SKU-F", XL: "BRAND-SPU-LB2-XL" },
           localSizes: { XL: 3 }, sizes: { F: 8, XL: 3 }, warehouse: 11, store: 2, locationStock: { warehouse: 11 }
         }
       ],
@@ -68,9 +69,9 @@ test("merges source inventory while preserving user-owned platform data", () => 
   const merged = mergeCozSnapshot(document(), snapshot, "2026-08-17T00:00:00.000Z");
   const product = merged.state.products.find((item) => item.id === "COZ-EXISTING");
   assert.equal(product.name, "Edited name");
-  assert.equal(product.baseSku, "BRAND-SPU");
+  assert.equal(product.baseSku, "OLD-STYLE");
   assert.equal(product.image, "/media/test.jpg");
-  assert.deepEqual(product.skuBySize, { F: "BRAND-SKU-F" });
+  assert.deepEqual(product.skuBySize, { F: "BRAND-SKU-F", XL: "OLD-STYLE-LB2-XL" });
   assert.deepEqual(product.sourceSkuBySize, { F: "1001" });
   assert.deepEqual(product.sizes, { F: 10, XL: 3 });
   assert.equal(product.warehouse, 13);
@@ -79,7 +80,8 @@ test("merges source inventory while preserving user-owned platform data", () => 
   assert.equal(merged.state.trashProducts.length, 1);
   assert.deepEqual(merged.stockLocations, document().stockLocations);
   assert.deepEqual(merged.stockHistory, document().stockHistory);
-  assert.equal(merged.state.source.mode, "direct-api");
+ assert.equal(merged.state.source.mode, "direct-api");
+  assert.equal(merged.state.spuRuleVersion, 2);
 });
 
 test("keeps deleted products excluded and gives new products deterministic IDs", () => {

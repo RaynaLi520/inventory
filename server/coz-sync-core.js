@@ -344,6 +344,14 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
       usedIds.add(String(mapping.id || ""));
       const localSizes = { ...(mapping.localSizes || {}) };
       const sizes = { ...sourceProduct.sizes, ...localSizes };
+      const actualSpu = String(mapping.originalStyle || mapping.baseSku || sourceProduct.baseSku || "").trim();
+      const previousSpu = String(mapping.baseSku || "").trim();
+      const skuBySize = Object.fromEntries(Object.entries(mapping.skuBySize || {}).map(([size, sku]) => {
+        const value = String(sku || "");
+        return [size, previousSpu && actualSpu && value.startsWith(`${previousSpu}-`)
+          ? `${actualSpu}-${value.slice(previousSpu.length + 1)}`
+          : sku];
+      }));
       return {
         ...mapping,
         ...sourceProduct,
@@ -351,7 +359,7 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
         name: mapping.name || sourceProduct.name,
         category: mapping.category || sourceProduct.category,
         originalStyle: mapping.originalStyle || mapping.style || sourceProduct.style,
-        baseSku: mapping.baseSku || sourceProduct.baseSku,
+        baseSku: actualSpu,
         spuMeta: mapping.spuMeta ? clone(mapping.spuMeta) : undefined,
         colorCode: mapping.colorCode || sourceProduct.colorCode,
         colorHex: mapping.colorHex || sourceProduct.colorHex,
@@ -364,7 +372,7 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
         imageSourceName: mapping.imageSourceName || "",
         imageUpdatedAt: mapping.imageUpdatedAt || null,
         imageSyncStatus: mapping.imageSyncStatus || (mapping.image ? "available" : "missing"),
-        skuBySize: { ...(mapping.skuBySize || {}) },
+        skuBySize,
         localSizes,
         sizes,
         warehouse: compactNumber(sourceProduct.warehouse + Object.values(localSizes).reduce((sum, quantity) => sum + numeric(quantity), 0)),
@@ -386,6 +394,7 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
   previousState.deletedBundleIds = Array.isArray(previousState.deletedBundleIds) ? previousState.deletedBundleIds : [];
   migrateFixedSetBundles(nextDocument);
   previousState.productIdVersion = Math.max(Number(previousState.productIdVersion || 0), PRODUCT_ID_VERSION);
+  previousState.spuRuleVersion = Math.max(Number(previousState.spuRuleVersion || 0), 2);
   previousState.source = {
     ...(previousState.source || {}),
     type: "coz",

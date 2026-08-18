@@ -237,17 +237,10 @@
     const chinese = labels?.[0] || String(value || "");
     return `${english} · ${chinese} · ${itemTypeCodes[value] || "--"}`;
   }
-  // CoZ users normally identify a style by its source style number. Keep the
-  // generated brand SPU as the internal key, but prefer the source number in
-  // visible catalog/search labels when one is available.
+  // An entered original style number is the actual SPU. The generated code is
+  // only used when no original style number exists.
   function preferredSpuCode(product) {
     return String(product?.originalStyle || product?.sourceBaseSku || product?.style || product?.baseSku || "").trim();
-  }
-
-  function secondarySpuCode(product) {
-    const preferred = preferredSpuCode(product);
-    const generated = String(product?.baseSku || "").trim();
-    return preferred && generated && preferred !== generated ? generated : "";
   }
   function sourceColorKey(source, color) {
     return JSON.stringify([
@@ -358,6 +351,7 @@
       ? [...new Set(saved.deletedProductKeys.map(migrateProductSourceKey).filter(Boolean))]
       : [];
     applyImageCatalog(saved);
+    migrateOriginalSpuCodes(saved);
     if (saved?.source?.type !== "coz") return saved;
     saved.products.forEach((product) => {
       const appearance = resolveColorAppearance(product.color);
@@ -399,6 +393,30 @@
     });
     normalizeProductReferences(saved);
     return saved;
+  }
+
+  function migrateOriginalSpuCodes(target) {
+    if (!target || !Array.isArray(target.products)) return false;
+    const replacements = new Map();
+    let changed = Number(target.spuRuleVersion || 0) < 2;
+    target.products.forEach((product) => {
+      const originalSpu = String(product.originalStyle || "").trim();
+      const previousSpu = String(product.baseSku || "").trim();
+      if (!originalSpu || !previousSpu || originalSpu === previousSpu) return;
+      product.spuMeta = { ...(product.spuMeta || {}), generatedSpu: product.spuMeta?.generatedSpu || previousSpu };
+      product.baseSku = originalSpu;
+      product.skuBySize = Object.fromEntries(Object.entries(product.skuBySize || {}).map(([size, sku]) => {
+        const value = String(sku || "");
+        return [size, value.startsWith(`${previousSpu}-`) ? `${originalSpu}-${value.slice(previousSpu.length + 1)}` : sku];
+      }));
+      replacements.set(previousSpu, originalSpu);
+      changed = true;
+    });
+    (target.bundles || []).forEach((bundle) => {
+      bundle.componentSkus = (bundle.componentSkus || []).map((sku) => replacements.get(String(sku || "")) || sku);
+    });
+    target.spuRuleVersion = 2;
+    return changed;
   }
 
   function isFixedSetStyle(product) {
@@ -824,6 +842,7 @@
   function applyCloudDocument(document) {
     if (!document?.state?.products?.length || !Array.isArray(document.state.movements)) return false;
     const needsProductIdMigration = Number(document.state.productIdVersion || 0) < PRODUCT_ID_VERSION;
+    const needsSpuRuleMigration = Number(document.state.spuRuleVersion || 0) < 2;
     if (Array.isArray(document.imageCatalog)) imageCatalog = clone(document.imageCatalog);
     state = upgradeCozState(clone(document.state));
     const fixedSetBundlesChanged = migrateFixedSetBundles(state);
@@ -842,7 +861,7 @@
     bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
     stockLocations.splice(0, stockLocations.length, ...normalizeStockLocations(document.stockLocations));
     stockHistory = normalizeStockHistory(document.stockHistory);
-    if ((needsProductIdMigration || productReferencesChanged || fixedSetBundlesChanged) && cloudReady) {
+    if ((needsProductIdMigration || needsSpuRuleMigration || productReferencesChanged || fixedSetBundlesChanged) && cloudReady) {
       cloudDirty = true;
       queueCloudSave();
     }
@@ -1212,9 +1231,7 @@
       ? `<button class="product-image-button" type="button" data-image-preview data-image-src="${escapeHtml(product.image)}" data-image-name="${escapeHtml(product.name)}" data-image-sku="${escapeHtml(preferredSpuCode(product))}" title="双击查看大图" aria-label="查看 ${escapeHtml(product.name)} 大图"><img class="product-thumb" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} 商品图片"></button>`
       : `<span class="product-image-placeholder" title="${missingImageTitle}"><i data-lucide="image-off"></i></span>`;
     const preferred = preferredSpuCode(product);
-    const secondary = secondarySpuCode(product);
-    const brandSpuLabel = currentLang === "zh" ? "品牌 SPU" : "Brand SPU";
-    return `<div class="product-cell">${image}<div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(preferred)}</code>${secondary ? `<small class="product-code-secondary">${brandSpuLabel} ${escapeHtml(secondary)}</small>` : ""}</div></div>`;
+    return `<div class="product-cell">${image}<div><strong>${escapeHtml(product.name)}</strong><code>${escapeHtml(preferred)}</code></div></div>`;
   }
 
   function statusBadge(product) {
@@ -1340,7 +1357,7 @@
     const results = $("inventorySearchResults");
     const matches = inventorySearchMatches(query);
     results.innerHTML = matches.length
-      ? matches.map((product, index) => `<button class="inventory-search-result${index === 0 ? " active" : ""}" type="button" role="option" data-inventory-search-id="${escapeHtml(product.id)}"><strong>${escapeHtml(preferredSpuCode(product))}</strong>${secondarySpuCode(product) ? `<small class="product-code-secondary">${currentLang === "zh" ? "品牌 SPU" : "Brand SPU"} ${escapeHtml(secondarySpuCode(product))}</small>` : ""}<span>${escapeHtml(product.name)} · ${escapeHtml(product.color)} · ${escapeHtml(orderedSizes(product).join("/"))}</span></button>`).join("")
+      ? matches.map((product, index) => `<button class="inventory-search-result${index === 0 ? " active" : ""}" type="button" role="option" data-inventory-search-id="${escapeHtml(product.id)}"><strong>${escapeHtml(preferredSpuCode(product))}</strong><span>${escapeHtml(product.name)} · ${escapeHtml(product.color)} · ${escapeHtml(orderedSizes(product).join("/"))}</span></button>`).join("")
       : `<div class="component-result-empty">${currentLang === "zh" ? "没有匹配的商品" : "No matching products"}</div>`;
     results.hidden = false;
     $("inventorySearch").setAttribute("aria-expanded", "true");
@@ -1377,7 +1394,7 @@
     const results = $(`bundleComponentResults${index}`);
     const matches = matchingBundleComponents(query);
     results.innerHTML = matches.length
-      ? matches.map((product, resultIndex) => `<button class="component-result${resultIndex === 0 ? " active" : ""}" type="button" role="option" data-component-index="${index}" data-component-id="${escapeHtml(product.id)}"><strong>${escapeHtml(preferredSpuCode(product))}</strong>${secondarySpuCode(product) ? `<small class="product-code-secondary">${currentLang === "zh" ? "品牌 SPU" : "Brand SPU"} ${escapeHtml(secondarySpuCode(product))}</small>` : ""}<span>${escapeHtml(product.name)} · ${escapeHtml(product.color)} · ${escapeHtml(orderedSizes(product).join("/"))}</span></button>`).join("")
+      ? matches.map((product, resultIndex) => `<button class="component-result${resultIndex === 0 ? " active" : ""}" type="button" role="option" data-component-index="${index}" data-component-id="${escapeHtml(product.id)}"><strong>${escapeHtml(preferredSpuCode(product))}</strong><span>${escapeHtml(product.name)} · ${escapeHtml(product.color)} · ${escapeHtml(orderedSizes(product).join("/"))}</span></button>`).join("")
       : `<div class="component-result-empty">${currentLang === "zh" ? "没有匹配的组件" : "No matching components"}</div>`;
     results.hidden = false;
     $(`bundleComponentSearch${index}`).setAttribute("aria-expanded", "true");
@@ -2117,7 +2134,7 @@
       const isGeneratedSku = existingSku && generatedCodes.some((code) => existingSku === `${product.baseSku}-${code}-${size}`);
       const sku = existingSku && (!isGeneratedSku || generatedCodes.length <= 1)
         ? existingSku
-        : (cozProduct && !colorCode ? "" : `${spuCodeFromForm()}-${colorCode || "COLOR"}-${size}`);
+        : (cozProduct && !colorCode ? "" : `${actualSpuCodeFromForm()}-${colorCode || "COLOR"}-${size}`);
       const sourceSku = product?.sourceSkuBySize?.[size] || (cozProduct ? "本地新增" : "--");
       return `<div class="sku-variant-row" data-variant-size="${escapeHtml(size)}" ${cozProduct ? 'data-coz-product="true"' : ""} ${sourceSynced ? 'data-source-synced="true"' : ""}><input class="variant-enabled" type="checkbox" aria-label="启用 ${escapeHtml(size)} 码 SKU" ${checked ? "checked" : ""} ${sourceSynced ? "disabled" : ""}><span class="variant-size">${escapeHtml(size)}</span><input class="variant-stock" type="number" min="0" value="${stock}" aria-label="${escapeHtml(size)} 码库存（只读）" aria-readonly="true" disabled><input class="variant-source-sku" value="${escapeHtml(sourceSku)}" aria-label="${escapeHtml(size)} 码 CoZ 原始 SKU" disabled><input class="variant-sku" value="${escapeHtml(sku)}" ${existingSku && !isGeneratedSku ? 'data-manual="true"' : ""} aria-label="${escapeHtml(size)} 码品牌 SKU"></div>`;
     }).join("");
@@ -2130,7 +2147,7 @@
       if (input.dataset.manual === "true") return;
       input.value = row.dataset.cozProduct === "true" && !colorCode
         ? ""
-        : `${spuCodeFromForm()}-${colorCode || "COLOR"}-${row.dataset.variantSize}`;
+        : `${actualSpuCodeFromForm()}-${colorCode || "COLOR"}-${row.dataset.variantSize}`;
     });
   }
 
@@ -2830,6 +2847,10 @@
     return `COZ${season}${year}-${fabric}${itemType}${sequence}`;
   }
 
+  function actualSpuCodeFromForm() {
+    return String($("skuStyle")?.value || "").trim() || spuCodeFromForm();
+  }
+
   function updateNextSpuSequence() {
     const seasonYear = `COZ${$("skuSeason").value || "SS"}${String($("skuYear").value || new Date().getFullYear()).slice(-2)}-`;
     const sequences = state.products.map((product) => String(product.baseSku || ""))
@@ -2848,7 +2869,7 @@
     $("skuPreview").textContent = original || generated;
     if ($("skuPreviewHint")) {
       $("skuPreviewHint").textContent = original
-        ? (currentLang === "zh" ? `原始款号优先显示 · 品牌 SPU：${generated}` : `Original style shown first · Brand SPU: ${generated}`)
+        ? (currentLang === "zh" ? "原始款号作为实际 SPU，尺码 SKU 将优先使用它" : "The original style number is the actual SPU and prefixes size SKUs")
         : (currentLang === "zh" ? "COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号" : "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence");
     }
     updateGeneratedSkuCodes();
@@ -2866,14 +2887,20 @@
       && String(product.originalStyle || product.style || "").trim().toLowerCase() === originalStyle.toLowerCase()
       && String(product.color || "").trim().toLowerCase() === color.toLowerCase()
     ) : null;
-    const baseSku = matchingManualProduct?.baseSku || spuCodeFromForm();
+    const generatedSpu = spuCodeFromForm();
+    const baseSku = matchingManualProduct?.baseSku || actualSpuCodeFromForm();
     const sequence = Number($("skuSequence").value);
     if (!Number.isInteger(sequence) || sequence < 1 || sequence > 999) {
       showToast("三位序号需为 001 至 999");
       $("skuSequence").focus();
       return;
     }
-    if (!matchingManualProduct && state.products.some((product) => product.id !== editingId && product.baseSku === baseSku && String(product.color || "").trim().toLowerCase() === color.toLowerCase())) {
+    const duplicateSpu = state.products.some((product) => product.id !== editingId
+      && String(product.baseSku || "").trim().toLowerCase() === baseSku.toLowerCase()
+      && String(product.color || "").trim().toLowerCase() === color.toLowerCase());
+    // An original style number is authoritative. Legacy rows can still carry
+    // the old generated SPU, so do not raise the obsolete SPU warning there.
+    if (!matchingManualProduct && !originalStyle && duplicateSpu) {
       showToast("这个 SPU 编码已存在，请调整三位序号");
       return;
     }
@@ -2926,7 +2953,8 @@
         fabricType: $("skuFabric").value,
         itemType,
         itemTypeCode: itemTypeCodes[itemType],
-        sequence
+        sequence,
+        generatedSpu
       },
       color, colorCode, colorHex: appearance.hex, colorAccent: appearance.accent, colorPattern: appearance.pattern,
       safety: Number($("skuSafety").value || 0), image: image || (!skuImageRemoved ? editingProduct?.image : "") || "",
