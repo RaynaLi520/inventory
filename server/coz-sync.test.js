@@ -28,7 +28,7 @@ function document() {
           id: "COZ-EXISTING", sourceOrigin: "coz", sourceBaseSku: "COZAW26-WPT147", style: "COZAW26-WPT147",
           originalStyle: "OLD-STYLE", baseSku: "BRAND-SPU", name: "Edited name", category: "Pant", color: "Light Blue/浅蓝色",
           colorCode: "LB2", safety: 5, image: "/media/test.jpg", imageName: "test.jpg",
-          skuBySize: { F: "BRAND-SKU-F", XL: "BRAND-SPU-LB2-XL" },
+          skuBySize: { F: "BRAND-SKU-F", M: "9988776655", XL: "BRAND-SPU-LB2-XL" },
           localSizes: { XL: 3 }, sizes: { F: 8, XL: 3 }, warehouse: 11, store: 2, locationStock: { warehouse: 11 }
         }
       ],
@@ -82,6 +82,7 @@ test("merges source inventory while preserving user-owned platform data", () => 
   assert.deepEqual(merged.stockHistory, document().stockHistory);
  assert.equal(merged.state.source.mode, "direct-api");
   assert.equal(merged.state.spuRuleVersion, 2);
+  assert.equal(merged.state.brandSkuRuleVersion, 2);
 });
 
 test("keeps deleted products excluded and gives new products deterministic IDs", () => {

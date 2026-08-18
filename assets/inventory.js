@@ -377,10 +377,13 @@
       if (product.localSizes) {
         product.localSizes = Object.fromEntries(Object.entries(product.localSizes).map(([size, qty]) => [normalizeSizeLabel(size), Number(qty || 0)]));
       }
-      const skuValues = Object.values(product.skuBySize || {}).filter(Boolean).map(String);
-      if (!product.sourceSkuBySize && skuValues.length && skuValues.every((sku) => /^\d+$/.test(sku))) {
-        product.sourceSkuBySize = { ...product.skuBySize };
-        product.skuBySize = {};
+      if (product.sourceOrigin !== "manual" || product.sourceBaseSku) {
+        product.sourceSkuBySize ||= {};
+        Object.entries(product.skuBySize || {}).forEach(([size, sku]) => {
+          if (!/^\d+$/.test(String(sku || "").trim())) return;
+          product.sourceSkuBySize[size] ||= String(sku).trim();
+          delete product.skuBySize[size];
+        });
       }
       if (product.sourceOrigin !== "manual" || product.sourceBaseSku) {
         product.sourceOrigin = "coz";
@@ -391,6 +394,7 @@
         product.sourceSkuBySize.F ||= "72500774932618";
       }
     });
+    saved.brandSkuRuleVersion = 2;
     normalizeProductReferences(saved);
     return saved;
   }
@@ -860,6 +864,7 @@
     if (!document?.state?.products?.length || !Array.isArray(document.state.movements)) return false;
     const needsProductIdMigration = Number(document.state.productIdVersion || 0) < PRODUCT_ID_VERSION;
     const needsSpuRuleMigration = Number(document.state.spuRuleVersion || 0) < 2;
+    const needsBrandSkuMigration = Number(document.state.brandSkuRuleVersion || 0) < 2;
     if (Array.isArray(document.imageCatalog)) imageCatalog = clone(document.imageCatalog);
     state = upgradeCozState(clone(document.state));
     const fixedSetBundlesChanged = migrateFixedSetBundles(state);
@@ -878,7 +883,7 @@
     bundleColors.splice(0, bundleColors.length, ...[...new Set([...(document.bundleColors || []), ...(state.bundles || []).map((bundle) => bundle.color)].map((value) => String(value || "").trim()).filter(Boolean))]);
     stockLocations.splice(0, stockLocations.length, ...normalizeStockLocations(document.stockLocations));
     stockHistory = normalizeStockHistory(document.stockHistory);
-    if ((needsProductIdMigration || needsSpuRuleMigration || productReferencesChanged || fixedSetBundlesChanged) && cloudReady) {
+    if ((needsProductIdMigration || needsSpuRuleMigration || needsBrandSkuMigration || productReferencesChanged || fixedSetBundlesChanged) && cloudReady) {
       cloudDirty = true;
       queueCloudSave();
     }
@@ -1015,7 +1020,12 @@
     const availableSizes = Object.keys(product.sizes || {});
     return [...sizeOrder.filter((size) => availableSizes.includes(size)), ...availableSizes.filter((size) => !sizeOrder.includes(size)).sort()];
   }
-  function skuForSize(product, size) { return product.skuBySize?.[size] || product.sourceSkuBySize?.[size] || `${product.baseSku}-${size}`; }
+  function skuForSize(product, size) {
+    const savedBrandSku = String(product.skuBySize?.[size] || "").trim();
+    if (savedBrandSku && !/^\d+$/.test(savedBrandSku)) return savedBrandSku;
+    const colorCode = String(product.colorCode || colorMappings[product.color] || inferColorCode(product) || "COLOR").trim().toUpperCase();
+    return `${product.baseSku}-${bundleColorCode(colorCode)}-${size}`;
+  }
   function isCozProduct(product) {
     return product?.sourceOrigin === "coz" || Boolean(product?.sourceBaseSku) || (state.source?.type === "coz" && !product?.sourceOrigin);
   }
@@ -1845,7 +1855,7 @@
   }
   function matchingMovementSkus(query = "") {
     const terms = String(query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
-    return movementSkuEntries().filter((entry) => terms.every((term) => entry.searchable.includes(term) || (/^\d{8,}$/.test(term) && entry.sourceSku.includes(term)))).slice(0, 40);
+    return movementSkuEntries().filter((entry) => terms.every((term) => entry.searchable.includes(term) || (/^\d{2,}$/.test(term) && entry.sourceSku.includes(term)))).slice(0, 40);
   }
   function renderMovementSkuResults(query = "") {
     const results = $("movementSkuResults");

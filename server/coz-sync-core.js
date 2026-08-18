@@ -346,11 +346,12 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
       const sizes = { ...sourceProduct.sizes, ...localSizes };
       const actualSpu = String(mapping.originalStyle || mapping.baseSku || sourceProduct.baseSku || "").trim();
       const previousSpu = String(mapping.baseSku || "").trim();
-      const skuBySize = Object.fromEntries(Object.entries(mapping.skuBySize || {}).map(([size, sku]) => {
+      const skuBySize = Object.fromEntries(Object.entries(mapping.skuBySize || {}).flatMap(([size, sku]) => {
         const value = String(sku || "");
-        return [size, previousSpu && actualSpu && value.startsWith(`${previousSpu}-`)
+        if (/^\d+$/.test(value.trim())) return [];
+        return [[size, previousSpu && actualSpu && value.startsWith(`${previousSpu}-`)
           ? `${actualSpu}-${value.slice(previousSpu.length + 1)}`
-          : sku];
+          : sku]];
       }));
       return {
         ...mapping,
@@ -395,6 +396,7 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
   migrateFixedSetBundles(nextDocument);
   previousState.productIdVersion = Math.max(Number(previousState.productIdVersion || 0), PRODUCT_ID_VERSION);
   previousState.spuRuleVersion = Math.max(Number(previousState.spuRuleVersion || 0), 2);
+  previousState.brandSkuRuleVersion = Math.max(Number(previousState.brandSkuRuleVersion || 0), 2);
   previousState.source = {
     ...(previousState.source || {}),
     type: "coz",
