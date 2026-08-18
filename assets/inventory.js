@@ -416,12 +416,14 @@
   function migrateFixedSetBundles(target) {
     if (!target || !Array.isArray(target.products)) return false;
     if (!Array.isArray(target.bundles)) target.bundles = [];
+    const deletedBundleIds = new Set((target.deletedBundleIds || []).map(String));
     let changed = false;
     target.products.filter(isFixedSetStyle).forEach((product) => {
       const sourceStyle = String(product.sourceBaseSku || product.style || product.originalStyle || product.baseSku || "").trim();
       const color = String(product.color || "").trim();
       const sourceSetKey = sourceColorKey(sourceStyle, color);
       const bundleId = `COZ-SET-${stableProductToken(sourceStyle)}-${stableProductToken(color || "COLOR")}`;
+      if (deletedBundleIds.has(bundleId)) return;
       const existing = target.bundles.find((item) => item.sourceSetKey === sourceSetKey)
         || target.bundles.find((item) => item.id === bundleId);
       const now = new Date().toISOString();
@@ -646,6 +648,34 @@
     const parts = bundleParts(bundle);
     if (!parts.length || parts.length !== (bundle.components || []).length) return 0;
     return Math.max(0, Math.min(...parts.map((product, index) => componentAvailable(product, bundle.size, bundle.componentSizes?.[index]))));
+  }
+  function fixedBundleSourceProduct(bundle) {
+    const products = [...(state.products || []), ...(state.trashProducts || [])];
+    return products.find((product) => product.id === bundle.sourceProductId)
+      || products.find((product) => productSourceKey(product) === bundle.sourceSetKey);
+  }
+  function fixedBundleSizeEntries(bundle) {
+    const source = fixedBundleSourceProduct(bundle);
+    const sizes = bundle.fixedStockBySize && typeof bundle.fixedStockBySize === "object"
+      ? bundle.fixedStockBySize
+      : source?.sizes || {};
+    const keys = [...new Set([...sizeOrder, ...Object.keys(sizes || {})])]
+      .filter((size) => Object.prototype.hasOwnProperty.call(sizes || {}, size));
+    return keys.map((size) => [size, Number(sizes[size] || 0)]);
+  }
+  function renderFixedBundleSizeBand(bundle) {
+    const entries = fixedBundleSizeEntries(bundle);
+    if (!entries.length) return "";
+    return `<div class="size-band fixed-size-band">${entries.map(([size, quantity]) => {
+      const cls = quantity <= 0 ? "empty" : isLowSkuQuantity(quantity) ? "low" : "";
+      return `<div class="size-stock ${cls}" title="${escapeHtml(size)} 码：${quantity} 件"><div><span>${escapeHtml(size)}</span><strong>${quantity}</strong></div></div>`;
+    }).join("")}</div>`;
+  }
+  function bundleColorSizeCell(bundle) {
+    if (bundle.type === "fixed") {
+      return `<div class="bundle-color-size"><span>${escapeHtml(bundle.color || "-")}</span>${renderFixedBundleSizeBand(bundle) || "<span>-</span>"}</div>`;
+    }
+    return `${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}`;
   }
   function bundleTypeLabel(type) {
     return type === "fixed" ? "固定 SET 套装" : type === "promo" ? "销售组合促销" : "虚拟套装";
@@ -1506,7 +1536,7 @@
         <td><strong>${escapeHtml(bundle.name)}</strong><code class="bundle-code">${escapeHtml(sku)}</code></td>
         <td><span class="bundle-type ${escapeHtml(bundle.type)}">${escapeHtml(bundleTypeLabel(bundle.type))}</span></td>
         <td><div class="bundle-parts">${partRecords.map(({ product, index }) => `<span class="bundle-part">${escapeHtml(product.name)}<code>${escapeHtml(bundle.componentCodes?.[index] || bundleTail(product.baseSku))}</code></span>`).join("") || "<span>-</span>"}</div></td>
-        <td>${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}</td>
+        <td>${bundleColorSizeCell(bundle)}</td>
         <td class="num"><span class="stock-number">${formatNumber(available)}</span></td>
         <td><span class="status ${inventoryStatus.className}">${inventoryStatus.label}</span></td>
         <td><div class="row-actions">${canManageCatalog() ? `<button class="row-action" type="button" data-edit-bundle="${escapeHtml(bundle.id)}" title="编辑套装" aria-label="编辑套装"><i data-lucide="pencil"></i></button><button class="row-action danger" type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装" aria-label="删除套装"><i data-lucide="trash-2"></i></button>` : ""}</div></td>
@@ -1923,7 +1953,7 @@
     $("trashRows").closest(".table-wrap").hidden = products.length === 0;
     $("bundleTrashRows").innerHTML = bundles.map((bundle) => `<tr>
       <td><strong>${escapeHtml(bundle.name)}</strong><code class="bundle-code">${escapeHtml(bundleSku(bundle))}</code></td>
-      <td>${escapeHtml(bundle.color || "跟随组件")} / ${escapeHtml(bundle.size || "跟随组件")}</td>
+      <td>${bundleColorSizeCell(bundle)}</td>
       <td>${escapeHtml(bundle.deletedAt ? new Date(bundle.deletedAt).toLocaleString("zh-CN", { hour12: false }) : "--")}</td>
       <td><div class="trash-actions"><button class="button secondary" type="button" data-restore-bundle="${escapeHtml(bundle.id)}"><i data-lucide="archive-restore"></i>恢复</button><button class="button danger" type="button" data-purge-bundle="${escapeHtml(bundle.id)}"><i data-lucide="trash-2"></i>彻底删除</button></div></td>
     </tr>`).join("");
@@ -1931,15 +1961,34 @@
     $("bundleTrashRows").closest(".table-wrap").hidden = bundles.length === 0;
   }
 
+  function fixedSetBundlesForProduct(product) {
+    const sourceKey = productSourceKey(product);
+    return (state.bundles || []).filter((bundle) => bundle.type === "fixed"
+      && (bundle.sourceProductId === product.id || bundle.sourceSetKey === sourceKey));
+  }
+
   function trashProduct(id) {
     const product = state.products.find((item) => item.id === id);
     if (!product) return;
     const linkedBundles = (state.bundles || []).filter((bundle) => (bundle.components || []).includes(id));
-    const detail = linkedBundles.length ? `\n该款被 ${linkedBundles.length} 个套装引用，删除后这些套装将暂时不可售。` : "";
+    const linkedSetBundles = fixedSetBundlesForProduct(product);
+    const detail = linkedBundles.length || linkedSetBundles.length
+      ? `\n${linkedBundles.length ? `该款被 ${linkedBundles.length} 个套装引用，删除后这些套装将暂时不可售。` : ""}${linkedSetBundles.length ? `对应的 ${linkedSetBundles.length} 个固定 SET 套装也会移入回收站。` : ""}`
+      : "";
     if (!window.confirm(`确认删除款式 ${product.baseSku} · ${product.color}？${detail}\n删除后可在回收站恢复。`)) return;
+    const deletedAt = new Date().toISOString();
     state.products = state.products.filter((item) => item.id !== id);
     state.deletedProductKeys = [...new Set([...(state.deletedProductKeys || []), productSourceKey(product)])];
-    state.trashProducts = [{ ...clone(product), deletedAt: new Date().toISOString(), deletedSourceKey: productSourceKey(product) }, ...(state.trashProducts || []).filter((item) => item.id !== id)];
+    state.trashProducts = [{ ...clone(product), deletedAt, deletedSourceKey: productSourceKey(product) }, ...(state.trashProducts || []).filter((item) => item.id !== id)];
+    const linkedSetIds = new Set(linkedSetBundles.map((bundle) => bundle.id));
+    if (linkedSetIds.size) {
+      state.bundles = (state.bundles || []).filter((bundle) => !linkedSetIds.has(bundle.id));
+      state.trashBundles = [
+        ...linkedSetBundles.map((bundle) => ({ ...clone(bundle), deletedAt, deletedWithProductId: product.id })),
+        ...(state.trashBundles || []).filter((bundle) => !linkedSetIds.has(bundle.id))
+      ];
+      state.deletedBundleIds = [...new Set([...(state.deletedBundleIds || []), ...linkedSetIds])];
+    }
     saveState();
     renderAll();
     showToast(`款式 ${product.baseSku} 已移入回收站`);
@@ -1958,6 +2007,19 @@
     state.products.unshift(restored);
     state.trashProducts = state.trashProducts.filter((item) => item.id !== id);
     state.deletedProductKeys = (state.deletedProductKeys || []).filter((key) => key !== productSourceKey(restored));
+    const restoredSetBundles = (state.trashBundles || []).filter((bundle) => bundle.deletedWithProductId === restored.id
+      || (bundle.type === "fixed" && bundle.sourceSetKey === productSourceKey(restored)));
+    if (restoredSetBundles.length) {
+      const restoredIds = new Set(restoredSetBundles.map((bundle) => bundle.id));
+      state.bundles = [...restoredSetBundles.map((bundle) => {
+        const copy = clone(bundle);
+        delete copy.deletedAt;
+        delete copy.deletedWithProductId;
+        return copy;
+      }), ...(state.bundles || [])];
+      state.trashBundles = (state.trashBundles || []).filter((bundle) => !restoredIds.has(bundle.id));
+      state.deletedBundleIds = (state.deletedBundleIds || []).filter((bundleId) => !restoredIds.has(bundleId));
+    }
     saveState();
     renderAll();
     showToast(`款式 ${restored.baseSku} 已恢复`);
@@ -1966,7 +2028,14 @@
   function purgeProduct(id) {
     const product = (state.trashProducts || []).find((item) => item.id === id);
     if (!product || !window.confirm(`彻底删除 ${product.baseSku} · ${product.color}？此操作无法恢复。`)) return;
+    const linkedSetBundles = (state.trashBundles || []).filter((bundle) => bundle.deletedWithProductId === product.id
+      || (bundle.type === "fixed" && bundle.sourceSetKey === productSourceKey(product)));
+    const linkedSetIds = new Set(linkedSetBundles.map((bundle) => bundle.id));
     state.trashProducts = state.trashProducts.filter((item) => item.id !== id);
+    if (linkedSetIds.size) {
+      state.trashBundles = (state.trashBundles || []).filter((bundle) => !linkedSetIds.has(bundle.id));
+      state.deletedBundleIds = [...new Set([...(state.deletedBundleIds || []), ...linkedSetIds])];
+    }
     saveState();
     renderAll();
     showToast(`款式 ${product.baseSku} 已彻底删除`);
@@ -2339,7 +2408,9 @@
   function restoreBundle(id) {
     const bundle = (state.trashBundles || []).find((item) => item.id === id);
     if (!bundle) return;
-    if ((state.bundles || []).some((item) => item.id === id || bundleSku(item) === bundleSku(bundle))) {
+    if ((state.bundles || []).some((item) => item.id === id
+      || (bundle.sourceSetKey && item.sourceSetKey === bundle.sourceSetKey)
+      || (!bundle.sourceSetKey && bundleSku(item) === bundleSku(bundle)))) {
       showToast("现有套装中已存在相同 SKU，无法直接恢复");
       return;
     }

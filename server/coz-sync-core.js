@@ -252,12 +252,14 @@ export function migrateFixedSetBundles(document) {
   const state = document?.state;
   if (!state || !Array.isArray(state.products)) return false;
   if (!Array.isArray(state.bundles)) state.bundles = [];
+  const deletedBundleIds = new Set((state.deletedBundleIds || []).map(String));
   let changed = false;
   state.products.filter(isFixedSetStyle).forEach((product) => {
     const sourceStyle = clean(product.sourceBaseSku || product.style || product.originalStyle || product.baseSku);
     const color = clean(product.color);
     const sourceSetKey = sourceColorKey(sourceStyle, color);
     const bundleId = `COZ-SET-${stableToken(sourceStyle)}-${stableToken(color || "COLOR")}`;
+    if (deletedBundleIds.has(bundleId)) return;
     let bundle = state.bundles.find((item) => item.sourceSetKey === sourceSetKey)
       || state.bundles.find((item) => item.id === bundleId);
     const now = new Date().toISOString();

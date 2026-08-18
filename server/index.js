@@ -62,6 +62,7 @@ function productStockFields(product) {
 function bundleStockFields(bundle) {
   return {
     fixedStock: Number(bundle?.fixedStock || 0),
+    fixedStockBySize: normalizedNumberMap(bundle?.fixedStockBySize),
     fixedWarehouse: Number(bundle?.fixedWarehouse || 0),
     fixedStore: Number(bundle?.fixedStore || 0),
     locationStock: normalizedNumberMap(bundle?.locationStock)
@@ -103,7 +104,7 @@ function catalogProjection(document) {
     });
     projected.state.bundles = (projected.state.bundles || []).map((bundle) => {
       const copy = { ...bundle };
-      ["fixedStock", "fixedWarehouse", "fixedStore", "locationStock"].forEach((key) => delete copy[key]);
+      ["fixedStock", "fixedStockBySize", "fixedWarehouse", "fixedStore", "locationStock"].forEach((key) => delete copy[key]);
       return copy;
     });
   }
