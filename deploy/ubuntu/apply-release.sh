@@ -25,8 +25,8 @@ for file in "${required_files[@]}"; do
 done
 
 node --check "$release_root/assets/inventory.js"
-node --check "$release_root/server/coz-sync-core.js"
-node --check "$release_root/server/index.js"
+node --input-type=module --check < "$release_root/server/coz-sync-core.js"
+node --input-type=module --check < "$release_root/server/index.js"
 
 install -m 0644 "$release_root/assets/inventory.js" "$app_root/assets/inventory.js"
 install -m 0644 "$release_root/assets/inventory.css" "$app_root/assets/inventory.css"
