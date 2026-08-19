@@ -191,7 +191,7 @@
         <section class="movement-summary">
           <div><span>今日入库</span><strong id="todayInbound">0</strong><small>件</small></div>
           <div><span>今日出库</span><strong id="todayOutbound">0</strong><small>件</small></div>
-          <div><span>今日调拨</span><strong>18</strong><small>件</small></div>
+          <div><span>今日调拨</span><strong id="todayTransfer">0</strong><small>件</small></div>
         </section>
         <section class="panel">
           <div class="section-head">
@@ -242,6 +242,7 @@
         <div class="segmented" role="group" aria-label="出入库类型">
           <button class="active" data-type="inbound" type="button"><i data-lucide="package-plus"></i>入库</button>
           <button data-type="outbound" type="button"><i data-lucide="package-minus"></i>出库</button>
+          <button data-type="transfer" type="button"><i data-lucide="arrow-left-right"></i>调拨</button>
         </div>
         <input id="movementType" type="hidden" value="inbound">
         <input id="editingMovementId" type="hidden">
@@ -255,6 +256,10 @@
             <select id="movementLocation"></select>
           </div>
           <label><span>数量</span><input id="movementQty" type="number" min="1" value="1" required></label>
+        </div>
+        <div class="form-field movement-destination-field" id="movementDestinationField" hidden>
+          <div class="field-title"><label for="movementDestination">调入库位</label></div>
+          <select id="movementDestination"></select>
         </div>
         <div class="location-editor" id="locationEditor" hidden>
           <div class="field-title"><strong id="locationEditorTitle">添加库位</strong></div>

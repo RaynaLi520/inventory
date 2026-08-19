@@ -304,6 +304,7 @@ select, input[type="number"], input[type="text"], input[type="url"], input[type=
 .movement-type { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; }
 .movement-type.inbound { color: var(--green); }
 .movement-type.outbound { color: var(--blue); }
+.movement-type.transfer { color: var(--amber); }
 .movement-type.adjustment { color: var(--amber); }
 .movement-type::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .qty.inbound { color: var(--green); font-weight: 700; }
@@ -421,7 +422,7 @@ body.can-manage-movements .movement-admin-column { display: table-cell; }
 .mini-icon-button { width: 36px; height: 40px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--muted); background: var(--surface); cursor: pointer; }
 .mini-icon-button.confirm { border-color: var(--green); color: #fff; background: var(--green); }
 .mini-icon-button svg { width: 16px; height: 16px; }
-.segmented { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 19px; padding: 3px; border: 1px solid var(--line); border-radius: 5px; background: #f4f6f5; }
+.segmented { display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: 19px; padding: 3px; border: 1px solid var(--line); border-radius: 5px; background: #f4f6f5; }
 .segmented button { height: 36px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; font-size: 10px; cursor: pointer; }
 .segmented button.active { color: var(--green); background: #fff; box-shadow: 0 1px 4px rgba(21,33,30,.1); font-weight: 700; }
 .segmented svg { width: 14px; }

@@ -72,7 +72,7 @@
     ["品牌小程序", "Brand mini-program"], ["天猫旗舰店", "Tmall flagship"], ["静安门店", "Jing'an store"], ["机动库存", "Buffer stock"], ["渠道可售", "Channel sellable"], ["今日订单", "Orders today"], ["同步正常", "Sync healthy"], ["微信自营商城", "WeChat direct store"], ["平台电商", "Marketplace"], ["线下直营", "Offline retail"], ["2 分钟前同步", "Synced 2 min ago"],
     ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SPU", "New SPU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
     ["回收站", "Recycle bin"], ["库存回收站", "Inventory recycle bin"], ["款式回收站", "Style recycle bin"], ["套装回收站", "Bundle recycle bin"], ["套装回收站为空", "Bundle recycle bin is empty"], ["删除款式", "Delete style"], ["恢复", "Restore"], ["彻底删除", "Delete permanently"], ["删除时间", "Deleted at"], ["回收站为空", "Recycle bin is empty"], ["删除的款式会保留在这里。", "Deleted styles remain here."], ["删除的套装会保留在这里。", "Deleted bundles remain here."], ["删除的款式不会在下一次 CoZ 同步时重新出现。恢复后会重新参与库存和套装计算。", "Deleted styles stay excluded from future CoZ syncs. Restored styles rejoin inventory and bundle calculations."],
-    ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["输入 SKU、款号或商品名称", "Enter SKU, style, or product name"], ["添加库位", "Add location"], ["修改现有库位", "Edit location"], ["库位名称", "Location name"], ["库位类型", "Location type"], ["保存库位", "Save location"], ["仓库", "Warehouse"], ["门店", "Store"], ["备注", "Note"],
+    ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["调入库位", "Destination location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["调拨", "Transfer"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["确认调拨", "Confirm transfer"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["输入 SKU、款号或商品名称", "Enter SKU, style, or product name"], ["添加库位", "Add location"], ["修改现有库位", "Edit location"], ["库位名称", "Location name"], ["库位类型", "Location type"], ["保存库位", "Save location"], ["仓库", "Warehouse"], ["门店", "Store"], ["备注", "Note"],
     ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
     ["确认", "Confirm"], ["例如：采购单 PO-20260809", "e.g. purchase order PO-20260809"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["品牌", "Brand"], ["品类", "Category"], ["款式名称", "Style name"], ["商品类型", "Item type"], ["添加类型", "Add type"], ["类型名称", "Type name"], ["类型缩写", "Type code"], ["商品图片", "Product image"], ["创建日期", "Creation date"], ["年份", "Year"], ["添加年份", "Add year"], ["新年份", "New year"], ["季节", "Season"], ["面料类型", "Fabric type"], ["添加面料类型", "Add fabric type"], ["面料类型名称", "Fabric type name"], ["面料类型代码", "Fabric type code"], ["SS · 春夏", "SS · Spring/Summer"], ["AW · 秋冬", "AW · Autumn/Winter"], ["三位序号", "3-digit sequence"], ["原始款号（选填）", "Original style no. (optional)"], ["图片链接（可选）", "Image URL (optional)"], ["SKU 变体", "SKU variants"], ["一个 SPU 可同时生成多个尺码 SKU。", "Create multiple size SKUs under one SPU."], ["颜色代码", "Color code"], ["生成", "Create"], ["启用", "Enabled"], ["尺码", "Size"], ["初始库存", "Opening stock"], ["CoZ 库存", "CoZ stock"], ["CoZ 原始 SKU", "Original CoZ SKU"], ["品牌 SKU", "Brand SKU"], ["库存与原始 SKU 由 CoZ 同步，品牌 SKU 可编辑。", "Stock and original SKUs are synced from CoZ. Brand SKUs can be edited."], ["未同步", "Not synced"], ["SKU 编码", "SKU code"], ["安全库存", "Safety stock"], ["新增成衣 SPU", "New garment SPU"], ["编辑 SPU 和 SKU", "Edit SPU and SKU"], ["SPU 编码预览", "SPU code preview"], ["COZ + 季节 + 年份后两位 + 面料首字母 + 商品类型缩写 + 三位序号", "COZ + season + 2-digit year + fabric initial + item type code + 3-digit sequence"], ["创建 SPU 和 SKU", "Create SPU and SKUs"], ["保存修改", "Save changes"]
   ];
@@ -713,6 +713,13 @@
       sku: bundleSku(bundle, size)
     }));
   }
+  function bundleSkuKeys(bundle) {
+    return new Set(bundleDisplayRows(bundle).map((row) => String(row.sku || "").trim().toUpperCase()).filter(Boolean));
+  }
+  function bundlesShareSku(left, right) {
+    const leftKeys = bundleSkuKeys(left);
+    return [...bundleSkuKeys(right)].some((sku) => leftKeys.has(sku));
+  }
   function bundleColorSizeCell(bundle, size = bundle.size || "F") {
     return `${escapeHtml(bundle.color || "-")} / ${escapeHtml(size)}`;
   }
@@ -1329,7 +1336,7 @@
       <div><div class="bar-label"><span>${channel.name}</span><span>${formatNumber(channel.value)} 件</span></div><div class="bar-track"><i style="width:${Math.max(4, channel.value / available * 100)}%;--bar:${channel.color}"></i></div></div>`).join("");
 
     $("activityList").innerHTML = state.movements.length ? state.movements.slice(0, 4).map((movement) => `
-      <div class="activity"><span class="activity-icon ${movement.type}"><i data-lucide="${movement.type === "inbound" ? "package-plus" : movement.type === "outbound" ? "package-minus" : "clipboard-check"}"></i></span><div><p>${movement.type === "inbound" ? "入库" : movement.type === "outbound" ? "出库" : "盘点调整"} <strong>${Math.abs(movement.qty)} 件</strong> · ${escapeHtml(shortSku(movement.sku))}</p><small>${escapeHtml(movement.location)} · ${escapeHtml(movement.time.slice(5))}</small></div></div>`).join("")
+      <div class="activity"><span class="activity-icon ${movement.type}"><i data-lucide="${movement.type === "inbound" ? "package-plus" : movement.type === "outbound" ? "package-minus" : movement.type === "transfer" ? "arrow-left-right" : "clipboard-check"}"></i></span><div><p>${movementLabel(movement.type)} <strong>${Math.abs(movement.qty)} 件</strong> · ${escapeHtml(shortSku(movement.sku))}</p><small>${escapeHtml(movement.type === "transfer" ? `${movement.location} → ${movement.destinationLocation || "-"}` : movement.location)} · ${escapeHtml(movement.time.slice(5))}</small></div></div>`).join("")
       : '<div class="activity-empty"><i data-lucide="history"></i><span>接口未提供出入库流水</span></div>';
   }
 
@@ -1585,7 +1592,7 @@
         <td>${bundleColorSizeCell(bundle, rowSize)}</td>
         <td class="num"><span class="stock-number">${formatNumber(available)}</span></td>
         <td><span class="status ${inventoryStatus.className}">${inventoryStatus.label}</span></td>
-        <td><div class="row-actions">${canManageCatalog() ? `<button class="row-action" type="button" data-edit-bundle="${escapeHtml(bundle.id)}" title="编辑套装" aria-label="编辑套装"><i data-lucide="pencil"></i></button><button class="row-action danger" type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装" aria-label="删除套装"><i data-lucide="trash-2"></i></button>` : ""}</div></td>
+        <td><div class="row-actions">${canManageCatalog() ? `<button class="row-action" type="button" data-edit-bundle="${escapeHtml(bundle.id)}" title="编辑套装" aria-label="编辑套装"><i data-lucide="pencil"></i></button>` : ""}${canManageMovements() ? `<button class="row-action" type="button" data-move-bundle="${escapeHtml(bundle.id)}" data-move-size="${escapeHtml(rowSize)}" title="调拨库存" aria-label="调拨库存"><i data-lucide="arrow-left-right"></i></button>` : ""}${canManageCatalog() ? `<button class="row-action danger" type="button" data-delete-bundle="${escapeHtml(bundle.id)}" title="删除套装" aria-label="删除套装"><i data-lucide="trash-2"></i></button>` : ""}</div></td>
       </tr>`;
     }).join("");
     $("bundleEmpty").hidden = rows.length > 0;
@@ -1619,7 +1626,7 @@
     return parts.length > 3 ? parts.slice(-3).join("-") : sku;
   }
 
-  function movementLabel(type) { return type === "inbound" ? "入库" : type === "outbound" ? "出库" : "盘点调整"; }
+  function movementLabel(type) { return type === "inbound" ? "入库" : type === "outbound" ? "出库" : type === "transfer" ? "调拨" : "盘点调整"; }
   function renderMovements() {
     const term = $("movementSearch").value.trim().toLowerCase();
     const rows = state.movements.filter((movement) => !term || [movement.id, movement.sku, movement.note].some((value) => String(value).toLowerCase().includes(term)));
@@ -1628,7 +1635,7 @@
         <td class="ledger-id"><strong>${escapeHtml(movement.id)}</strong><small>${escapeHtml(movement.time)}</small></td>
         <td><span class="movement-type ${movement.type}">${movementLabel(movement.type)}</span></td>
         <td><code>${escapeHtml(movement.sku)}</code></td>
-        <td>${escapeHtml(movement.location)}</td>
+        <td>${escapeHtml(movement.type === "transfer" ? `${movement.location} → ${movement.destinationLocation || "-"}` : movement.location)}</td>
         <td class="num qty ${movement.type}">${movement.qty > 0 ? "+" : ""}${movement.qty}</td>
         <td>${escapeHtml(movement.operator)}</td>
         <td>${escapeHtml(movement.note || "-")}</td>
@@ -1637,6 +1644,7 @@
     const todayRows = state.movements.filter((movement) => movement.time.startsWith(localDateKey()));
     $("todayInbound").textContent = todayRows.filter((movement) => movement.type === "inbound").reduce((sum, movement) => sum + Math.abs(movement.qty), 0);
     $("todayOutbound").textContent = todayRows.filter((movement) => movement.type === "outbound").reduce((sum, movement) => sum + Math.abs(movement.qty), 0);
+    $("todayTransfer").textContent = todayRows.filter((movement) => movement.type === "transfer").reduce((sum, movement) => sum + Math.abs(movement.qty), 0);
   }
 
   function renderChannels() {
@@ -1885,6 +1893,11 @@
     $("movementLocation").innerHTML = stockLocations.map((location) => `<option value="${escapeHtml(location.id)}">${escapeHtml(location.name)}</option>`).join("");
     if (stockLocations.some((location) => location.id === current)) $("movementLocation").value = current;
   }
+  function renderMovementDestinationOptions() {
+    const current = $("movementDestination").value;
+    $("movementDestination").innerHTML = stockLocations.map((location) => `<option value="${escapeHtml(location.id)}">${escapeHtml(location.name)}</option>`).join("");
+    if (stockLocations.some((location) => location.id === current)) $("movementDestination").value = current;
+  }
   function ensureLocationStock(record, fixedBundle = false) {
     if (!record.locationStock || typeof record.locationStock !== "object") {
       record.locationStock = fixedBundle
@@ -2112,7 +2125,7 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function openMovementModal(productId, size) {
+  function openMovementModal(targetId, size, kind = "product") {
     if (!canManageMovements()) {
       showToast("当前账号只有库存查看权限");
       return;
@@ -2123,10 +2136,13 @@
     $("movementForm").reset();
     setMovementType("inbound");
     renderMovementLocationOptions();
-    if (productId) {
-      const product = state.products.find((item) => item.id === productId);
-      const preferredSize = size || orderedSizes(product)[0] || "M";
-      selectMovementSku(`product|${productId}|${preferredSize}`);
+    renderMovementDestinationOptions();
+    if (targetId) {
+      const record = kind === "bundle"
+        ? (state.bundles || []).find((item) => item.id === targetId)
+        : state.products.find((item) => item.id === targetId);
+      const preferredSize = size || (kind === "bundle" ? bundleDisplayRows(record || {}).at(0)?.size : orderedSizes(record)[0]) || "M";
+      selectMovementSku(`${kind}|${targetId}|${preferredSize}`);
     } else {
       $("movementSku").value = "";
       $("movementSkuSearch").value = "";
@@ -2423,8 +2439,8 @@
       showToast("请输入套装名称");
       return;
     }
-    if ((state.bundles || []).some((item) => item.id !== editingId && bundleSku(item) === bundleSku(bundle))) {
-      showToast(`套装 SKU ${bundleSku(bundle)} 已存在`);
+    if ((state.bundles || []).some((item) => item.id !== editingId && bundlesShareSku(item, bundle))) {
+      showToast(`套装 SKU ${[...bundleSkuKeys(bundle)][0] || bundleSku(bundle)} 已存在`);
       return;
     }
     state.bundles = editingBundle
@@ -2663,7 +2679,9 @@
   function setMovementType(type) {
     $("movementType").value = type;
     document.querySelectorAll(".segmented button").forEach((button) => button.classList.toggle("active", button.dataset.type === type));
-    $("movementForm").querySelector('[type="submit"]').textContent = type === "inbound" ? "确认入库" : "确认出库";
+    $("movementForm").querySelector('[type="submit"]').textContent = type === "inbound" ? "确认入库" : type === "outbound" ? "确认出库" : "确认调拨";
+    $("movementDestinationField").hidden = type !== "transfer";
+    if (type === "transfer") renderMovementDestinationOptions();
     applyLanguage();
   }
 
@@ -2760,8 +2778,34 @@
     return "";
   }
 
+  function applyTransferEffect(target, quantity, sourceLocationId, destinationLocationId) {
+    const amount = Math.max(0, Number(quantity || 0));
+    if (!amount || !sourceLocationId || !destinationLocationId || sourceLocationId === destinationLocationId) return "请选择不同的来源和目标库位";
+    const before = clone(state);
+    const withdrawalError = applyMovementEffect(target, -amount, sourceLocationId);
+    if (withdrawalError) return withdrawalError;
+    const depositError = applyMovementEffect(target, amount, destinationLocationId);
+    if (depositError) {
+      state = before;
+      return depositError;
+    }
+    return "";
+  }
+
+  function applyStoredMovementEffect(movement, direction = 1) {
+    const target = resolveMovementTarget(movement);
+    if (!target) return "流水关联的商品、数量或库位无效";
+    const quantity = Math.abs(Number(movement.qty || 0)) * direction;
+    if (movement.type === "transfer") {
+      return applyTransferEffect(target, Math.abs(Number(movement.qty || 0)),
+        direction > 0 ? movement.locationId : movement.destinationLocationId,
+        direction > 0 ? movement.destinationLocationId : movement.locationId);
+    }
+    return applyMovementEffect(target, movement.type === "inbound" ? quantity : -quantity, movement.locationId);
+  }
+
   function nextMovementId(type) {
-    const prefix = `${type === "inbound" ? "IN" : "OUT"}-${compactDateKey()}-`;
+    const prefix = `${type === "inbound" ? "IN" : type === "transfer" ? "TR" : "OUT"}-${compactDateKey()}-`;
     const highest = state.movements.reduce((max, movement) => {
       const match = String(movement.id || "").match(new RegExp(`^${prefix}(\\d+)$`));
       return match ? Math.max(max, Number(match[1])) : max;
@@ -2783,9 +2827,11 @@
     $("movementModalTitle").textContent = "编辑库存流水";
     selectMovementSku(`${target.kind}|${target.targetId}|${target.size || ""}`);
     $("movementLocation").value = movementLocationId(movement);
+    renderMovementDestinationOptions();
+    if (movement.destinationLocationId) $("movementDestination").value = movement.destinationLocationId;
     $("movementQty").value = Math.max(1, Math.abs(Number(movement.qty || 1)));
     $("movementNote").value = movement.note || "";
-    setMovementType(movement.type === "outbound" ? "outbound" : "inbound");
+    setMovementType(["outbound", "transfer"].includes(movement.type) ? movement.type : "inbound");
     $("movementForm").querySelector('[type="submit"]').textContent = "保存修改";
     $("movementModal").hidden = false;
     document.body.style.overflow = "hidden";
@@ -2798,7 +2844,7 @@
     if (!movement || !window.confirm(`确认删除流水 ${movement.id}？系统会同时撤销这条流水造成的库存变化。`)) return;
     const before = clone(state);
     const target = resolveMovementTarget(movement);
-    const error = applyMovementEffect(target, -Number(movement.qty || 0), movementLocationId(movement));
+    const error = applyStoredMovementEffect(movement, -1);
     if (error) {
       state = before;
       showToast(`${error}，无法撤销这条流水`);
@@ -2826,12 +2872,18 @@
     const target = movementTargetFromValue($("movementSku").value);
     const type = $("movementType").value;
     const quantity = Math.max(1, Number($("movementQty").value || 1));
-    const signedQuantity = type === "inbound" ? quantity : -quantity;
+    const signedQuantity = type === "inbound" ? quantity : type === "outbound" ? -quantity : quantity;
     const locationId = $("movementLocation").value;
     const location = locationById(locationId);
+    const destinationLocationId = $("movementDestination").value;
+    const destinationLocation = locationById(destinationLocationId);
     if (!target || !location) return;
     if (type === "inbound" && target.kind === "bundle" && target.record.type !== "fixed") {
       showToast("虚拟套装没有独立入库，请给组成单品入库");
+      return;
+    }
+    if (type === "transfer" && (!destinationLocation || destinationLocationId === locationId)) {
+      showToast("调拨需要选择不同的来源和目标库位");
       return;
     }
 
@@ -2840,14 +2892,16 @@
     const before = clone(state);
     if (existing) {
       const oldTarget = resolveMovementTarget(existing);
-      const reverseError = applyMovementEffect(oldTarget, -Number(existing.qty || 0), movementLocationId(existing));
+      const reverseError = applyStoredMovementEffect(existing, -1);
       if (reverseError) {
         state = before;
         showToast(`${reverseError}，无法修改这条流水`);
         return;
       }
     }
-    const applyError = applyMovementEffect(target, signedQuantity, locationId);
+    const applyError = type === "transfer"
+      ? applyTransferEffect(target, quantity, locationId, destinationLocationId)
+      : applyMovementEffect(target, signedQuantity, locationId);
     if (applyError) {
       state = before;
       showToast(`${applyError}，请调整数量`);
@@ -2864,8 +2918,10 @@
       location: location.name,
       locationId,
       qty: signedQuantity,
+      destinationLocation: type === "transfer" ? destinationLocation.name : "",
+      destinationLocationId: type === "transfer" ? destinationLocationId : "",
       operator: currentSession.displayName || currentSession.username,
-      note: $("movementNote").value.trim() || (target.kind === "bundle" ? `${bundleTypeLabel(target.record.type)}${type === "outbound" ? "销售" : "入库"}` : "快速库存调整"),
+      note: $("movementNote").value.trim() || (target.kind === "bundle" ? `${bundleTypeLabel(target.record.type)}${type === "outbound" ? "销售" : type === "transfer" ? "调拨" : "入库"}` : type === "transfer" ? "库存调拨" : "快速库存调整"),
       targetKind: target.kind,
       targetId: target.targetId,
       targetSize: target.size || ""
@@ -2878,7 +2934,7 @@
     $("movementForm").reset();
     setMovementType("inbound");
     renderAll();
-    showToast(existing ? `流水 ${movement.id} 已修改` : `${target.label} 已${type === "inbound" ? "入库" : "出库"} ${quantity}${target.kind === "bundle" ? " 套" : " 件"}`);
+    showToast(existing ? `流水 ${movement.id} 已修改` : `${target.label} 已${type === "inbound" ? "入库" : type === "transfer" ? "调拨" : "出库"} ${quantity}${target.kind === "bundle" ? " 套" : " 件"}`);
   }
 
   function spuCodeFromForm() {
@@ -3317,6 +3373,8 @@
       if (jumpButton) switchView(jumpButton.dataset.jump);
       const moveButton = event.target.closest("[data-move-product]");
       if (moveButton) openMovementModal(moveButton.dataset.moveProduct);
+      const moveBundleButton = event.target.closest("[data-move-bundle]");
+      if (moveBundleButton) openMovementModal(moveBundleButton.dataset.moveBundle, moveBundleButton.dataset.moveSize, "bundle");
       const editButton = event.target.closest("[data-edit-product]");
       if (editButton) openSkuModal(editButton.dataset.editProduct);
       const trashButton = event.target.closest("[data-trash-product]");
