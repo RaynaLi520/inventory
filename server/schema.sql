@@ -16,6 +16,32 @@ create table if not exists inventory_platform_state_history (
 create index if not exists inventory_state_history_created_idx
 on inventory_platform_state_history (created_at desc);
 
+create table if not exists plm_styles (
+  plm_style_id text primary key,
+  spu text not null,
+  ja_style_no text,
+  product_name text not null,
+  sizes jsonb not null default '[]'::jsonb,
+  modified_at_source bigint,
+  last_seen_at timestamptz not null default now()
+);
+
+create index if not exists plm_styles_spu_idx on plm_styles (spu);
+
+create table if not exists plm_colorways (
+  plm_colorway_id text primary key,
+  plm_style_id text not null references plm_styles(plm_style_id) on delete cascade,
+  color_name text not null,
+  source_color_code text,
+  inventory_product_id text,
+  sync_status text not null default 'not_materialized',
+  modified_at_source bigint,
+  last_seen_at timestamptz not null default now()
+);
+
+create index if not exists plm_colorways_style_idx on plm_colorways (plm_style_id);
+create index if not exists plm_colorways_inventory_product_idx on plm_colorways (inventory_product_id);
+
 create table if not exists inventory_sync_runs (
   id bigserial primary key,
   source text not null,

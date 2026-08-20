@@ -1,0 +1,12 @@
+[Unit]
+Description=Synchronize selected Centric PLM styles every minute
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Persistent=true
+Unit=inventory-plm-sync.service
+
+[Install]
+WantedBy=timers.target

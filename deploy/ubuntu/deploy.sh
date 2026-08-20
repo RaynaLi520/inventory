@@ -27,6 +27,7 @@ if ! sudo -u postgres psql -tAc "select 1 from pg_database where datname='henan_
 fi
 
 mkdir -p "$app_root" "$data_root/media" "$backup_root"
+install -d -m 0700 /etc/henan-inventory
 if [[ "$app_source" != "$app_root" ]]; then
   rsync -a --delete \
     --exclude='.git/' --exclude='.vercel/' --exclude='node_modules/' \
@@ -49,6 +50,8 @@ sudo -u inventory_app psql --dbname=henan_inventory --file="$app_root/server/sch
 install -m 0644 "$app_root/deploy/ubuntu/inventory-api.service" /etc/systemd/system/inventory-api.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-coz-sync.service" /etc/systemd/system/inventory-coz-sync.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-coz-sync.timer" /etc/systemd/system/inventory-coz-sync.timer
+install -m 0644 "$app_root/deploy/ubuntu/inventory-plm-sync.service" /etc/systemd/system/inventory-plm-sync.service
+install -m 0644 "$app_root/deploy/ubuntu/inventory-plm-sync.timer" /etc/systemd/system/inventory-plm-sync.timer
 install -m 0644 "$app_root/deploy/ubuntu/inventory-backup.service" /etc/systemd/system/inventory-backup.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-backup.timer" /etc/systemd/system/inventory-backup.timer
 install -m 0644 "$app_root/deploy/ubuntu/inventory-cert-renew.service" /etc/systemd/system/inventory-cert-renew.service
@@ -70,7 +73,7 @@ ufw allow from 172.16.0.0/16 to any port 80 proto tcp
 ufw allow from 172.16.0.0/16 to any port 443 proto tcp
 ufw --force enable
 
-systemctl enable --now postgresql inventory-api.service inventory-coz-sync.timer inventory-backup.timer inventory-cert-renew.timer nginx
+systemctl enable --now postgresql inventory-api.service inventory-coz-sync.timer inventory-plm-sync.timer inventory-backup.timer inventory-cert-renew.timer nginx
 systemctl restart inventory-api.service nginx
 systemctl start inventory-coz-sync.service
 

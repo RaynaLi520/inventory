@@ -1,0 +1,25 @@
+[Unit]
+Description=Henan Inventory read-only Centric PLM synchronization
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+ConditionPathExists=/etc/henan-inventory/plm-sync.env
+
+[Service]
+Type=oneshot
+User=inventory_app
+Group=inventory_app
+WorkingDirectory=/opt/henan-inventory
+Environment=NODE_ENV=production
+Environment=PGHOST=/var/run/postgresql
+Environment=PGDATABASE=henan_inventory
+Environment=PGUSER=inventory_app
+Environment=PLM_SYNC_TIMEOUT_MS=30000
+EnvironmentFile=/etc/henan-inventory/plm-sync.env
+ExecStart=/usr/bin/node server/plm-sync.js
+TimeoutStartSec=45
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+

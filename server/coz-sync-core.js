@@ -152,6 +152,16 @@ function productSourceKey(product) {
   );
 }
 
+function deletedSourceKeysForState(state) {
+  const trashKeys = new Set((state?.trashProducts || [])
+    .map((product) => migrateProductSourceKey(product.deletedSourceKey || productSourceKey(product)))
+    .filter(Boolean));
+  const explicitKeys = (state?.deletedProductKeys || [])
+    .map(migrateProductSourceKey)
+    .filter((key) => trashKeys.has(key));
+  return new Set([...trashKeys, ...explicitKeys]);
+}
+
 function stableToken(value) {
   const normalized = clean(value).toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   if (normalized) return normalized;
@@ -215,6 +225,7 @@ function sourceProductFromGroup(items, colorMappings) {
     product.sizes[size] = compactNumber((product.sizes[size] || 0) + item.stockedQuantity);
     product.reservedBySize[size] = compactNumber((product.reservedBySize[size] || 0) + item.reservedQuantity);
     product.sourceSkuBySize[size] = String(item.sku);
+    if (product.colorCode) product.skuBySize[size] = `${product.baseSku}-${product.colorCode}-${size}`;
     product.sourceDetailsBySize[size] = {
       upc: item.upc || "",
       retailPrice: item.retailPrice || 0,
@@ -312,10 +323,7 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
   const previousState = nextDocument.state;
   const currentProducts = previousState.products || [];
   const trashProducts = Array.isArray(previousState.trashProducts) ? previousState.trashProducts : [];
-  const deletedSourceKeys = new Set([
-    ...(previousState.deletedProductKeys || []),
-    ...trashProducts.map((product) => product.deletedSourceKey || productSourceKey(product))
-  ].map(migrateProductSourceKey).filter(Boolean));
+  const deletedSourceKeys = deletedSourceKeysForState(previousState);
   const manualProducts = currentProducts.filter((product) => product.sourceOrigin === "manual" && !product.sourceBaseSku);
   const mappingBySource = new Map(currentProducts
     .filter((product) => product.sourceBaseSku || product.sourceOrigin === "coz")
@@ -327,7 +335,13 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
     groups.get(key).push(item);
   });
 
-  const usedIds = new Set(manualProducts.map((product) => String(product.id || "")).filter(Boolean));
+  // PLM can create a catalog row before the style has any CoZ inventory. Keep
+  // those zero-stock rows until the source API contains the same style/color;
+  // once it does, mappingBySource merges both records under the existing ID.
+  const pendingPlmProducts = currentProducts.filter((product) => product.sourceOrigin === "plm" && !groups.has(productSourceKey(product)));
+  const preservedProducts = [...manualProducts, ...pendingPlmProducts];
+
+  const usedIds = new Set(preservedProducts.map((product) => String(product.id || "")).filter(Boolean));
   const syncedProducts = [...groups.entries()]
     .filter(([key]) => !deletedSourceKeys.has(key))
     .map(([key, items]) => {
@@ -343,7 +357,17 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
 
       usedIds.add(String(mapping.id || ""));
       const localSizes = { ...(mapping.localSizes || {}) };
-      const sizes = { ...sourceProduct.sizes, ...localSizes };
+      // Source inventory owns a size as soon as CoZ reports it. PLM may have
+      // initialized that same size to zero, but it must not overwrite source
+      // stock during the next CoZ merge. Keep local quantities only for sizes
+      // absent from the source snapshot.
+      const sizes = { ...sourceProduct.sizes };
+      Object.entries(localSizes).forEach(([size, quantity]) => {
+        if (!Object.hasOwn(sizes, size)) sizes[size] = quantity;
+      });
+      const localOnlyQuantity = Object.entries(localSizes)
+        .filter(([size]) => !Object.hasOwn(sourceProduct.sizes, size))
+        .reduce((sum, [, quantity]) => sum + numeric(quantity), 0);
       const actualSpu = String(mapping.originalStyle || mapping.baseSku || sourceProduct.baseSku || "").trim();
       const previousSpu = String(mapping.baseSku || "").trim();
       const skuBySize = Object.fromEntries(Object.entries(mapping.skuBySize || {}).flatMap(([size, sku]) => {
@@ -376,7 +400,7 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
         skuBySize,
         localSizes,
         sizes,
-        warehouse: compactNumber(sourceProduct.warehouse + Object.values(localSizes).reduce((sum, quantity) => sum + numeric(quantity), 0)),
+        warehouse: compactNumber(sourceProduct.warehouse + localOnlyQuantity),
         store: Number(mapping.store || 0),
         locationStock: mapping.locationStock ? clone(mapping.locationStock) : undefined,
         sourceOrigin: "coz",
@@ -386,7 +410,7 @@ export function mergeCozSnapshot(document, snapshot, syncedAt = new Date().toISO
     .sort((left, right) => left.style.localeCompare(right.style) || left.color.localeCompare(right.color));
 
   if (!syncedProducts.length) throw new Error("CoZ synchronization produced no products");
-  previousState.products = [...manualProducts, ...syncedProducts];
+  previousState.products = [...preservedProducts, ...syncedProducts];
   previousState.trashProducts = trashProducts;
   previousState.deletedProductKeys = [...deletedSourceKeys];
   previousState.movements = Array.isArray(previousState.movements) ? previousState.movements : [];

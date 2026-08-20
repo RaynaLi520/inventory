@@ -65,7 +65,7 @@
           <button class="control-button" id="languageToggle" type="button" title="切换语言"><i data-lucide="languages"></i><span>English</span></button>
           <button class="control-button" id="themeToggle" type="button" title="切换主题"><i data-lucide="moon"></i><span>深色</span></button>
           <button class="icon-button" id="scanBtn" type="button" title="扫描 SKU"><i data-lucide="scan-line"></i></button>
-          <button class="icon-button notification-button" type="button" title="库存提醒"><i data-lucide="bell"></i><span></span></button>
+          <button class="icon-button notification-button" id="notificationBtn" type="button" title="待完成 SKU"><svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .738-1.674C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg><span class="notification-count" id="notificationCount" aria-live="polite">0</span></button>
           <button class="button secondary desktop-only" id="exportBtn" type="button"><i data-lucide="download"></i>导出库存</button>
           <button class="button primary" id="quickMoveBtn" type="button"><i data-lucide="package-plus"></i>快速出入库</button>
         </div>
@@ -138,9 +138,11 @@
       </section>
 
       <section class="view" id="inventoryView">
-        <div class="toolbar">
+        <div class="toolbar inventory-toolbar">
           <div class="inventory-search-combobox"><label class="search-box"><i data-lucide="search"></i><input id="inventorySearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inventorySearchResults" autocomplete="off" placeholder="搜索款式、SKU、颜色"></label><div class="inventory-search-results" id="inventorySearchResults" role="listbox" hidden></div></div>
           <select id="categoryFilter" aria-label="按品类筛选"><option value="">全部品类</option></select>
+          <select id="seasonFilter" aria-label="按季节筛选"><option value="">全部季节</option></select>
+          <select id="fabricFilter" aria-label="按面料筛选"><option value="">全部面料</option></select>
           <select id="statusFilter" aria-label="按库存状态筛选"><option value="">全部状态</option><option value="healthy">库存正常</option><option value="broken">断码</option><option value="partial-low">部分低库存</option><option value="all-low">全部低库存</option><option value="unavailable">不可售</option></select>
           <button class="button secondary trash-button" id="openTrashBtn" type="button"><i data-lucide="trash-2"></i>回收站 <span id="trashCount">0</span></button>
           <button class="button secondary" id="addSkuBtn" type="button"><i data-lucide="plus"></i>新增 SPU</button>
@@ -168,6 +170,8 @@
           <div class="bundle-search-combobox"><label class="search-box"><i data-lucide="search"></i><input id="bundleSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="bundleSearchResults" autocomplete="off" placeholder="搜索套装、SKU、组件或颜色"></label><div class="inventory-search-results" id="bundleSearchResults" role="listbox" hidden></div></div>
           <select id="bundleTypeFilter" aria-label="按套装类型筛选"></select>
           <select id="bundleSizeFilter" aria-label="按套装尺码筛选"></select>
+          <select id="bundleSeasonFilter" aria-label="按套装季节筛选"></select>
+          <select id="bundleFabricFilter" aria-label="按套装面料筛选"></select>
           <select id="bundleStatusFilter" aria-label="按套装状态筛选"></select>
           <button class="button secondary trash-button" id="openBundleTrashBtn" type="button"><i data-lucide="trash-2"></i>回收站 <span id="bundleTrashCount">0</span></button>
           <button class="button secondary" id="addBundleBtn" type="button"><i data-lucide="plus"></i>新建套装</button>

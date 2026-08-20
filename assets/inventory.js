@@ -77,7 +77,7 @@
     ["可售库存", "Sellable stock"], ["今日售出", "Sold today"], ["低库存 SKU", "Low-stock SKUs"], ["在途库存", "In transit"], ["较上周", "vs last week"], ["需处理", "Needs action"], ["库存小于等于 5", "Stock at or below 5"], ["3 个采购单 · 最早 8/12 到货", "3 purchase orders · earliest arrival Aug 12"], ["线上 24 · 门店 12", "Online 24 · Store 12"], ["4.8%", "4.8%"], ["品牌 SPU", "Brand SPU"],
     ["个 SKU · 实时可售", "SKUs · sellable now"], ["件", "pcs"], ["件可售库存", "sellable pcs"], ["重点款库存", "Priority stock"], ["全部 SKU", "All SKUs"], ["渠道库存", "Channel stock"], ["最近动态", "Recent activity"], ["库存总览", "Stock overview"], ["库存正常", "Healthy"], ["低库存", "Low stock"], ["低库存（≤5）", "Low stock (≤5)"], ["断码", "Broken size run"], ["部分低库存", "Partially low stock"], ["全部低库存", "All sizes low"], ["LIVE STOCK", "LIVE STOCK"], ["ALLOCATION", "ALLOCATION"],
     ["品牌小程序", "Brand mini-program"], ["天猫旗舰店", "Tmall flagship"], ["静安门店", "Jing'an store"], ["机动库存", "Buffer stock"], ["渠道可售", "Channel sellable"], ["今日订单", "Orders today"], ["同步正常", "Sync healthy"], ["微信自营商城", "WeChat direct store"], ["平台电商", "Marketplace"], ["线下直营", "Offline retail"], ["2 分钟前同步", "Synced 2 min ago"],
-    ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按库存状态筛选", "Filter by stock status"], ["新增 SPU", "New SPU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
+    ["搜索款式、SKU、颜色", "Search style, SKU, color"], ["搜索单号或 SKU", "Search order or SKU"], ["全部品类", "All categories"], ["全部季节", "All seasons"], ["全部面料", "All fabrics"], ["全部状态", "All statuses"], ["按品类筛选", "Filter by category"], ["按季节筛选", "Filter by season"], ["按面料筛选", "Filter by fabric"], ["按库存状态筛选", "Filter by stock status"], ["新增 SPU", "New SPU"], ["SKU CATALOG", "SKU CATALOG"], ["成衣库存明细", "Inventory detail"], ["款式 / SKU", "Style / SKU"], ["颜色", "Color"], ["尺码库存带", "Size curve"], ["仓库", "Warehouse"], ["门店", "Store"], ["占用", "Reserved"], ["可售", "Sellable"], ["状态", "Status"], ["调整库存", "Adjust stock"],
     ["回收站", "Recycle bin"], ["库存回收站", "Inventory recycle bin"], ["款式回收站", "Style recycle bin"], ["套装回收站", "Bundle recycle bin"], ["套装回收站为空", "Bundle recycle bin is empty"], ["删除款式", "Delete style"], ["恢复", "Restore"], ["彻底删除", "Delete permanently"], ["删除时间", "Deleted at"], ["回收站为空", "Recycle bin is empty"], ["删除的款式会保留在这里。", "Deleted styles remain here."], ["删除的套装会保留在这里。", "Deleted bundles remain here."], ["删除的款式不会在下一次 CoZ 同步时重新出现。恢复后会重新参与库存和套装计算。", "Deleted styles stay excluded from future CoZ syncs. Restored styles rejoin inventory and bundle calculations."],
     ["库存流水", "Stock ledger"], ["STOCK LEDGER", "STOCK LEDGER"], ["类型", "Type"], ["库位", "Location"], ["调入库位", "Destination location"], ["数量", "Quantity"], ["操作人", "Operator"], ["备注", "Note"], ["入库", "Inbound"], ["出库", "Outbound"], ["调拨", "Transfer"], ["盘点调整", "Adjustment"], ["上海总仓", "Shanghai warehouse"], ["静安门店", "Jing'an store"], ["快速出入库", "Quick movement"], ["确认入库", "Confirm inbound"], ["确认出库", "Confirm outbound"], ["确认调拨", "Confirm transfer"], ["取消", "Cancel"], ["SKU", "SKU"], ["扫描 SKU", "Scan SKU"], ["选择或扫描 SKU 后调整库存", "Select or scan a SKU to adjust stock"], ["输入 SKU、款号或商品名称", "Enter SKU, style, or product name"], ["添加库位", "Add location"], ["修改现有库位", "Edit location"], ["库位名称", "Location name"], ["库位类型", "Location type"], ["保存库位", "Save location"], ["仓库", "Warehouse"], ["门店", "Store"], ["备注", "Note"],
     ["销售渠道与库存配额", "Sales channels and allocation"], ["OMNICHANNEL", "OMNICHANNEL"], ["每个渠道共享实物库存，通过配额控制超卖风险。", "Channels share physical stock; allocations prevent overselling."], ["连接渠道", "Connect channel"], ["库存同步规则", "Stock sync rules"], ["POLICY", "POLICY"], ["保存规则", "Save rules"], ["安全库存保护", "Safety stock protection"], ["可售数量达到安全库存时停止线上销售", "Stop online sales when sellable stock reaches safety level"], ["订单自动占用", "Auto-reserve orders"], ["订单创建后立即占用库存，取消后自动释放", "Reserve on order creation and release on cancellation"], ["门店库存线上可见", "Show store stock online"], ["允许消费者查询附近门店库存", "Let customers check nearby store stock"],
@@ -138,6 +138,7 @@
   let activeView = "overview";
   let toastTimer = null;
   let currentLang = localStorage.getItem("ja-garment-language") || "zh";
+  let inventoryPendingOnly = false;
   let cloudStatus = cloudBackendAvailable ? "connecting" : "local";
   let cloudUpdatedAt = null;
   let cloudReady = false;
@@ -358,6 +359,11 @@
     saved.deletedProductKeys = Array.isArray(saved.deletedProductKeys)
       ? [...new Set(saved.deletedProductKeys.map(migrateProductSourceKey).filter(Boolean))]
       : [];
+    // Tombstones are retained only while the item is in the recycle bin.
+    // Older builds left keys behind after permanent deletion, which prevented
+    // a later authoritative PLM snapshot from recreating the style.
+    const activeTrashKeys = new Set(saved.trashProducts.map(productSourceKey));
+    saved.deletedProductKeys = saved.deletedProductKeys.filter((key) => activeTrashKeys.has(key));
     applyImageCatalog(saved);
     migrateOriginalSpuCodes(saved);
     if (saved?.source?.type !== "coz") return saved;
@@ -462,7 +468,8 @@
         id: existing?.id || bundleId,
         name: product.name || sourceStyle,
         type: "fixed",
-        season: (sourceStyle.match(/^COZ(SS|AW)\d{2}/i)?.[1] || "").toUpperCase(),
+        season: productSeason(product) || (sourceStyle.match(/^COZ(SS|AW)\d{2}/i)?.[1] || "").toUpperCase(),
+        fabricTypeCode: productFabricCode(product),
         color,
         colorCode: String(product.colorCode || colorMappings[color] || "").trim().toUpperCase(),
         size: "",
@@ -1057,6 +1064,41 @@
     const colorCode = String(product.colorCode || colorMappings[product.color] || inferColorCode(product) || "COLOR").trim().toUpperCase();
     return `${product.baseSku}-${bundleColorCode(colorCode)}-${size}`;
   }
+  function productSeason(product) {
+    const explicit = String(product?.spuMeta?.season || product?.season || "").trim().toUpperCase();
+    if (explicit && /^(?:SS|AW)\d{2}$/.test(explicit)) return explicit;
+    if (/^(?:SS|AW)$/.test(explicit) && product?.spuMeta?.year) return `${explicit}${String(product.spuMeta.year).slice(-2)}`;
+    const source = String(product?.sourceBaseSku || product?.baseSku || product?.style || product?.originalStyle || "").trim().toUpperCase();
+    const match = source.match(/^COZ((?:SS|AW)\d{2})/);
+    return match?.[1] || "";
+  }
+  function productFabricCode(product) {
+    const explicit = String(product?.spuMeta?.fabricTypeCode || product?.fabricTypeCode || "").trim().toUpperCase();
+    if (explicit) return explicit;
+    const source = String(product?.sourceBaseSku || product?.baseSku || product?.style || product?.originalStyle || "").trim().toUpperCase();
+    return source.match(/^COZ(?:SS|AW)\d{2}-([A-Z])/i)?.[1]?.toUpperCase() || "";
+  }
+  function fabricLabel(code) {
+    const normalized = String(code || "").trim().toUpperCase();
+    const entry = Object.entries(fabricTypeCodes).find(([, value]) => String(value).toUpperCase() === normalized);
+    if (!entry) return normalized || "-";
+    const [name] = entry;
+    if (currentLang !== "zh") return `${name} · ${normalized}`;
+    return `${name === "Woven" ? "梭织" : name === "Knit" ? "针织" : name} · ${normalized}`;
+  }
+  function bundleSeason(bundle) {
+    const explicit = String(bundle?.season || "").trim().toUpperCase();
+    if (/^(?:SS|AW)\d{2}$/.test(explicit)) return explicit;
+    const source = fixedBundleSourceProduct(bundle);
+    return productSeason(source) || explicit;
+  }
+  function bundleFabricCode(bundle) {
+    const explicit = String(bundle?.fabricTypeCode || "").trim().toUpperCase();
+    if (explicit) return explicit;
+    const source = fixedBundleSourceProduct(bundle);
+    if (source) return productFabricCode(source);
+    return bundlePartRecords(bundle).map(({ product }) => productFabricCode(product)).find(Boolean) || "";
+  }
   function isCozProduct(product) {
     return product?.sourceOrigin === "coz" || Boolean(product?.sourceBaseSku) || (state.source?.type === "coz" && !product?.sourceOrigin);
   }
@@ -1064,6 +1106,22 @@
   function availableStock(product) { return Math.max(0, totalStock(product) - Number(product.reserved || 0)); }
   function isLowSkuQuantity(quantity) { return Number(quantity) <= LOW_STOCK_SKU_THRESHOLD; }
   function isLow(product) { return Object.values(product.sizes).some(isLowSkuQuantity); }
+  function pendingPlmSkuCount() {
+    return state.products.reduce((sum, product) => {
+      if (product?.sourceOrigin !== "plm") return sum;
+      return sum + Object.keys(product.sizes || {}).length;
+    }, 0);
+  }
+  function renderNotificationCount() {
+    const count = pendingPlmSkuCount();
+    const badge = $("notificationCount");
+    const button = $("notificationBtn");
+    if (!badge || !button) return;
+    badge.textContent = formatNumber(count);
+    const label = currentLang === "zh" ? `待完成 SKU：${formatNumber(count)}` : `Pending SKUs: ${formatNumber(count)}`;
+    badge.setAttribute("aria-label", label);
+    button.title = label;
+  }
   function stockStatus(available) {
     const quantity = Number(available || 0);
     if (quantity <= 0) return { label: "不可售", className: "unavailable" };
@@ -1369,12 +1427,17 @@
   function getFilteredProducts() {
     const term = $("inventorySearch").value.trim();
     const category = $("categoryFilter").value;
+    const season = $("seasonFilter").value;
+    const fabric = $("fabricFilter").value;
     const status = $("statusFilter").value;
     return state.products.filter((product) => {
       const matchesTerm = matchesProductSearch(product, term);
       const matchesCategory = !category || product.category === category;
+      const matchesSeason = !season || productSeason(product) === season;
+      const matchesFabric = !fabric || productFabricCode(product) === fabric;
       const matchesStatus = !status || productStockStatus(product).className === status;
-      return matchesTerm && matchesCategory && matchesStatus;
+      const matchesPending = !inventoryPendingOnly || product.sourceOrigin === "plm";
+      return matchesTerm && matchesCategory && matchesSeason && matchesFabric && matchesStatus && matchesPending;
     });
   }
 
@@ -1554,7 +1617,7 @@
     const fixedSkus = bundle.type === "fixed" && !fixedSize
       ? fixedBundleSizeEntries(bundle).map(([size]) => bundleSku(bundle, size))
       : [];
-    return [bundle.name, bundleSku(bundle, fixedSize), ...fixedSkus, bundle.color, fixedSize || bundle.size, bundle.season,
+    return [bundle.name, bundleSku(bundle, fixedSize), ...fixedSkus, bundle.color, fixedSize || bundle.size, bundleSeason(bundle), fabricLabel(bundleFabricCode(bundle)),
       ...(bundle.componentCodes || []), ...(bundle.componentSkus || []), ...(bundle.componentSourceSkus || []),
       ...records.flatMap(({ product }) => [product.name, product.baseSku, product.sourceBaseSku])].join(" ").toLowerCase();
   }
@@ -1594,12 +1657,16 @@
     const term = String($("bundleSearch").value || "").trim().toLowerCase();
     const type = $("bundleTypeFilter").value;
     const size = $("bundleSizeFilter").value;
+    const season = $("bundleSeasonFilter").value;
+    const fabric = $("bundleFabricFilter").value;
     const status = $("bundleStatusFilter").value;
     const rows = allBundles.flatMap(bundleDisplayRows).filter((row) => {
       const { bundle, available } = row;
       return matchesBundleSearch(bundle, term, row.size)
         && (!type || bundle.type === type)
         && (!size || row.size === size)
+        && (!season || bundleSeason(bundle) === season)
+        && (!fabric || bundleFabricCode(bundle) === fabric)
         && (!status
           || (status === "healthy" && available > 5)
           || (status === "low" && available > 0 && available <= 5)
@@ -1623,7 +1690,7 @@
     }).join("");
     $("bundleEmpty").hidden = rows.length > 0;
     if (!rows.length) {
-      const filtered = Boolean(term || type || size || status);
+      const filtered = Boolean(term || type || size || season || fabric || status);
       $("bundleEmpty").querySelector("strong").textContent = filtered ? "没有匹配的套装" : "还没有套装";
       $("bundleEmpty").querySelector("p").textContent = filtered ? "请调整搜索词或筛选条件。" : "新建虚拟套装后，系统会按组件库存实时计算可售套数。";
     }
@@ -1633,17 +1700,27 @@
     const selections = {
       type: $("bundleTypeFilter").value,
       size: $("bundleSizeFilter").value,
+      season: $("bundleSeasonFilter").value,
+      fabric: $("bundleFabricFilter").value,
       status: $("bundleStatusFilter").value
     };
     const sizes = [...new Set((state.bundles || []).flatMap((bundle) => bundleDisplayRows(bundle).map((row) => row.size)).filter(Boolean))]
       .sort((a, b) => sizeOrder.indexOf(a) - sizeOrder.indexOf(b));
+    const seasons = [...new Set((state.bundles || []).map(bundleSeason).filter(Boolean))].sort((left, right) => right.localeCompare(left));
+    const fabrics = [...new Set((state.bundles || []).map(bundleFabricCode).filter(Boolean))].sort();
     $("bundleTypeFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部类型" : "All types"}</option>`
       + ["virtual", "promo", "fixed"].map((type) => `<option value="${type}">${escapeHtml(bundleTypeLabel(type))}</option>`).join("");
     $("bundleSizeFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部尺码" : "All sizes"}</option>`
       + sizes.map((size) => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join("");
+    $("bundleSeasonFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部季节" : "All seasons"}</option>`
+      + seasons.map((season) => `<option value="${escapeHtml(season)}">${escapeHtml(season)}</option>`).join("");
+    $("bundleFabricFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部面料" : "All fabrics"}</option>`
+      + fabrics.map((code) => `<option value="${escapeHtml(code)}">${escapeHtml(fabricLabel(code))}</option>`).join("");
     $("bundleStatusFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部状态" : "All statuses"}</option><option value="healthy">${currentLang === "zh" ? "库存正常" : "Healthy"}</option><option value="low">${currentLang === "zh" ? "低库存（≤5）" : "Low stock (≤5)"}</option><option value="unavailable">${currentLang === "zh" ? "不可售" : "Unavailable"}</option>`;
     $("bundleTypeFilter").value = selections.type;
     $("bundleSizeFilter").value = selections.size;
+    $("bundleSeasonFilter").value = seasons.includes(selections.season) ? selections.season : "";
+    $("bundleFabricFilter").value = fabrics.includes(selections.fabric) ? selections.fabric : "";
     $("bundleStatusFilter").value = selections.status;
   }
 
@@ -1703,6 +1780,26 @@
     const categories = [...new Set(state.products.map((product) => product.category))];
     $("categoryFilter").innerHTML = `<option value="">${currentLang === "zh" ? "全部品类" : "All categories"}</option>` + categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(itemTypeLabel(category))}</option>`).join("");
     $("categoryFilter").value = selected;
+  }
+
+  function renderSeasonOptions() {
+    const select = $("seasonFilter");
+    if (!select) return;
+    const selected = select.value;
+    const seasons = [...new Set(state.products.map(productSeason).filter(Boolean))].sort((left, right) => right.localeCompare(left));
+    select.innerHTML = `<option value="">${currentLang === "zh" ? "全部季节" : "All seasons"}</option>`
+      + seasons.map((season) => `<option value="${escapeHtml(season)}">${escapeHtml(season)}</option>`).join("");
+    select.value = seasons.includes(selected) ? selected : "";
+  }
+
+  function renderFabricOptions() {
+    const select = $("fabricFilter");
+    if (!select) return;
+    const selected = select.value;
+    const fabrics = [...new Set(state.products.map(productFabricCode).filter(Boolean))].sort();
+    select.innerHTML = `<option value="">${currentLang === "zh" ? "全部面料" : "All fabrics"}</option>`
+      + fabrics.map((code) => `<option value="${escapeHtml(code)}">${escapeHtml(fabricLabel(code))}</option>`).join("");
+    select.value = fabrics.includes(selected) ? selected : "";
   }
 
   function renderSkuCategoryOptions(selectedCategory) {
@@ -2138,6 +2235,8 @@
   function renderAll() {
     renderSession();
     renderCategoryOptions();
+    renderSeasonOptions();
+    renderFabricOptions();
     renderSkuCategoryOptions();
     renderBundleFilters();
     renderMovementLocationOptions();
@@ -2148,6 +2247,7 @@
     renderMovements();
     renderChannels();
     renderSyncState();
+    renderNotificationCount();
     refreshIcons();
     applyLanguage();
   }
@@ -2246,6 +2346,9 @@
       || (bundle.type === "fixed" && bundle.sourceSetKey === productSourceKey(product)));
     const linkedSetIds = new Set(linkedSetBundles.map((bundle) => bundle.id));
     state.trashProducts = state.trashProducts.filter((item) => item.id !== id);
+    // Permanent deletion is an explicit reset. If the authoritative PLM/CoZ
+    // snapshot still contains this source style, it may be imported again.
+    state.deletedProductKeys = (state.deletedProductKeys || []).filter((key) => key !== productSourceKey(product));
     if (linkedSetIds.size) {
       state.trashBundles = (state.trashBundles || []).filter((bundle) => !linkedSetIds.has(bundle.id));
       state.deletedBundleIds = [...new Set([...(state.deletedBundleIds || []), ...linkedSetIds])];
@@ -3319,7 +3422,7 @@
   function exportInventory() {
     const headers = ["品牌 SKU", "CoZ 原始 SKU", "品牌 SPU", "CoZ 原始款号", "款式", "品类", "颜色", "尺码", "库存", "安全库存", "SKU 状态", "款式状态"];
     const rows = state.products.flatMap((product) => Object.entries(product.sizes).map(([size, qty]) => [
-      product.skuBySize?.[size] || "", product.sourceSkuBySize?.[size] || "", product.baseSku, product.sourceBaseSku || "", product.name, itemTypeLabels[product.category]?.[0] || product.category, product.color, size, qty, product.safety, qty <= 0 ? "不可售" : isLowSkuQuantity(qty) ? "低库存" : "正常", productStockStatus(product).label
+      skuForSize(product, size), product.sourceSkuBySize?.[size] || "", product.baseSku, product.sourceBaseSku || "", product.name, itemTypeLabels[product.category]?.[0] || product.category, product.color, size, qty, product.safety, qty <= 0 ? "不可售" : isLowSkuQuantity(qty) ? "低库存" : "正常", productStockStatus(product).label
     ]));
     const csv = "\ufeff" + [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -3541,7 +3644,10 @@
   function bindEvents() {
     document.addEventListener("click", (event) => {
       const viewButton = event.target.closest("[data-view]");
-      if (viewButton) switchView(viewButton.dataset.view);
+      if (viewButton) {
+        inventoryPendingOnly = false;
+        switchView(viewButton.dataset.view);
+      }
       const jumpButton = event.target.closest("[data-jump]");
       if (jumpButton) switchView(jumpButton.dataset.jump);
       const moveButton = event.target.closest("[data-move-product]");
@@ -3748,6 +3854,8 @@
       } else if (event.key === "Escape") closeInventorySearchResults();
     });
     $("categoryFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
+    $("seasonFilter")?.addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
+    $("fabricFilter")?.addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
     $("statusFilter").addEventListener("change", () => { renderInventory(); refreshIcons(); applyLanguage(); });
     $("bundleSearch").addEventListener("focus", () => renderBundleSearchResults($("bundleSearch").value));
     $("bundleSearch").addEventListener("input", () => { renderBundleRows(); renderBundleSearchResults($("bundleSearch").value); refreshIcons(); applyLanguage(); });
@@ -3770,7 +3878,7 @@
         selectBundleSearchResult(option.dataset.bundleSearchId, option.dataset.bundleSearchSize);
       } else if (event.key === "Escape") closeBundleSearchResults();
     });
-    ["bundleTypeFilter", "bundleSizeFilter", "bundleStatusFilter"].forEach((id) => $(id).addEventListener("change", () => { renderBundleRows(); refreshIcons(); applyLanguage(); }));
+    ["bundleTypeFilter", "bundleSizeFilter", "bundleSeasonFilter", "bundleFabricFilter", "bundleStatusFilter"].forEach((id) => $(id).addEventListener("change", () => { renderBundleRows(); refreshIcons(); applyLanguage(); }));
     $("movementSkuSearch").addEventListener("focus", () => renderMovementSkuResults($("movementSkuSearch").value));
     $("movementSkuSearch").addEventListener("input", () => {
       $("movementSku").value = "";
@@ -3863,6 +3971,17 @@
     });
     $("bundleType").addEventListener("change", updateBundleTypeFields);
     $("saveRulesBtn").addEventListener("click", () => showToast("库存同步规则已保存"));
+    $("notificationBtn")?.addEventListener("click", () => {
+      inventoryPendingOnly = true;
+      switchView("inventory");
+      $("inventorySearch").value = "";
+      $("categoryFilter").value = "";
+      $("seasonFilter").value = "";
+      $("fabricFilter").value = "";
+      $("statusFilter").value = "";
+      renderInventory();
+      closeInventorySearchResults();
+    });
     $("languageToggle").addEventListener("click", () => {
       currentLang = currentLang === "zh" ? "en" : "zh";
       localStorage.setItem("ja-garment-language", currentLang);

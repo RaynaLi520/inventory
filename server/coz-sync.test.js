@@ -87,6 +87,7 @@ test("merges source inventory while preserving user-owned platform data", () => 
 
 test("keeps deleted products excluded and gives new products deterministic IDs", () => {
   const base = document();
+  base.state.trashProducts.push({ id: "TRASH-WPT148", sourceBaseSku: "COZAW26-WPT148", color: "Black/黑色" });
   base.state.deletedProductKeys.push('["cozaw26-wpt148","black/黑色"]');
   const snapshot = normalizeCozResponse(response([
     row({ C3: "COZAW26-WPT148", C4: "Black/黑色", C24: "2001", Query: '{"SKU":"2001"}' }),
@@ -98,6 +99,16 @@ test("keeps deleted products excluded and gives new products deterministic IDs",
   const firstNew = first.state.products.find((product) => product.sourceBaseSku === "COZAW26-WPT149");
   const secondNew = second.state.products.find((product) => product.sourceBaseSku === "COZAW26-WPT149");
   assert.equal(firstNew.id, secondNew.id);
+});
+
+test("allows a permanently deleted source style to return", () => {
+  const base = document();
+  base.state.deletedProductKeys.push('["cozaw26-wpt148","black/黑色"]');
+  const snapshot = normalizeCozResponse(response([
+    row({ C3: "COZAW26-WPT148", C4: "Black/黑色", C24: "2001", Query: '{"SKU":"2001"}' })
+  ]));
+  const merged = mergeCozSnapshot(base, snapshot);
+  assert.equal(merged.state.products.some((product) => product.sourceBaseSku === "COZAW26-WPT148"), true);
 });
 
 test("mirrors CoZ SET styles into fixed bundles without removing products", () => {
@@ -116,4 +127,35 @@ test("mirrors CoZ SET styles into fixed bundles without removing products", () =
   assert.equal(merged.state.products.some((item) => item.sourceBaseSku === "COZSS26-WSET068"), true);
   const repeated = mergeCozSnapshot(merged, snapshot, "2026-08-17T00:01:00.000Z");
   assert.equal(repeated.state.bundles.filter((item) => item.sourceSetKey === bundle.sourceSetKey).length, 1);
+});
+
+test("keeps PLM-only products until matching CoZ inventory arrives", () => {
+  const base = document();
+  base.state.products.push({
+    id: "PLM-KST111-WBR", sourceOrigin: "plm", sourceBaseSku: "COZAW26-KST111",
+    style: "COZAW26-KST111", originalStyle: "COZAW26-KST111", baseSku: "COZAW26-KST111",
+    name: "圆领长袖T恤", category: "Shirt", color: "白底小熊", colorCode: "WBR",
+    sizes: { S: 0, M: 0, L: 0 }, localSizes: { S: 0, M: 0, L: 0 },
+    skuBySize: { S: "COZAW26-KST111-WBR-S", M: "COZAW26-KST111-WBR-M", L: "COZAW26-KST111-WBR-L" },
+    warehouse: 0, store: 0, reserved: 0
+  });
+  const snapshot = normalizeCozResponse(response([
+    row({ C24: "1001", Query: '{"SKU":"1001"}', C3: "COZAW26-WPT147", C4: "粉色条纹", C5: "M", C15: 10 })
+  ]));
+  const merged = mergeCozSnapshot(base, snapshot);
+  assert.equal(merged.state.products.some((product) => product.id === "PLM-KST111-WBR"), true);
+});
+
+test("CoZ size quantities take precedence over PLM zero-size initialization", () => {
+  const base = document();
+  const existing = base.state.products.find((product) => product.id === "COZ-EXISTING");
+  existing.localSizes = { S: 0, M: 0, L: 0 };
+  existing.sizes = { S: 0, M: 0, L: 0 };
+  const snapshot = normalizeCozResponse(response([
+    row({ C3: "COZAW26-WPT147", C4: "Light Blue/浅蓝色", C5: "M", C15: 10 })
+  ]));
+  const merged = mergeCozSnapshot(base, snapshot);
+  const product = merged.state.products.find((item) => item.id === "COZ-EXISTING");
+  assert.deepEqual(product.sizes, { M: 10, S: 0, L: 0 });
+  assert.equal(product.warehouse, 10);
 });
