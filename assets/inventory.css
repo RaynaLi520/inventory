@@ -269,9 +269,10 @@ select, input[type="number"], input[type="text"], input[type="url"], input[type=
 @media (min-width: 1200px) {
   .bundle-toolbar { gap: 9px; }
   .bundle-toolbar .bundle-search-combobox { flex: 1 1 300px; max-width: 430px; }
-  .bundle-toolbar select { flex: 0 1 142px; min-width: 118px; padding: 0 31px 0 11px; }
+  .bundle-toolbar select { flex: 0 1 142px; min-width: 118px; padding: 0 31px 0 11px; font-size: 11px; }
   .bundle-toolbar-actions { gap: 9px; margin-left: 12px; }
-  .bundle-toolbar-actions .button { padding: 8px 14px; font-size: 12px; gap: 7px; }
+  .bundle-toolbar-actions .button { min-width: 132px; padding: 8px 14px; font-size: 12px; gap: 7px; }
+  .bundle-toolbar-actions .trash-button { min-width: 143px; }
 }
 .inventory-panel { min-height: 420px; }
 .bundle-table { min-width: 860px; }
