@@ -239,6 +239,8 @@ tbody tr:hover { background: #fafcfb; }
 .bundle-toolbar .bundle-search-combobox { flex: 0 1 325px; max-width: 325px; }
 .bundle-toolbar .bundle-search-combobox .search-box { width: 100%; min-width: 0; }
 .bundle-toolbar select { min-width: 132px; }
+.bundle-toolbar-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 9px; margin-left: auto; }
+.bundle-toolbar-actions .button { margin-left: 0; white-space: nowrap; }
 .inventory-toolbar .inventory-search-combobox { flex: 1 1 360px; max-width: 430px; }
 .inventory-toolbar select { flex: 0 1 142px; }
 .search-box { height: 38px; min-width: 260px; display: flex; align-items: center; gap: 8px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 5px; background: var(--surface); }
@@ -256,6 +258,17 @@ tbody tr:hover { background: #fafcfb; }
 select, input[type="number"], input[type="text"], input[type="url"], input[type="search"] { height: 38px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); background: #fff; font-size: 11px; }
 .toolbar select { min-width: 118px; padding: 0 31px 0 11px; }
 .toolbar .button { margin-left: auto; }
+@media (min-width: 641px) {
+  .bundle-toolbar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .bundle-toolbar .bundle-search-combobox { grid-column: 1 / span 2; width: 100%; max-width: 430px; }
+  .bundle-toolbar select { width: 100%; min-width: 0; }
+  .bundle-toolbar #bundleTypeFilter { grid-column: 3; }
+  .bundle-toolbar #bundleSizeFilter { grid-column: 4; }
+  .bundle-toolbar #bundleSeasonFilter { grid-column: 1; }
+  .bundle-toolbar #bundleFabricFilter { grid-column: 2; }
+  .bundle-toolbar #bundleStatusFilter { grid-column: 3; }
+  .bundle-toolbar-actions { grid-column: 4; width: 100%; margin-left: 0; justify-content: flex-end; }
+}
 .inventory-panel { min-height: 420px; }
 .bundle-table { min-width: 860px; }
 .bundle-table td { height: 78px; }
@@ -732,6 +745,8 @@ body.dark-theme .color-code-notice.conflict { color: #f3d19a; background: #3b2c1
   .bundle-toolbar { grid-template-columns: 1fr 1fr; }
   .bundle-toolbar .bundle-search-combobox { max-width: none; }
   .bundle-toolbar select:last-of-type { grid-column: 1 / -1; }
+  .bundle-toolbar-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; width: 100%; margin-left: 0; }
+  .bundle-toolbar-actions .button { width: 100%; }
   .field-inline-actions { gap: 8px; }
   .location-editor-fields { grid-template-columns: 1fr; }
   .image-input-layout { grid-template-columns: 1fr; }
