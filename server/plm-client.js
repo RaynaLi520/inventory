@@ -64,7 +64,8 @@ function isCozStyle(node) {
   return /^COZ(?:SS|AW)\d{2}-/.test(sourceStyle);
 }
 
-async function discoverCozStyleUrls(client, rootUrl = defaultRootUrl, scopeName = defaultScopeName) {
+export async function discoverCozStyleUrls(client, rootUrl = defaultRootUrl, scopeName = defaultScopeName) {
+  const normalizedScopeName = String(scopeName || defaultScopeName).trim().toLowerCase();
   const root = await client.getNode(rootUrl);
   const styleUrls = [];
   const seen = new Set();
@@ -73,7 +74,7 @@ async function discoverCozStyleUrls(client, rootUrl = defaultRootUrl, scopeName 
     const season = await client.getNode(seasonId);
     for (const categoryId of Array.isArray(season?.Hierarchy) ? season.Hierarchy : []) {
       const category = await client.getNode(categoryId);
-      if (nodeName(category).toLowerCase() !== scopeName) continue;
+      if (nodeName(category).toLowerCase() !== normalizedScopeName) continue;
       for (const collectionId of Array.isArray(category?.Hierarchy) ? category.Hierarchy : []) {
         const collection = await client.getNode(collectionId);
         for (const styleId of Array.isArray(collection?.Hierarchy) ? collection.Hierarchy : []) {

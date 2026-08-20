@@ -261,10 +261,17 @@ select, input[type="number"], input[type="text"], input[type="url"], input[type=
 @media (min-width: 641px) {
   .bundle-toolbar { flex-wrap: nowrap; gap: 6px; }
   .bundle-toolbar .bundle-search-combobox { flex: 1 1 180px; width: auto; min-width: 96px; max-width: 280px; }
-  .bundle-toolbar select { flex: 1 1 0; width: auto; min-width: 52px; padding: 0 20px 0 6px; font-size: 10px; }
-  .bundle-toolbar-actions { flex: 0 0 auto; gap: 6px; margin-left: 6px; }
-  .bundle-toolbar-actions .button { margin-left: 0; padding: 7px 5px; font-size: 10px; gap: 4px; }
-  .bundle-toolbar-actions .button svg { width: 14px; height: 14px; }
+  .bundle-toolbar select { flex: 1 1 0; width: auto; min-width: 52px; padding: 0 20px 0 6px; font-size: 11px; }
+  .bundle-toolbar-actions { flex: 0 0 auto; gap: 8px; margin-left: 10px; }
+  .bundle-toolbar-actions .button { margin-left: 0; padding: 8px 10px; font-size: 11px; gap: 6px; }
+  .bundle-toolbar-actions .button svg { width: 15px; height: 15px; }
+}
+@media (min-width: 1200px) {
+  .bundle-toolbar { gap: 9px; }
+  .bundle-toolbar .bundle-search-combobox { flex: 1 1 300px; max-width: 430px; }
+  .bundle-toolbar select { flex: 0 1 142px; min-width: 118px; padding: 0 31px 0 11px; }
+  .bundle-toolbar-actions { gap: 9px; margin-left: 12px; }
+  .bundle-toolbar-actions .button { padding: 8px 14px; font-size: 12px; gap: 7px; }
 }
 .inventory-panel { min-height: 420px; }
 .bundle-table { min-width: 860px; }
