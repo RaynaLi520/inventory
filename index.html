@@ -252,7 +252,7 @@
         </div>
         <div class="form-row">
           <div class="form-field movement-location-field">
-            <div class="field-title"><label for="movementLocation">库位</label><div class="field-inline-actions"><button class="inline-add" id="addLocationBtn" type="button"><i data-lucide="plus"></i>添加库位</button><button class="inline-add" id="editLocationBtn" type="button"><i data-lucide="pencil"></i>修改现有库位</button></div></div>
+            <div class="field-title"><label for="movementLocation" id="movementLocationLabel">入库库位</label><div class="field-inline-actions"><button class="inline-add" id="addLocationBtn" type="button"><i data-lucide="plus"></i>添加库位</button><button class="inline-add" id="editLocationBtn" type="button"><i data-lucide="pencil"></i>修改现有库位</button></div></div>
             <select id="movementLocation"></select>
           </div>
           <label><span>数量</span><input id="movementQty" type="number" min="1" value="1" required></label>
@@ -266,7 +266,19 @@
           <div class="location-editor-fields"><input id="locationEditorId" type="hidden"><input id="newLocationName" type="text" maxlength="30" placeholder="库位名称"><select id="newLocationType" aria-label="库位类型"><option value="warehouse">仓库</option><option value="store">门店</option></select></div>
           <div class="location-editor-actions"><button class="button secondary" id="cancelLocationBtn" type="button">取消</button><button class="button primary" id="saveLocationBtn" type="button">保存库位</button></div>
         </div>
-        <label><span>备注</span><input id="movementNote" type="text" placeholder="例如：采购单 PO-20260809"></label>
+        <div class="form-field movement-reason-field" id="movementReasonField">
+          <div class="field-title"><label for="movementReason" id="movementReasonLabel">入库类型</label><div class="field-inline-actions"><button class="inline-add" id="addMovementReasonBtn" type="button"><i data-lucide="plus"></i>增加选项</button><button class="inline-add" id="editMovementReasonBtn" type="button"><i data-lucide="pencil"></i>编辑选项</button></div></div>
+          <select id="movementReason"></select>
+          <div class="category-creator compact-creator movement-reason-editor" id="movementReasonEditor" hidden><input id="movementReasonEditorMode" type="hidden"><input id="movementReasonOriginal" type="hidden"><input id="movementReasonName" maxlength="30" placeholder="输入选项名称"><div class="category-creator-actions"><button class="mini-icon-button" id="cancelMovementReasonBtn" type="button" aria-label="取消编辑选项"><i data-lucide="x"></i></button><button class="mini-icon-button confirm" id="saveMovementReasonBtn" type="button" aria-label="保存选项"><i data-lucide="check"></i></button></div></div>
+        </div>
+        <div class="form-field purchase-order-field" id="purchaseOrderField">
+          <div class="field-title"><label for="purchaseOrderSearch">成衣采购单号（选填）</label></div>
+          <div class="movement-sku-combobox"><input id="purchaseOrderSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="purchaseOrderResults" autocomplete="off" placeholder="例如：成衣采购单 PO-20260809"><div class="inventory-search-results movement-sku-results" id="purchaseOrderResults" role="listbox" hidden></div></div>
+        </div>
+        <div class="movement-reference" id="movementReference">
+          <section><div class="movement-reference-head"><strong>历史采购 SKU 记录</strong><small>来自已有入库流水</small></div><div class="movement-reference-list" id="purchaseSkuHistory"></div></section>
+          <section><div class="movement-reference-head"><strong>当前 SKU 入库记录</strong><small>用于核对重复入库</small></div><div class="movement-reference-list" id="inboundSkuHistory"></div></section>
+        </div>
         <div class="form-actions"><button class="button secondary" data-close-modal type="button">取消</button><button class="button primary" type="submit">确认入库</button></div>
       </form>
     </section>

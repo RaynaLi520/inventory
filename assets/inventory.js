@@ -50,6 +50,11 @@
     { id: "warehouse", name: "上海总仓", type: "warehouse" },
     { id: "store", name: "静安门店", type: "store" }
   ];
+  const defaultMovementReasonOptions = {
+    inbound: ["采购入库", "退货入库", "返单补货", "盘点补入", "其他入库"],
+    outbound: ["销售", "单件销售", "套装销售", "运营出库", "拍照样", "赠品出库", "次品报损", "其他出库"],
+    transfer: ["库存调拨", "店仓调拨", "仓间调拨", "其他调拨"]
+  };
   const stockLocations = loadStockLocations();
   let imageCatalog = Array.isArray(window.COZ_IMAGE_CATALOG) ? [...window.COZ_IMAGE_CATALOG] : [];
   const PRODUCT_ID_VERSION = 2;
@@ -61,6 +66,8 @@
     channels: ["全渠道 / 配额", "销售渠道"]
   };
   const translationPairs = [
+    ["入库库位", "Inbound location"], ["出库库位", "Outbound location"], ["调出库位", "Source location"], ["入库类型", "Inbound reason"], ["出库原因", "Outbound reason"], ["调拨原因", "Transfer reason"], ["增加选项", "Add option"], ["编辑选项", "Edit option"], ["成衣采购单号（选填）", "Garment PO number (optional)"], ["历史采购 SKU 记录", "Historical PO SKU records"], ["来自已有入库流水", "From existing inbound records"], ["当前 SKU 入库记录", "Current SKU inbound records"], ["用于核对重复入库", "Check previous inbound entries"],
+    ["采购入库", "Purchase inbound"], ["退货入库", "Return inbound"], ["返单补货", "Reorder replenishment"], ["盘点补入", "Stocktake addition"], ["其他入库", "Other inbound"], ["单件销售", "Single-item sale"], ["套装销售", "Bundle sale"], ["运营出库", "Operations outbound"], ["拍照样", "Photo sample"], ["赠品出库", "Gift outbound"], ["次品报损", "Defect write-off"], ["其他出库", "Other outbound"], ["销售", "Sale"], ["库存调拨", "Inventory transfer"], ["店仓调拨", "Store/warehouse transfer"], ["仓间调拨", "Warehouse transfer"], ["其他调拨", "Other transfer"],
     ["操作", "Actions"], ["编辑库存流水", "Edit stock movement"], ["库存管理员", "Inventory manager"], ["只读库存", "Read-only inventory"], ["库存（只读）", "Inventory (read-only)"], ["库存已锁定，请在“出入库流水”中由授权人员调整。", "Inventory is locked. Authorized staff must adjust it in Stock movements."],
     ["库存中台 / 今日", "Inventory desk / Today"], ["经营概览", "Overview"], ["商品中心 / SKU", "Products / SKU"], ["成衣库存", "Inventory"], ["库存中心 / 流水", "Stock center / Ledger"], ["出入库流水", "Movements"], ["全渠道 / 配额", "Omnichannel / Allocation"], ["销售渠道", "Channels"],
     ["套装组合", "Bundles"], ["套装库存与组成", "Bundle inventory and components"], ["新建套装", "New bundle"], ["保存套装", "Save bundle"], ["虚拟套装", "Virtual bundle"], ["销售组合促销", "Promotional combination"], ["固定 SET 套装", "Fixed SET bundle"], ["套装 SKU 编码预览", "Bundle SKU preview"], ["套装名称", "Bundle name"], ["组合类型", "Bundle type"], ["季节", "Season"], ["添加季节", "Add season"], ["新季节", "New season"], ["添加颜色", "Add color"], ["新颜色", "New color"], ["固定 SET SKU", "Fixed SET SKU"], ["固定套装库存", "Fixed bundle stock"], ["套装组成", "Bundle components"], ["组成", "Components"], ["颜色 / 尺码", "Color / Size"], ["组件 1", "Component 1"], ["组件 2", "Component 2"], ["组件 3（可选）", "Component 3 (optional)"], ["输入款号、名称或颜色检索", "Search style, name, or color"], ["搜索套装、SKU、组件或颜色", "Search bundle, SKU, component, or color"], ["清除组件", "Clear component"], ["组合短码 1", "Bundle code 1"], ["组合短码 2", "Bundle code 2"], ["组合短码 3（可选）", "Bundle code 3 (optional)"], ["还没有套装", "No bundles yet"], ["个套装", "bundles"], ["套", "sets"], ["单件库存可组成虚拟套装，固定 SET 可独立管理。", "Use individual inventory in virtual bundles; manage fixed SET stock independently."], ["新建虚拟套装后，系统会按组件库存实时计算可售套数。", "Create a virtual bundle to calculate sellable sets from component stock in real time."], ["最多 3 个组件；第三项可用于头花等配件。", "Up to 3 components; use the third for a hair accessory."], ["虚拟 / 促销：组件短码用 + 连接；固定套装：使用完整 SET SKU。", "Virtual / promotion: join component codes with +; fixed bundles use the full SET SKU."], ["不可售", "Unavailable"], ["删除套装", "Delete bundle"],
@@ -126,6 +133,7 @@
   };
 
   let state = loadState();
+  normalizeMovementReasonOptions(state);
   let stockHistory = loadStockHistory();
   let activeView = "overview";
   let toastTimer = null;
@@ -575,6 +583,21 @@
     localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categoryCodes));
     queueCloudSave();
   }
+  function normalizeMovementReasonOptions(target) {
+    if (!target || typeof target !== "object") return;
+    const saved = target.movementReasonOptions && typeof target.movementReasonOptions === "object"
+      ? target.movementReasonOptions
+      : {};
+    target.movementReasonOptions = Object.fromEntries(Object.entries(defaultMovementReasonOptions).map(([type, defaults]) => [
+      type,
+      (() => {
+        const values = (Array.isArray(saved[type]) ? saved[type] : defaults)
+          .map((value) => String(value || "").trim())
+          .filter(Boolean);
+        return values.length ? [...new Set(values)] : [...defaults];
+      })()
+    ]));
+  }
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -874,6 +897,7 @@
     const needsBrandSkuMigration = Number(document.state.brandSkuRuleVersion || 0) < 2;
     if (Array.isArray(document.imageCatalog)) imageCatalog = clone(document.imageCatalog);
     state = upgradeCozState(clone(document.state));
+    normalizeMovementReasonOptions(state);
     const fixedSetBundlesChanged = migrateFixedSetBundles(state);
     Object.keys(categoryCodes).forEach((key) => delete categoryCodes[key]);
     Object.assign(categoryCodes, defaultCategoryCodes, document.categoryCodes || {});
@@ -1227,6 +1251,8 @@
     if (themeButton) themeButton.title = currentLang === "zh" ? "切换主题" : "Switch theme";
     if ($("bundleSearch")) $("bundleSearch").placeholder = currentLang === "zh" ? "搜索套装、SKU、组件或颜色" : "Search bundle, SKU, component, or color";
     if ($("movementSkuSearch")) $("movementSkuSearch").placeholder = currentLang === "zh" ? "输入 SKU、款号或商品名称" : "Enter SKU, style, or product name";
+    if ($("purchaseOrderSearch")) $("purchaseOrderSearch").placeholder = currentLang === "zh" ? "例如：成衣采购单 PO-20260809" : "e.g. garment PO PO-20260809";
+    if ($("movementReasonName")) $("movementReasonName").placeholder = currentLang === "zh" ? "输入选项名称" : "Enter option name";
     if ($("skuYear") && $("skuFabric")) renderSpuOptionSelectors($("skuYear").value, $("skuFabric").value);
     if ($("bundleSeason") && $("bundleColor")) renderBundleOptionSelectors($("bundleSeason").value, $("bundleColor").value);
     [1, 2, 3].forEach((index) => {
@@ -1884,6 +1910,135 @@
     $("movementSku").value = entry.value;
     $("movementSkuSearch").value = `${entry.label} · ${entry.meta}`;
     closeMovementSkuResults();
+    syncMovementReasonForTarget();
+    renderMovementReference();
+  }
+  function movementReasonOptions(type = $("movementType").value || "inbound") {
+    normalizeMovementReasonOptions(state);
+    return state.movementReasonOptions[type] || [];
+  }
+  function defaultMovementReason(type = $("movementType").value || "inbound") {
+    if (type === "inbound") return "采购入库";
+    if (type === "transfer") return "库存调拨";
+    const target = movementTargetFromValue($("movementSku").value);
+    return target?.kind === "bundle" ? "套装销售" : target?.kind === "product" ? "单件销售" : "销售";
+  }
+  function renderMovementReasonOptions(selected = "") {
+    const type = $("movementType").value || "inbound";
+    const options = [...movementReasonOptions(type)];
+    const value = String(selected || defaultMovementReason(type)).trim();
+    if (value && !options.includes(value)) options.push(value);
+    $("movementReason").innerHTML = options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join("");
+    $("movementReason").value = options.includes(value) ? value : options[0] || "";
+  }
+  function syncMovementReasonForTarget(force = false) {
+    const type = $("movementType").value;
+    const current = $("movementReason").value;
+    const automaticReasons = new Set(["销售", "单件销售", "套装销售"]);
+    if (force || !current || (type === "outbound" && automaticReasons.has(current))) renderMovementReasonOptions(defaultMovementReason(type));
+  }
+  function openMovementReasonEditor(mode) {
+    const editing = mode === "edit";
+    const selected = $("movementReason").value;
+    if (editing && !selected) {
+      showToast("请先选择需要编辑的选项");
+      return;
+    }
+    $("movementReasonEditorMode").value = editing ? "edit" : "add";
+    $("movementReasonOriginal").value = editing ? selected : "";
+    $("movementReasonName").value = editing ? selected : "";
+    $("movementReasonEditor").hidden = false;
+    setTimeout(() => $("movementReasonName").focus(), 20);
+  }
+  function closeMovementReasonEditor() {
+    $("movementReasonEditor").hidden = true;
+    $("movementReasonEditorMode").value = "";
+    $("movementReasonOriginal").value = "";
+    $("movementReasonName").value = "";
+  }
+  function saveMovementReasonOption() {
+    const type = $("movementType").value;
+    const options = movementReasonOptions(type);
+    const mode = $("movementReasonEditorMode").value;
+    const original = $("movementReasonOriginal").value;
+    const name = $("movementReasonName").value.trim();
+    if (!name) {
+      showToast("请输入选项名称");
+      return;
+    }
+    if (options.some((option) => option !== original && option.toLowerCase() === name.toLowerCase())) {
+      showToast("该选项已经存在");
+      return;
+    }
+    state.movementReasonOptions[type] = mode === "edit"
+      ? options.map((option) => option === original ? name : option)
+      : [...options, name];
+    saveState();
+    renderMovementReasonOptions(name);
+    closeMovementReasonEditor();
+    showToast(mode === "edit" ? "选项已修改" : "选项已增加");
+  }
+  function movementPurchaseOrder(movement) {
+    if (movement?.purchaseOrder) return String(movement.purchaseOrder).trim().toUpperCase();
+    const match = String(movement?.note || "").toUpperCase().match(/\bPO[\s-]?[A-Z0-9-]{4,}\b/);
+    return match ? match[0].replace(/\s+/g, "-") : "";
+  }
+  function movementReasonValue(movement) {
+    if (movement?.reason) return String(movement.reason).trim();
+    const note = String(movement?.note || "").trim();
+    if (movement?.type === "inbound" && movementPurchaseOrder(movement)) return "采购入库";
+    if (movement?.type === "inbound" && note.includes("退货")) return "退货入库";
+    return note || defaultMovementReason(movement?.type || "inbound");
+  }
+  function purchaseOrderEntries() {
+    const orders = new Map();
+    state.movements.filter((movement) => movement.type === "inbound").forEach((movement) => {
+      const order = movementPurchaseOrder(movement);
+      if (!order) return;
+      const existing = orders.get(order) || { order, quantity: 0, skuCount: new Set(), latest: movement.time };
+      existing.quantity += Math.abs(Number(movement.qty || 0));
+      existing.skuCount.add(movement.sku);
+      if (String(movement.time) > String(existing.latest)) existing.latest = movement.time;
+      orders.set(order, existing);
+    });
+    return [...orders.values()].sort((left, right) => String(right.latest).localeCompare(String(left.latest)));
+  }
+  function renderPurchaseOrderResults(query = "") {
+    const terms = String(query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const matches = purchaseOrderEntries().filter((entry) => terms.every((term) => entry.order.toLowerCase().includes(term))).slice(0, 20);
+    $("purchaseOrderResults").innerHTML = matches.length
+      ? matches.map((entry, index) => `<button class="inventory-search-result${index === 0 ? " active" : ""}" type="button" role="option" data-purchase-order="${escapeHtml(entry.order)}"><strong>${escapeHtml(entry.order)}</strong><span>${currentLang === "zh" ? `${entry.skuCount.size} 个 SKU · 已入 ${formatNumber(entry.quantity)} 件` : `${entry.skuCount.size} SKUs · ${formatNumber(entry.quantity)} pcs received`} · ${escapeHtml(entry.latest)}</span></button>`).join("")
+      : `<div class="component-result-empty">${currentLang === "zh" ? "没有匹配的历史采购单，可直接输入新单号" : "No matching historical PO. Enter a new PO number directly."}</div>`;
+    $("purchaseOrderResults").hidden = false;
+    $("purchaseOrderSearch").setAttribute("aria-expanded", "true");
+  }
+  function closePurchaseOrderResults() {
+    $("purchaseOrderResults").hidden = true;
+    $("purchaseOrderSearch").setAttribute("aria-expanded", "false");
+  }
+  function selectPurchaseOrder(order) {
+    $("purchaseOrderSearch").value = order;
+    closePurchaseOrderResults();
+    renderMovementReference();
+  }
+  function movementHistoryRow(movement, leading) {
+    const reason = movement.reason || String(movement.note || "").split(" · ")[0] || "入库";
+    return `<div class="movement-reference-row"><div><strong>${escapeHtml(leading)}</strong><code>${escapeHtml(movement.sku)}</code></div><span>+${formatNumber(Math.abs(Number(movement.qty || 0)))} · ${escapeHtml(reason)}<small>${escapeHtml(movement.time)}</small></span></div>`;
+  }
+  function renderMovementReference() {
+    if ($("movementType").value !== "inbound") return;
+    const query = $("purchaseOrderSearch").value.trim().toLowerCase();
+    const target = movementTargetFromValue($("movementSku").value);
+    const purchaseHistory = state.movements.filter((movement) => movement.type === "inbound" && movementPurchaseOrder(movement))
+      .filter((movement) => !query || movementPurchaseOrder(movement).toLowerCase().includes(query))
+      .slice(0, 5);
+    const skuHistory = state.movements.filter((movement) => movement.type === "inbound" && target && movement.sku === target.sku).slice(0, 5);
+    $("purchaseSkuHistory").innerHTML = purchaseHistory.length
+      ? purchaseHistory.map((movement) => movementHistoryRow(movement, movementPurchaseOrder(movement))).join("")
+      : `<p class="movement-reference-empty">${currentLang === "zh" ? "暂无历史采购 SKU 记录" : "No historical PO SKU records"}</p>`;
+    $("inboundSkuHistory").innerHTML = skuHistory.length
+      ? skuHistory.map((movement) => movementHistoryRow(movement, movement.location || "入库")).join("")
+      : `<p class="movement-reference-empty">${currentLang === "zh" ? "选择 SKU 后显示历史入库记录" : "Select a SKU to view its inbound history"}</p>`;
   }
   function locationById(id) {
     return stockLocations.find((location) => location.id === id) || stockLocations[0];
@@ -2147,6 +2302,8 @@
       $("movementSku").value = "";
       $("movementSkuSearch").value = "";
     }
+    $("purchaseOrderSearch").value = "";
+    renderMovementReference();
     $("movementModal").hidden = false;
     document.body.style.overflow = "hidden";
     setTimeout(() => {
@@ -2159,6 +2316,8 @@
     $("movementModal").hidden = true;
     $("editingMovementId").value = "";
     closeMovementSkuResults();
+    closePurchaseOrderResults();
+    closeMovementReasonEditor();
     closeLocationEditor();
     document.body.style.overflow = "";
   }
@@ -2681,7 +2840,15 @@
     document.querySelectorAll(".segmented button").forEach((button) => button.classList.toggle("active", button.dataset.type === type));
     $("movementForm").querySelector('[type="submit"]').textContent = type === "inbound" ? "确认入库" : type === "outbound" ? "确认出库" : "确认调拨";
     $("movementDestinationField").hidden = type !== "transfer";
+    $("movementLocationLabel").textContent = type === "inbound" ? "入库库位" : type === "outbound" ? "出库库位" : "调出库位";
+    $("movementReasonLabel").textContent = type === "inbound" ? "入库类型" : type === "outbound" ? "出库原因" : "调拨原因";
+    $("purchaseOrderField").hidden = type !== "inbound";
+    $("movementReference").hidden = type !== "inbound";
+    closeMovementReasonEditor();
+    closePurchaseOrderResults();
+    renderMovementReasonOptions(defaultMovementReason(type));
     if (type === "transfer") renderMovementDestinationOptions();
+    if (type === "inbound") renderMovementReference();
     applyLanguage();
   }
 
@@ -2830,8 +2997,10 @@
     renderMovementDestinationOptions();
     if (movement.destinationLocationId) $("movementDestination").value = movement.destinationLocationId;
     $("movementQty").value = Math.max(1, Math.abs(Number(movement.qty || 1)));
-    $("movementNote").value = movement.note || "";
     setMovementType(["outbound", "transfer"].includes(movement.type) ? movement.type : "inbound");
+    renderMovementReasonOptions(movementReasonValue(movement));
+    $("purchaseOrderSearch").value = movementPurchaseOrder(movement);
+    renderMovementReference();
     $("movementForm").querySelector('[type="submit"]').textContent = "保存修改";
     $("movementModal").hidden = false;
     document.body.style.overflow = "hidden";
@@ -2877,6 +3046,8 @@
     const location = locationById(locationId);
     const destinationLocationId = $("movementDestination").value;
     const destinationLocation = locationById(destinationLocationId);
+    const reason = $("movementReason").value.trim() || defaultMovementReason(type);
+    const purchaseOrder = type === "inbound" ? $("purchaseOrderSearch").value.trim().toUpperCase() : "";
     if (!target || !location) return;
     if (type === "inbound" && target.kind === "bundle" && target.record.type !== "fixed") {
       showToast("虚拟套装没有独立入库，请给组成单品入库");
@@ -2921,7 +3092,9 @@
       destinationLocation: type === "transfer" ? destinationLocation.name : "",
       destinationLocationId: type === "transfer" ? destinationLocationId : "",
       operator: currentSession.displayName || currentSession.username,
-      note: $("movementNote").value.trim() || (target.kind === "bundle" ? `${bundleTypeLabel(target.record.type)}${type === "outbound" ? "销售" : type === "transfer" ? "调拨" : "入库"}` : type === "transfer" ? "库存调拨" : "快速库存调整"),
+      reason,
+      purchaseOrder,
+      note: type === "inbound" && purchaseOrder ? `${reason} · ${purchaseOrder}` : reason,
       targetKind: target.kind,
       targetId: target.targetId,
       targetSize: target.size || ""
@@ -3399,6 +3572,8 @@
       if (bundleSearchResult) selectBundleSearchResult(bundleSearchResult.dataset.bundleSearchId, bundleSearchResult.dataset.bundleSearchSize);
       const movementSkuResult = event.target.closest("[data-movement-sku-value]");
       if (movementSkuResult) selectMovementSku(movementSkuResult.dataset.movementSkuValue);
+      const purchaseOrderResult = event.target.closest("[data-purchase-order]");
+      if (purchaseOrderResult) selectPurchaseOrder(purchaseOrderResult.dataset.purchaseOrder);
       const editMovementButton = event.target.closest("[data-edit-movement]");
       if (editMovementButton) openMovementEditor(editMovementButton.dataset.editMovement);
       const deleteMovementButton = event.target.closest("[data-delete-movement]");
@@ -3409,7 +3584,8 @@
       if (!componentPicker) [1, 2, 3].forEach(closeBundleComponentResults);
       if (!event.target.closest(".inventory-search-combobox")) closeInventorySearchResults();
       if (!event.target.closest(".bundle-search-combobox")) closeBundleSearchResults();
-      if (!event.target.closest(".movement-sku-combobox")) closeMovementSkuResults();
+      if (!event.target.closest(".movement-sku-field")) closeMovementSkuResults();
+      if (!event.target.closest(".purchase-order-field")) closePurchaseOrderResults();
       const colorResult = event.target.closest("[data-color-name]");
       if (colorResult) selectMappedColor(colorResult.dataset.colorName, colorResult.dataset.colorCode);
       if (!event.target.closest(".color-combobox")) closeColorResults();
@@ -3502,6 +3678,10 @@
     $("editLocationBtn").addEventListener("click", () => openLocationEditor("edit"));
     $("cancelLocationBtn").addEventListener("click", closeLocationEditor);
     $("saveLocationBtn").addEventListener("click", saveLocation);
+    $("addMovementReasonBtn").addEventListener("click", () => openMovementReasonEditor("add"));
+    $("editMovementReasonBtn").addEventListener("click", () => openMovementReasonEditor("edit"));
+    $("cancelMovementReasonBtn").addEventListener("click", closeMovementReasonEditor);
+    $("saveMovementReasonBtn").addEventListener("click", saveMovementReasonOption);
     $("skuImageDropzone").addEventListener("click", () => $("skuImageFile").click());
     $("skuImageFile").addEventListener("change", (event) => useSkuImageFile(event.target.files?.[0]));
     $("clearSkuImageBtn").addEventListener("click", () => {
@@ -3541,6 +3721,7 @@
     $("newBundleSeason").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addBundleSeason(); } });
     $("newBundleColor").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addBundleColor(); } });
     $("newLocationName").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); saveLocation(); } });
+    $("movementReasonName").addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); saveMovementReasonOption(); } });
     $("movementForm").addEventListener("submit", submitMovement);
     $("skuForm").addEventListener("submit", submitSku);
     $("bundleForm").addEventListener("submit", submitBundle);
@@ -3594,6 +3775,31 @@
     $("movementSkuSearch").addEventListener("input", () => {
       $("movementSku").value = "";
       renderMovementSkuResults($("movementSkuSearch").value);
+      syncMovementReasonForTarget();
+      renderMovementReference();
+    });
+    $("purchaseOrderSearch").addEventListener("focus", () => renderPurchaseOrderResults($("purchaseOrderSearch").value));
+    $("purchaseOrderSearch").addEventListener("input", () => {
+      renderPurchaseOrderResults($("purchaseOrderSearch").value);
+      renderMovementReference();
+    });
+    $("purchaseOrderSearch").addEventListener("keydown", (event) => {
+      let options = [...$("purchaseOrderResults").querySelectorAll(".inventory-search-result")];
+      let current = options.findIndex((option) => option.classList.contains("active"));
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if ($("purchaseOrderResults").hidden) {
+          renderPurchaseOrderResults($("purchaseOrderSearch").value);
+          options = [...$("purchaseOrderResults").querySelectorAll(".inventory-search-result")];
+          current = options.findIndex((option) => option.classList.contains("active"));
+        }
+        const next = event.key === "ArrowDown" ? Math.min(options.length - 1, current + 1) : Math.max(0, current - 1);
+        options.forEach((option, index) => option.classList.toggle("active", index === next));
+        options[next]?.scrollIntoView({ block: "nearest" });
+      } else if (event.key === "Enter" && !$("purchaseOrderResults").hidden && options.length) {
+        event.preventDefault();
+        selectPurchaseOrder(options[Math.max(0, current)].dataset.purchaseOrder);
+      } else if (event.key === "Escape") closePurchaseOrderResults();
     });
     $("movementSkuSearch").addEventListener("keydown", (event) => {
       let options = [...$("movementSkuResults").querySelectorAll(".inventory-search-result")];

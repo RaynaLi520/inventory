@@ -75,6 +75,7 @@ function sameJson(left, right) {
 
 function changesProtectedInventory(previousDocument, nextDocument) {
   if (!sameJson(previousDocument?.state?.movements || [], nextDocument?.state?.movements || [])) return true;
+  if (!sameJson(previousDocument?.state?.movementReasonOptions || {}, nextDocument?.state?.movementReasonOptions || {})) return true;
   if (!sameJson(previousDocument?.stockLocations || [], nextDocument?.stockLocations || [])) return true;
 
   const previousProducts = new Map((previousDocument?.state?.products || []).map((product) => [String(product.id), product]));
@@ -97,6 +98,7 @@ function catalogProjection(document) {
   delete projected.stockHistory;
   if (projected.state) {
     delete projected.state.movements;
+    delete projected.state.movementReasonOptions;
     projected.state.products = (projected.state.products || []).map((product) => {
       const copy = { ...product };
       ["sizes", "localSizes", "warehouse", "store", "reserved", "reservedBySize", "reservedReported", "locationStock"].forEach((key) => delete copy[key]);
