@@ -1443,6 +1443,39 @@
     });
   }
 
+  function searchTerms(query = "") {
+    return String(query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+  }
+
+  function searchTermIsNumeric(term) {
+    return /^\d+$/.test(String(term || ""));
+  }
+
+  function productSkuSearchable(product) {
+    return [preferredSpuCode(product), ...Object.values(product?.skuBySize || {})]
+      .join(" ").toLowerCase();
+  }
+
+  // Numeric searches are SKU lookups. Do not let a number in a product name,
+  // color, or another descriptive field produce an unrelated result.
+  function matchesSearchTerms(terms, searchable, skuSearchable, sourceSearchable = "") {
+    return terms.every((term) => {
+      if (searchTermIsNumeric(term)) return skuSearchable.includes(term);
+      return searchable.includes(term) || (/^\d{8,}$/.test(term) && sourceSearchable.includes(term));
+    });
+  }
+
+  function searchMatchRank(terms, preferred, skuSearchable, searchable) {
+    const preferredValue = String(preferred || "").toLowerCase();
+    return terms.reduce((score, term) => {
+      if (preferredValue === term) return score + 1000;
+      if (preferredValue.startsWith(term)) return score + 800;
+      if (skuSearchable.includes(term)) return score + 600;
+      if (searchable.includes(term)) return score + 100;
+      return score;
+    }, 0);
+  }
+
   function renderInventory() {
     const products = getFilteredProducts();
     $("resultCount").textContent = products.reduce((sum, product) => sum + Object.keys(product.sizes).length, 0);
@@ -1466,17 +1499,28 @@
   }
 
   function matchesProductSearch(product, query = "") {
-    const terms = String(query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const terms = searchTerms(query);
     if (!terms.length) return true;
-    const visible = [product.name, product.baseSku, product.sourceBaseSku, product.style, product.originalStyle, product.color,
-      ...Object.values(product.skuBySize || {})].join(" ").toLowerCase();
+    const skuSearchable = productSkuSearchable(product);
+    const visible = [product.name, product.color, skuSearchable,
+      product.baseSku, product.sourceBaseSku, product.style, product.originalStyle].join(" ").toLowerCase();
     const rawSourceSkus = Object.values(product.sourceSkuBySize || {}).join(" ").toLowerCase();
-    return terms.every((term) => visible.includes(term) || (/^\d{8,}$/.test(term) && rawSourceSkus.includes(term)));
+    return matchesSearchTerms(terms, visible, skuSearchable, rawSourceSkus);
   }
   function inventorySearchMatches(query = "") {
-    return state.products.filter((product) => {
-      return matchesProductSearch(product, query);
-    }).slice(0, 30);
+    const terms = searchTerms(query);
+    return state.products
+      .filter((product) => matchesProductSearch(product, query))
+      .sort((a, b) => {
+        const rank = (product) => {
+          const skuSearchable = productSkuSearchable(product);
+          const searchable = [product.name, product.color, skuSearchable,
+            product.baseSku, product.sourceBaseSku, product.style, product.originalStyle].join(" ").toLowerCase();
+          return searchMatchRank(terms, preferredSpuCode(product), skuSearchable, searchable);
+        };
+        return rank(b) - rank(a);
+      })
+      .slice(0, 30);
   }
   function renderInventorySearchResults(query = "") {
     const results = $("inventorySearchResults");
@@ -1973,6 +2017,7 @@
         value: `product|${product.id}|${size}`,
         label: sku,
         meta: `${product.name} · ${product.color} · ${size}`,
+        skuSearchable: [sku, productSkuSearchable(product)].join(" ").toLowerCase(),
         searchable: [sku, product.baseSku, product.sourceBaseSku, product.style, product.originalStyle, product.name, product.color, size].join(" ").toLowerCase(),
         sourceSku: String(sourceSku).toLowerCase()
       };
@@ -1981,14 +2026,19 @@
       value: `bundle|${bundle.id}|${row.size}`,
       label: row.sku,
       meta: `[套装] ${bundle.name} · ${bundle.color || "-"} / ${row.size}`,
+      skuSearchable: String(row.sku || "").toLowerCase(),
       searchable: bundleSearchText(bundle, row.size),
       sourceSku: ""
     })));
     return [...products, ...bundles];
   }
   function matchingMovementSkus(query = "") {
-    const terms = String(query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
-    return movementSkuEntries().filter((entry) => terms.every((term) => entry.searchable.includes(term) || (/^\d{2,}$/.test(term) && entry.sourceSku.includes(term)))).slice(0, 40);
+    const terms = searchTerms(query);
+    return movementSkuEntries()
+      .filter((entry) => matchesSearchTerms(terms, entry.searchable, entry.skuSearchable, entry.sourceSku))
+      .sort((a, b) => searchMatchRank(terms, b.label, b.skuSearchable, b.searchable)
+        - searchMatchRank(terms, a.label, a.skuSearchable, a.searchable))
+      .slice(0, 40);
   }
   function renderMovementSkuResults(query = "") {
     const results = $("movementSkuResults");
