@@ -38,7 +38,16 @@ journalctl -u inventory-coz-sync -n 100 --no-pager
 
 The Ubuntu server calls the CoZ Forguncy inventory API directly every 60 seconds. The synchronization does not require a browser extension or an always-on employee computer. Each response must be complete before PostgreSQL is updated; failed or partial responses leave the previous inventory unchanged.
 
-The production-plan and garment-inbound pages are synchronized by the optional `inventory-coz-records-sync.timer` every five minutes. This job stores normalized records in PostgreSQL and exposes them to the quick inbound dialog through `/api/external-records`; it does not change stock quantities. Because Forguncy generates different binding IDs for each page, export the two pages' `GetTableDataWithOffset` POST bodies and install them as `/etc/henan-inventory/coz-purchase-records-request.json` and `/etc/henan-inventory/coz-inbound-records-request.json`. Set `COZ_RECORDS_COOKIE` in `/etc/henan-inventory/coz-records-sync.env` only when the internal API requires a session cookie. The service fetches every page, sorts by source time descending, and keeps the last successful database snapshot if either request fails.
+The production-plan and garment-inbound pages are synchronized by the optional `inventory-coz-records-sync.timer` every five minutes. This job stores normalized records in PostgreSQL and exposes them to the quick inbound dialog through `/api/external-records`; it does not change stock quantities. The captured request templates are included as `coz-purchase-records-request.json` and `coz-inbound-records-request.json`. Install them on Ubuntu with:
+
+```bash
+sudo install -d -m 0700 /etc/henan-inventory
+sudo install -m 0600 deploy/ubuntu/coz-purchase-records-request.json /etc/henan-inventory/coz-purchase-records-request.json
+sudo install -m 0600 deploy/ubuntu/coz-inbound-records-request.json /etc/henan-inventory/coz-inbound-records-request.json
+sudo install -m 0600 deploy/ubuntu/coz-records-sync.env.example /etc/henan-inventory/coz-records-sync.env
+```
+
+The production template is for `生产订单计划表` and the inbound template is for `成衣入库单主表_列表页面` (`currentTable: 出入库主表`). Set `COZ_RECORDS_COOKIE` in `/etc/henan-inventory/coz-records-sync.env` only when the internal API requires a session cookie. If the response uses generic `C0`, `C1`, ... fields, inspect one response and set `COZ_RECORDS_FIELD_MAPS` before enabling the timer; the service will not guess a column mapping. The service fetches every page, sorts by source time descending, and keeps the last successful database snapshot if either request fails.
 
 Centric PLM style synchronization is read-only and stores its credentials outside the repository. Create `/etc/henan-inventory/plm-sync.env` with mode `0600` and set `PLM_BASE_URL`, `PLM_USERNAME`, and `PLM_PASSWORD`. By default the service discovers active CoZ styles under the configured season hierarchy (`PLM_ROOT_URL=C243138`, `PLM_SCOPE_NAME=CoZ`) every 60 seconds. Set `PLM_STYLE_URLS` only when a temporary explicit style-ID allowlist is required; a non-empty allowlist overrides discovery. PLM internal IDs remain in the `plm_styles` and `plm_colorways` PostgreSQL tables; inventory products retain the existing visible fields and color-code mapping.
 

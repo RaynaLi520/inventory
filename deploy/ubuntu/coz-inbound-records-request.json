@@ -1,0 +1,37 @@
+{
+  "bindingInfos": [
+    "5ea3a718-1ac6-489b-a943-c626f9952c31",
+    "709e3e22-30dc-49f7-bad6-37045610e57f",
+    "c4eb9aa4-c239-4865-901d-17e65d342fa6",
+    "4588c18f-022f-44a6-b36e-999d5bd75073",
+    "a47f8309-073d-45ed-8d65-59abfba4de38",
+    "1c46210d-c201-4c36-bd60-4171f27a2f10",
+    "61ec43a6-e281-498b-937a-52af0ee982ff",
+    "d3362679-5535-4d83-a329-c8cf2a6010a6",
+    "78bdb6b1-b5cb-4d75-8329-654b2aa11b73",
+    "f2a2fd39-94e6-4872-8db5-034dcf773779",
+    "3e9a90b4-76e0-4196-850f-3e6a25b53dce",
+    "63fa7677-d002-48b6-8e44-e0a7ee6151e9"
+  ],
+  "currentRowInfo": {
+    "currentTable": "出入库主表",
+    "viewname": "成衣入库单主表_列表页面表格1",
+    "listviewLocation": "成衣入库单主表_列表页面|表格1",
+    "viewConditionFormulaValues": {
+      "=M2": null
+    }
+  },
+  "demandRowCount": 0,
+  "currentDataLength": 0,
+  "needRowVersion": true,
+  "editorDataInfos": null,
+  "sortCommandID": null,
+  "orderByInfo": null,
+  "offsetConditionInfo": {
+    "targetPage": 1,
+    "pageLimitRowCount": 10
+  },
+  "columnFilterQueries": null,
+  "totalRowBindingInfos": [],
+  "pageName": "成衣入库单主表_列表页面"
+}

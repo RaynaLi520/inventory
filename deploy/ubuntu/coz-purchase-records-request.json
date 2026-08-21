@@ -1,0 +1,36 @@
+{
+  "bindingInfos": [
+    "d1746573-31ec-4044-968c-1e6c959c7e3f",
+    "bc70b48b-b043-434d-a2db-6ec7268baf95",
+    "51ad1f40-a61c-443a-a89a-4871f86a105c",
+    "1de05bd2-29ac-44d6-9d88-4bde64f8bc88",
+    "248422b0-1cdf-47dc-b427-3b6a80ba9858",
+    "cf4339e5-2b31-4b28-9d26-bead0b55452d",
+    "e7f26637-a0e4-4e7d-8596-13ee519d15bf",
+    "3ebb7dd0-5d43-4c61-a7a9-cabe285805af"
+  ],
+  "currentRowInfo": {
+    "currentTable": "生产订单表",
+    "viewname": "生产订单计划表表格1",
+    "listviewLocation": "生产订单计划表|表格1",
+    "viewConditionFormulaValues": {
+      "=G2": null,
+      "=W2": null,
+      "=AN2": null,
+      "=AY2": null
+    }
+  },
+  "demandRowCount": 0,
+  "currentDataLength": 0,
+  "needRowVersion": true,
+  "editorDataInfos": null,
+  "sortCommandID": null,
+  "orderByInfo": null,
+  "offsetConditionInfo": {
+    "targetPage": 1,
+    "pageLimitRowCount": 16
+  },
+  "columnFilterQueries": null,
+  "totalRowBindingInfos": ["e1fc1c45-3e9b-43fc-aa92-6883120af462"],
+  "pageName": "生产订单计划表"
+}
