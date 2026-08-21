@@ -76,13 +76,14 @@ function sourceKey(row, index, kind) {
   return `${kind}:${digest}:${index}`;
 }
 
-export function normalizeCozRecordRows(rows, kind) {
+export function normalizeCozRecordRows(rows, kind, fieldMap = {}) {
   const seen = new Set();
   return rows.map((row, index) => {
-    const sku = clean(firstField(row, [/sku|stockkeepingunit|商品编码|货号|款号/])) || clean(firstMatchingValue(row, /(?:^|[-_])(?:[A-Z]{2,}\d|\d{8,}|[A-Z]{2,}[-_][A-Z0-9]+)(?:[-_]|$)/i));
-    const purchaseOrder = clean(firstField(row, [/采购单|采购订单|生产订单|生产单|订单号|po(?:number|no)?/])) || clean(firstMatchingValue(row, /\bPO[-\s]?[A-Z0-9-]{4,}\b/i));
-    const quantityValue = firstField(row, [/数量|qty|quantity|入库数|计划数|采购数/]);
-    const recordedAt = parseDate(firstField(row, [/时间|日期|date|time|入库时间|计划时间|创建时间|审核时间|单据时间/]));
+    const mapped = (name) => fieldMap?.[name] ? row[fieldMap[name]] : undefined;
+    const sku = clean(mapped("sku") ?? firstField(row, [/sku|stockkeepingunit|商品编码|货号|款号/]) ?? firstMatchingValue(row, /(?:^|[-_])(?:[A-Z]{2,}\d|\d{8,}|[A-Z]{2,}[-_][A-Z0-9]+)(?:[-_]|$)/i));
+    const purchaseOrder = clean(mapped("purchaseOrder") ?? firstField(row, [/采购单|采购订单|生产订单|生产单|订单号|po(?:number|no)?/]) ?? firstMatchingValue(row, /\bPO[-\s]?[A-Z0-9-]{4,}\b/i));
+    const quantityValue = mapped("quantity") ?? firstField(row, [/数量|qty|quantity|入库数|计划数|采购数/]);
+    const recordedAt = parseDate(mapped("recordedAt") ?? firstField(row, [/时间|日期|date|time|入库时间|计划时间|创建时间|审核时间|单据时间/]));
     const key = sourceKey(row, index, kind);
     if (seen.has(key)) return null;
     seen.add(key);
@@ -98,6 +99,6 @@ export function normalizeCozRecordRows(rows, kind) {
   }).filter(Boolean).sort((left, right) => String(right.recordedAt || "").localeCompare(String(left.recordedAt || "")) || left.sourceKey.localeCompare(right.sourceKey));
 }
 
-export function normalizeCozRecordPayload(payload, kind) {
-  return normalizeCozRecordRows(extractRows(payload), kind);
+export function normalizeCozRecordPayload(payload, kind, fieldMap = {}) {
+  return normalizeCozRecordRows(extractRows(payload), kind, fieldMap);
 }

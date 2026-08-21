@@ -20,3 +20,13 @@ test("patches Forguncy pagination without mutating the template", () => {
   assert.equal(next.currentDataLength, 0);
   assert.equal(template.offsetConditionInfo.targetPage, 1);
 });
+
+test("supports explicit column mappings for Forguncy C columns", () => {
+  const [record] = normalizeCozRecordPayload({ Data: [{ C2: "COZAW26-KST111-LB-S", C4: "生产单-001", C7: 12, C9: "2026-08-20" }] }, "purchase", {
+    sku: "C2", purchaseOrder: "C4", quantity: "C7", recordedAt: "C9"
+  });
+  assert.equal(record.sku, "COZAW26-KST111-LB-S");
+  assert.equal(record.purchaseOrder, "生产单-001");
+  assert.equal(record.quantity, 12);
+  assert.equal(record.recordedAt, "2026-08-20T00:00:00.000Z");
+});

@@ -14,6 +14,9 @@ const timeoutMs = Number(process.env.COZ_RECORDS_SYNC_TIMEOUT_MS || 50000);
 const pageSize = Number(process.env.COZ_RECORDS_PAGE_SIZE || 500);
 const maxPages = Number(process.env.COZ_RECORDS_MAX_PAGES || 200);
 const cookie = String(process.env.COZ_RECORDS_COOKIE || "").trim();
+let fieldMaps = {};
+try { fieldMaps = JSON.parse(String(process.env.COZ_RECORDS_FIELD_MAPS || "{}")); }
+catch (error) { throw new Error(`COZ_RECORDS_FIELD_MAPS is not valid JSON: ${error.message}`); }
 const pool = new Pool();
 
 async function fetchRecords(config) {
@@ -39,7 +42,7 @@ async function fetchRecords(config) {
       clearTimeout(timeout);
     }
   }
-  return normalizeCozRecordPayload({ Data: allRows, AllRowLoaded: true }, config.kind);
+  return normalizeCozRecordPayload({ Data: allRows, AllRowLoaded: true }, config.kind, fieldMaps[config.kind] || {});
 }
 
 async function synchronize() {
