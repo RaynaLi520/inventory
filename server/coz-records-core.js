@@ -54,10 +54,11 @@ function extractRows(payload) {
   return [];
 }
 
-export function patchPageRequest(request, page) {
+export function patchPageRequest(request, page, pageSize) {
   const next = JSON.parse(JSON.stringify(request || {}));
   const offset = next.offsetConditionInfo || (next.offsetConditionInfo = {});
   offset.targetPage = page;
+  if (pageSize) offset.pageLimitRowCount = pageSize;
   if (next.currentDataLength !== undefined) next.currentDataLength = 0;
   return next;
 }

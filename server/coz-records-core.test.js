@@ -15,9 +15,10 @@ test("normalizes and sorts external CoZ records by newest date", () => {
 
 test("patches Forguncy pagination without mutating the template", () => {
   const template = { offsetConditionInfo: { targetPage: 1 }, currentDataLength: 23 };
-  const next = patchPageRequest(template, 4);
+  const next = patchPageRequest(template, 4, 500);
   assert.equal(next.offsetConditionInfo.targetPage, 4);
   assert.equal(next.currentDataLength, 0);
+  assert.equal(next.offsetConditionInfo.pageLimitRowCount, 500);
   assert.equal(template.offsetConditionInfo.targetPage, 1);
 });
 

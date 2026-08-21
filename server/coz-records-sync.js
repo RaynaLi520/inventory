@@ -29,7 +29,7 @@ async function fetchRecords(config) {
       const response = await fetch(config.url, {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8", Accept: "application/json", ...(cookie ? { Cookie: cookie } : {}) },
-        body: JSON.stringify(patchPageRequest(request, page)),
+        body: JSON.stringify(patchPageRequest(request, page, pageSize)),
         signal: controller.signal
       });
       if (!response.ok) throw new Error(`${config.kind} API returned HTTP ${response.status}`);
