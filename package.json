@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server/index.js",
     "test": "node --test server/*.test.js",
-    "check": "node --check server/index.js && node --check server/auth.js && node --check server/create-admin.js && node --check server/reset-user-password.js && node --check server/import-backup.js && node --check server/coz-sync-core.js && node --check server/coz-sync.js && node --check server/plm-client.js && node --check server/plm-sync-core.js && node --check server/plm-sync.js && node --check assets/auth.js && node --check assets/inventory.js && node --check service-worker.js && node --check tools/generate-mobile-qr.js && node --check tools/plm-sync-dry-run.js",
+    "check": "node --check server/index.js && node --check server/auth.js && node --check server/create-admin.js && node --check server/reset-user-password.js && node --check server/import-backup.js && node --check server/coz-sync-core.js && node --check server/coz-records-core.js && node --check server/coz-sync.js && node --check server/coz-records-sync.js && node --check server/plm-client.js && node --check server/plm-sync-core.js && node --check server/plm-sync.js && node --check assets/auth.js && node --check assets/inventory.js && node --check service-worker.js && node --check tools/generate-mobile-qr.js && node --check tools/plm-sync-dry-run.js",
     "sync:plm": "node server/plm-sync.js",
     "create:admin": "node server/create-admin.js",
     "reset:password": "node server/reset-user-password.js",

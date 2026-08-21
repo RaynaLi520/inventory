@@ -452,6 +452,11 @@ body.can-manage-movements .movement-admin-column { display: table-cell; }
 .movement-reference-row > span { display: flex; flex-direction: column; align-items: flex-end; color: var(--green); font-size: 12px; font-weight: 750; white-space: nowrap; }
 .movement-reference-row small { margin-top: 3px; color: var(--muted); font-size: 11px; font-weight: 400; }
 .movement-reference-empty { min-height: 66px; display: grid; place-items: center; margin: 0; padding: 12px; color: var(--muted); font-size: 12px; text-align: center; }
+.movement-reference-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-height: 36px; padding: 5px 8px; border-top: 1px solid var(--line); }
+.movement-reference-pagination:empty { display: none; }
+.movement-reference-pagination button { min-width: 28px; height: 27px; padding: 0 7px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--ink); background: var(--surface); font-size: 11px; cursor: pointer; }
+.movement-reference-pagination button:disabled { cursor: not-allowed; opacity: .45; }
+.movement-reference-pagination span { color: var(--muted); font-size: 11px; }
 .category-creator { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) auto; gap: 7px; padding: 9px; border: 1px solid var(--line); background: #f7faf8; }
 .category-creator.compact-creator { grid-template-columns: minmax(0, 1fr) auto; }
 .category-creator input { min-width: 0; }

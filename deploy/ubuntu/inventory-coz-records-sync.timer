@@ -1,0 +1,11 @@
+[Unit]
+Description=Run CoZ external records synchronization every 5 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Unit=inventory-coz-records-sync.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target

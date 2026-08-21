@@ -282,8 +282,8 @@
           <div class="movement-sku-combobox"><input id="purchaseOrderSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="purchaseOrderResults" autocomplete="off" placeholder="例如：成衣采购单 PO-20260809"><div class="inventory-search-results movement-sku-results" id="purchaseOrderResults" role="listbox" hidden></div></div>
         </div>
         <div class="movement-reference" id="movementReference">
-          <section><div class="movement-reference-head"><strong>历史采购 SKU 记录</strong><small>来自已有入库流水</small></div><div class="movement-reference-list" id="purchaseSkuHistory"></div></section>
-          <section><div class="movement-reference-head"><strong>当前 SKU 入库记录</strong><small>用于核对重复入库</small></div><div class="movement-reference-list" id="inboundSkuHistory"></div></section>
+          <section><div class="movement-reference-head"><strong>历史采购 SKU 记录</strong><small>来自生产订单计划表，按时间倒序</small></div><div class="movement-reference-list" id="purchaseSkuHistory"></div><div class="movement-reference-pagination" id="purchaseSkuHistoryPagination"></div></section>
+          <section><div class="movement-reference-head"><strong>当前 SKU 入库记录</strong><small>来自成衣入库单，按时间倒序</small></div><div class="movement-reference-list" id="inboundSkuHistory"></div><div class="movement-reference-pagination" id="inboundSkuHistoryPagination"></div></section>
         </div>
         <div class="form-actions"><button class="button secondary" data-close-modal type="button">取消</button><button class="button primary" type="submit">确认入库</button></div>
       </form>

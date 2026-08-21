@@ -25,6 +25,8 @@
       })
     : null;
   const cloudBackendAvailable = localApiEnabled || Boolean(supabaseClient);
+  const externalRecordPages = { purchase: 1, inbound: 1 };
+  const externalRecordRequests = { purchase: 0, inbound: 0 };
   const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "F"];
   const LOW_STOCK_SKU_THRESHOLD = 5;
   const defaultCategoryCodes = { "上装": "TOP", "下装": "BTM", "连衣裙": "DRS", "外套": "OUT", "配饰": "ACC" };
@@ -2006,6 +2008,8 @@
     if (!entry) return;
     $("movementSku").value = entry.value;
     $("movementSkuSearch").value = `${entry.label} · ${entry.meta}`;
+    externalRecordPages.purchase = 1;
+    externalRecordPages.inbound = 1;
     closeMovementSkuResults();
     syncMovementReasonForTarget();
     renderMovementReference();
@@ -2115,6 +2119,7 @@
   }
   function selectPurchaseOrder(order) {
     $("purchaseOrderSearch").value = order;
+    externalRecordPages.purchase = 1;
     closePurchaseOrderResults();
     renderMovementReference();
   }
@@ -2122,20 +2127,59 @@
     const reason = movement.reason || String(movement.note || "").split(" · ")[0] || "入库";
     return `<div class="movement-reference-row"><div><strong>${escapeHtml(leading)}</strong><code>${escapeHtml(movement.sku)}</code></div><span>+${formatNumber(Math.abs(Number(movement.qty || 0)))} · ${escapeHtml(reason)}<small>${escapeHtml(movement.time)}</small></span></div>`;
   }
-  function renderMovementReference() {
+  function externalRecordRow(record, leading) {
+    const quantity = record.quantity === null || record.quantity === undefined ? "--" : `+${formatNumber(Math.abs(Number(record.quantity || 0)))}`;
+    const date = record.recorded_at ? new Date(record.recorded_at).toLocaleString(currentLang === "zh" ? "zh-CN" : "en", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "时间未提供";
+    const reason = record.purchase_order || (record.kind === "purchase" ? "生产计划" : "成衣入库单");
+    return `<div class="movement-reference-row"><div><strong>${escapeHtml(leading || record.purchase_order || "外部记录")}</strong><code>${escapeHtml(record.sku || "SKU 未提供")}</code></div><span>${quantity} · ${escapeHtml(reason)}<small>${escapeHtml(date)}</small></span></div>`;
+  }
+  function renderExternalPagination(kind, result) {
+    const target = $(kind === "purchase" ? "purchaseSkuHistoryPagination" : "inboundSkuHistoryPagination");
+    if (!target) return;
+    if (!result?.total || result.totalPages <= 1) { target.innerHTML = ""; return; }
+    target.innerHTML = `<button type="button" data-external-record-page="${kind}" data-page="${result.page - 1}" ${result.page <= 1 ? "disabled" : ""}>上一页</button><span>${result.page} / ${result.totalPages} · ${formatNumber(result.total)} 条</span><button type="button" data-external-record-page="${kind}" data-page="${result.page + 1}" ${result.page >= result.totalPages ? "disabled" : ""}>下一页</button>`;
+  }
+  async function loadExternalRecords(kind, filters) {
+    if (!localApiEnabled) return null;
+    const requestId = ++externalRecordRequests[kind];
+    const params = new URLSearchParams({ kind, page: String(externalRecordPages[kind]), pageSize: "5" });
+    Object.entries(filters || {}).forEach(([key, value]) => { if (value) params.set(key, value); });
+    try {
+      const response = await fetch(`${apiBase}/external-records?${params}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`External ${kind} records failed (HTTP ${response.status})`);
+      const result = await response.json();
+      if (requestId !== externalRecordRequests[kind]) return null;
+      renderExternalPagination(kind, result);
+      return result.records || [];
+    } catch (error) {
+      console.warn(`External ${kind} records unavailable`, error);
+      return null;
+    }
+  }
+  async function renderMovementReference() {
     if ($("movementType").value !== "inbound") return;
     const query = $("purchaseOrderSearch").value.trim().toLowerCase();
     const target = movementTargetFromValue($("movementSku").value);
-    const purchaseHistory = state.movements.filter((movement) => movement.type === "inbound" && movementPurchaseOrder(movement))
+    const localPurchaseHistory = state.movements.filter((movement) => movement.type === "inbound" && movementPurchaseOrder(movement))
       .filter((movement) => !query || movementPurchaseOrder(movement).toLowerCase().includes(query))
       .slice(0, 5);
-    const skuHistory = state.movements.filter((movement) => movement.type === "inbound" && target && movement.sku === target.sku).slice(0, 5);
-    $("purchaseSkuHistory").innerHTML = purchaseHistory.length
-      ? purchaseHistory.map((movement) => movementHistoryRow(movement, movementPurchaseOrder(movement))).join("")
+    const localSkuHistory = state.movements.filter((movement) => movement.type === "inbound" && target && movement.sku === target.sku).slice(0, 5);
+    $("purchaseSkuHistory").innerHTML = localPurchaseHistory.length
+      ? localPurchaseHistory.map((movement) => movementHistoryRow(movement, movementPurchaseOrder(movement))).join("")
       : `<p class="movement-reference-empty">${currentLang === "zh" ? "暂无历史采购 SKU 记录" : "No historical PO SKU records"}</p>`;
-    $("inboundSkuHistory").innerHTML = skuHistory.length
-      ? skuHistory.map((movement) => movementHistoryRow(movement, movement.location || "入库")).join("")
+    $("inboundSkuHistory").innerHTML = localSkuHistory.length
+      ? localSkuHistory.map((movement) => movementHistoryRow(movement, movement.location || "入库")).join("")
       : `<p class="movement-reference-empty">${currentLang === "zh" ? "选择 SKU 后显示历史入库记录" : "Select a SKU to view its inbound history"}</p>`;
+    const [purchaseRecords, inboundRecords] = await Promise.all([
+      loadExternalRecords("purchase", { sku: target?.sku || "", purchaseOrder: query }),
+      loadExternalRecords("inbound", { sku: target?.sku || "" })
+    ]);
+    if (purchaseRecords) $("purchaseSkuHistory").innerHTML = purchaseRecords.length
+      ? purchaseRecords.map((record) => externalRecordRow(record, record.purchase_order || "生产计划")).join("")
+      : `<p class="movement-reference-empty">${currentLang === "zh" ? "暂无历史采购 SKU 记录" : "No historical PO SKU records"}</p>`;
+    if (inboundRecords) $("inboundSkuHistory").innerHTML = inboundRecords.length
+      ? inboundRecords.map((record) => externalRecordRow(record, record.purchase_order || "成衣入库")).join("")
+      : `<p class="movement-reference-empty">${currentLang === "zh" ? "暂无当前 SKU 入库记录" : "No inbound records for this SKU"}</p>`;
   }
   function locationById(id) {
     return stockLocations.find((location) => location.id === id) || stockLocations[0];
@@ -3680,6 +3724,11 @@
       if (movementSkuResult) selectMovementSku(movementSkuResult.dataset.movementSkuValue);
       const purchaseOrderResult = event.target.closest("[data-purchase-order]");
       if (purchaseOrderResult) selectPurchaseOrder(purchaseOrderResult.dataset.purchaseOrder);
+      const externalPageButton = event.target.closest("[data-external-record-page]");
+      if (externalPageButton && !externalPageButton.disabled) {
+        externalRecordPages[externalPageButton.dataset.externalRecordPage] = Math.max(1, Number(externalPageButton.dataset.page || 1));
+        renderMovementReference();
+      }
       const editMovementButton = event.target.closest("[data-edit-movement]");
       if (editMovementButton) openMovementEditor(editMovementButton.dataset.editMovement);
       const deleteMovementButton = event.target.closest("[data-delete-movement]");
@@ -3882,12 +3931,15 @@
     $("movementSkuSearch").addEventListener("focus", () => renderMovementSkuResults($("movementSkuSearch").value));
     $("movementSkuSearch").addEventListener("input", () => {
       $("movementSku").value = "";
+      externalRecordPages.purchase = 1;
+      externalRecordPages.inbound = 1;
       renderMovementSkuResults($("movementSkuSearch").value);
       syncMovementReasonForTarget();
       renderMovementReference();
     });
     $("purchaseOrderSearch").addEventListener("focus", () => renderPurchaseOrderResults($("purchaseOrderSearch").value));
     $("purchaseOrderSearch").addEventListener("input", () => {
+      externalRecordPages.purchase = 1;
       renderPurchaseOrderResults($("purchaseOrderSearch").value);
       renderMovementReference();
     });

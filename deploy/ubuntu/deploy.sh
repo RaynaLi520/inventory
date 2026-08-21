@@ -50,6 +50,8 @@ sudo -u inventory_app psql --dbname=henan_inventory --file="$app_root/server/sch
 install -m 0644 "$app_root/deploy/ubuntu/inventory-api.service" /etc/systemd/system/inventory-api.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-coz-sync.service" /etc/systemd/system/inventory-coz-sync.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-coz-sync.timer" /etc/systemd/system/inventory-coz-sync.timer
+install -m 0644 "$app_root/deploy/ubuntu/inventory-coz-records-sync.service" /etc/systemd/system/inventory-coz-records-sync.service
+install -m 0644 "$app_root/deploy/ubuntu/inventory-coz-records-sync.timer" /etc/systemd/system/inventory-coz-records-sync.timer
 install -m 0644 "$app_root/deploy/ubuntu/inventory-plm-sync.service" /etc/systemd/system/inventory-plm-sync.service
 install -m 0644 "$app_root/deploy/ubuntu/inventory-plm-sync.timer" /etc/systemd/system/inventory-plm-sync.timer
 install -m 0644 "$app_root/deploy/ubuntu/inventory-backup.service" /etc/systemd/system/inventory-backup.service
@@ -74,6 +76,9 @@ ufw allow from 172.16.0.0/16 to any port 443 proto tcp
 ufw --force enable
 
 systemctl enable --now postgresql inventory-api.service inventory-coz-sync.timer inventory-plm-sync.timer inventory-backup.timer inventory-cert-renew.timer nginx
+if [[ -f /etc/henan-inventory/coz-purchase-records-request.json && -f /etc/henan-inventory/coz-inbound-records-request.json ]]; then
+  systemctl enable --now inventory-coz-records-sync.timer
+fi
 systemctl restart inventory-api.service nginx
 systemctl start inventory-coz-sync.service
 

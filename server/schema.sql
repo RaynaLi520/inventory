@@ -52,6 +52,25 @@ create table if not exists inventory_sync_runs (
   finished_at timestamptz
 );
 
+create table if not exists coz_external_records (
+  kind text not null check (kind in ('purchase', 'inbound')),
+  source_key text not null,
+  sku text not null default '',
+  purchase_order text not null default '',
+  quantity numeric,
+  recorded_at timestamptz,
+  data jsonb not null default '{}'::jsonb,
+  synced_at timestamptz not null default now(),
+  primary key (kind, source_key)
+);
+
+create index if not exists coz_external_records_time_idx
+on coz_external_records (kind, recorded_at desc nulls last);
+create index if not exists coz_external_records_sku_idx
+on coz_external_records (kind, sku);
+create index if not exists coz_external_records_po_idx
+on coz_external_records (kind, purchase_order);
+
 create table if not exists app_users (
   id bigserial primary key,
   username text not null unique check (username = lower(username) and username ~ '^[a-z0-9._-]{3,32}$'),

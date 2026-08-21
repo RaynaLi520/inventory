@@ -1,0 +1,24 @@
+[Unit]
+Description=Henan Inventory CoZ purchase and inbound record synchronization
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+User=inventory_app
+Group=inventory_app
+WorkingDirectory=/opt/henan-inventory
+Environment=NODE_ENV=production
+Environment=PGHOST=/var/run/postgresql
+Environment=PGDATABASE=henan_inventory
+Environment=PGUSER=inventory_app
+Environment=COZ_RECORDS_SYNC_TIMEOUT_MS=50000
+EnvironmentFile=-/etc/henan-inventory/coz-records-sync.env
+ExecStart=/usr/bin/node server/coz-records-sync.js
+TimeoutStartSec=120
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+

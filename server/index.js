@@ -217,6 +217,37 @@ app.put("/api/state", requireInventoryAccess, async (request, response, next) =>
   }
 });
 
+app.get("/api/external-records", requireInventoryAccess, async (request, response, next) => {
+  try {
+    const kind = String(request.query.kind || "").trim().toLowerCase();
+    if (!["purchase", "inbound"].includes(kind)) {
+      response.status(400).json({ error: "kind must be purchase or inbound" });
+      return;
+    }
+    const pageSize = Math.min(50, Math.max(1, Number(request.query.pageSize || 5)));
+    const page = Math.max(1, Number(request.query.page || 1));
+    const sku = String(request.query.sku || "").trim();
+    const purchaseOrder = String(request.query.purchaseOrder || "").trim();
+    const filters = [kind];
+    const conditions = ["kind = $1"];
+    if (sku) { filters.push(`%${sku}%`); conditions.push(`sku ilike $${filters.length}`); }
+    if (purchaseOrder) { filters.push(`%${purchaseOrder}%`); conditions.push(`purchase_order ilike $${filters.length}`); }
+    const where = conditions.join(" and ");
+    const count = await pool.query(`select count(*)::int as total, max(synced_at) as synced_at from coz_external_records where ${where}`, filters);
+    const total = Number(count.rows[0]?.total || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const offset = (Math.min(page, totalPages) - 1) * pageSize;
+    const records = await pool.query(
+      `select source_key, kind, sku, purchase_order, quantity, recorded_at, data, synced_at
+       from coz_external_records where ${where}
+       order by recorded_at desc nulls last, source_key desc
+       limit $${filters.length + 1} offset $${filters.length + 2}`,
+      [...filters, pageSize, offset]
+    );
+    response.json({ kind, records: records.rows, page: Math.min(page, totalPages), pageSize, total, totalPages, syncedAt: count.rows[0]?.synced_at || null });
+  } catch (error) { next(error); }
+});
+
 app.post("/api/images", ...requireInventoryPermission("manageCatalog"), async (request, response, next) => {
   try {
     const match = String(request.body?.dataUrl || "").match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
