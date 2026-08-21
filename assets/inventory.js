@@ -1460,7 +1460,9 @@
   // color, or another descriptive field produce an unrelated result.
   function matchesSearchTerms(terms, searchable, skuSearchable, sourceSearchable = "") {
     return terms.every((term) => {
-      if (searchTermIsNumeric(term)) return skuSearchable.includes(term);
+      if (searchTermIsNumeric(term)) {
+        return skuSearchable.includes(term) || (/^\d{8,}$/.test(term) && sourceSearchable.includes(term));
+      }
       return searchable.includes(term) || (/^\d{8,}$/.test(term) && sourceSearchable.includes(term));
     });
   }
